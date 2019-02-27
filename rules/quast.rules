@@ -1,0 +1,11 @@
+rule calculate_assembly_statistics_with_quast:
+    conda:
+        pipeline_path + "envs/quast.yml"
+    input:
+        "samples/{sample}/assembly/spades/scaffolds.fasta"
+    output:
+        "samples/{sample}/quality/quast/report.txt"
+    log:
+        logging_folder+"samples/{sample}/logs/assembly/quast.txt",
+    shell:
+        "quast.py {input[0]} -o $( dirname {output[0]}) &> {log}"

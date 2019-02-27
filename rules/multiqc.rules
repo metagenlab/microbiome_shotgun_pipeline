@@ -1,0 +1,83 @@
+rule create_multiqc_report_for_assembly:
+    params:
+        configfile = multiqc_configfile
+    conda:
+        pipeline_path + "envs/multiqc.yml"
+    input:
+        assembly=expand("samples/{sample}/multiqc/assembly/log.txt", sample = list(read_naming.keys())),
+        mapping=expand("samples/{sample}/multiqc/mapping_to_{sample}_assembled/bwa/log.txt", sample = list(read_naming.keys())),
+    output:
+        "report/multiqc_assembly/multiqc_report.html"
+    log:
+        logging_folder + "logs/quality/multiqc/assembly.txt"
+    shell:
+        """
+        multiqc -c {params.configfile} -f -o $(dirname {output[0]}) $(dirname {input[assembly]} {input[mapping]} | tr "\n" " ") &> {log[0]}
+        """
+
+
+rule create_multiqc_report_for_mapping:
+    params:
+        configfile = multiqc_configfile
+    conda:
+        pipeline_path + "envs/multiqc.yml"
+    input:
+        mapping = expand("samples/{sample}/multiqc/mapping_to_{{ref}}/{{mapping_method}}/log.txt", sample = list(read_naming.keys())),
+    output:
+        "report/multiqc_mapping_to_{ref}/{mapping_method}/multiqc_report.html"
+    log:
+        logging_folder + "logs/quality/multiqc/{mapping_method}/mapping_to_{ref}.txt"
+    shell:
+        """
+        multiqc -c {params.configfile} -f -o $(dirname {output[0]}) $(dirname {input[mapping]}) &> {log[0]}
+        """
+
+rule copy_result_files_mapping_paired:
+    input:
+        qualimap_report = "report/qualimap/{sample}/{mapping_method}/{ref}/qualimapReport.html",
+        fastqc_report = "samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/summary.txt",
+        trimmomatic_report = "samples/{sample}/reads/trimmed/summary.txt",
+    output:
+        "samples/{sample}/multiqc/mapping_to_{ref}/{mapping_method}/log.txt"
+    shell:
+        """
+        mkdir -p $(dirname {output[0]})/{wildcards.sample}
+        cp -R $(dirname {input[qualimap_report]})/* $(dirname {output[0]})/{wildcards.sample}
+        sed -i "s/{wildcards.ref}/{wildcards.sample}/" $(dirname {output[0]})/{wildcards.sample}/genome_results.txt
+        cp -R $(dirname {input[fastqc_report]})/* $(dirname {output[0]})/{wildcards.sample}
+        sed "s/_R1\.fastq/\.fastq/g" {input[trimmomatic_report]} | sed "s/_R2\.fastq/\.fastq/g" > $(dirname {output[0]})/trimmomatic.log
+        sed -i "s/R1_paired\.fastq/{wildcards.sample}/" $(dirname {output[0]})/{wildcards.sample}/fastqc_data.txt
+        sed -i "s/R2_paired\.fastq/{wildcards.sample}/" $(dirname {output[0]})/{wildcards.sample}/fastqc_data.txt
+        echo "okay" > {output}
+        """
+
+
+rule copy_result_files_mapping_single:
+    input:
+        qualimap_report = "report/qualimap/{sample}/{mapping_method}/{ref}/qualimapReport.html",
+        fastqc_report = "samples/{sample}/reads/trimmed/fastqc/single_fastqc/summary.txt",
+        trimmomatic_report = "samples/{sample}/reads/trimmed/summary.txt",
+    output:
+        "samples/{sample}/multiqc/mapping_to_{ref}/{mapping_method}/log.txt"
+    shell:
+        """
+        mkdir -p $(dirname {output[0]})/{wildcards.sample}
+        cp -R $(dirname {input[qualimap_report]})/* $(dirname {output[0]})/{wildcards.sample}
+        cp -R $(dirname {input[fastqc_report]})/* $(dirname {output[0]})/{wildcards.sample}
+        sed "s/_single//g" {input[trimmomatic_report]} > $(dirname {output[0]})/trimmomatic.log
+        sed -i "s/single\.fastq/{wildcards.sample}/" $(dirname {output[0]})/{wildcards.sample}/fastqc_data.txt
+        echo "okay" > {output}
+        """
+
+rule copy_result_files_assembly:
+    input:
+        quast_report = "samples/{sample}/quality/quast/report.txt",
+    output:
+        "samples/{sample}/multiqc/assembly/log.txt"
+    shell:
+        """
+        mkdir -p $(dirname {output[0]})/{wildcards.sample}
+        cp -R $(dirname {input[quast_report]}) $(dirname {output[0]})
+        sed -i.bak "s/.fsa//g" $(dirname {output[0]})/quast/report.tsv
+        echo "okay" > {output}
+        """
