@@ -7,11 +7,9 @@ rule prepare_contig_bins_table:
         "samples/{sample}/binning/maxbin/maxbin_table.tab",
     log:
         "samples/{sample}/binning/maxbin/{sample}.log",
-    shell:
-        """
-        echo {input[fasta_files]}
-        scripts/maxbin2classif.py -i {input[fasta_files]} > {output[0]}
-        """
+    script:
+        'scripts/maxbin2classif.py'
+
 
 rule plot_gc_cov_maxbin_bins:
     conda:
@@ -22,11 +20,9 @@ rule plot_gc_cov_maxbin_bins:
         "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     output:
         "samples/{sample}/binning/maxbin/gc_cov_buble_test.svg"
-    shell:
-        '''
-        echo scripts/gc_coverage_plot.py -t {input[0]} -m {input[2]} -d {input[1]} -o "$(dirname {output[0]})/"
-        scripts/gc_coverage_plot.py -t {input[0]} -m {input[2]} -d {input[1]} -o "$(dirname {output[0]})/"
-        '''
+    script:
+        'scripts/gc_coverage_plot.py'
+
 
 '''
 rule plot_gc_cov_kaiju_phylum:

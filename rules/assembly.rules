@@ -69,9 +69,8 @@ rule fasta_filter_size:
     log:
         logging_folder + "samples/{sample}/logs/spades_assembly.txt"
     shell:
-        """
         "awk '/^>/{{print (NR==1)?$0: \"\\n\" $0;next}} {{printf \"%s\", $0}}END{{print \"\"}}' {input} |  awk \'!/^>/ {{ next }} {{ getline seq }} length(seq) >= {params[0]} {{ print $0 \"\\n\" seq }}\'  > {output}"
-        """
+
 rule fasta_edit_header:
     conda:
         pipeline_path + "envs/biopython.yml"
@@ -85,5 +84,5 @@ rule fasta_edit_header:
         logging_folder + "samples/{sample}/logs/spades_assembly.txt"
     shell:
         """
-        "sed 's/_length.*//' {input}  > {output}"
+        sed 's/_length.*//' {input[0]}  > {output[0]}
         """
