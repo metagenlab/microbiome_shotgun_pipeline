@@ -1,0 +1,6 @@
+#mandatory, one of them or both
+sra_samples: example_sra_samples.tsv
+local_samples: example_local_samples.tsv
+
+# databases (setup should be automated as well)
+kaju_database: /path/to/kaiju/progenomes/
