@@ -2,7 +2,7 @@ rule orfing_with_prodigal:
     conda:
         pipeline_path + "envs/prodigal.yml"
     input:
-        contigs = "samples/{sample}/assembly/spades/scaffolds.fasta"
+        contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:
         "samples/{sample}/annotation/{sample}.faa",
     log:

@@ -6,8 +6,8 @@ rule map_paired_reads_with_bwa:
     input:
         fastq1 = "samples/{sample}/reads/trimmed/R1_paired.fastq",
         fastq2 = "samples/{sample}/reads/trimmed/R2_paired.fastq",
-        ref = "samples/{sample}/assembly/spades/scaffolds.fasta",
-        ref_index = "samples/{sample}/assembly/spades/scaffolds.fasta.bwt",
+        ref = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+        ref_index = "samples/{sample}/assembly/spades/large_contigs_edit.fasta.bwt",
     output:
         temp("samples/{sample}/mapping/bwa/{ref}.bam"),
     log:
@@ -28,8 +28,8 @@ rule map_single_reads_with_bwa:
         platform = "ILLUMINA"
     input:
         fastq = "samples/{sample}/reads/trimmed/single.fastq",
-        ref = "samples/{sample}/assembly/spades/scaffolds.fasta",
-        ref_index = "samples/{sample}/assembly/spades/scaffolds.fasta.bwt",
+        ref = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+        ref_index = "samples/{sample}/assembly/spades/large_contigs_edit.fasta.bwt",
     output:
         temp("samples/{sample}/mapping/bwa/{ref}.bam"),
     log:
@@ -51,7 +51,7 @@ rule extract_contig_coverage:
         extract = "samples/{sample}/{mapping_method}/{sample}_assembled/contig_coverage.txt"
     shell:
         """
-        sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep contig_ | sed "s/^[ \\t]*//" > {output[extract]}
+        sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep NODE_ | sed "s/^[ \\t]*//" > {output[extract]}
         """
 
 rule index_reference_fasta:

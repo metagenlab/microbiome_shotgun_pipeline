@@ -14,7 +14,7 @@ rule maxbin_binning:
     conda:
         pipeline_path + "envs/maxbin.yml"
     input:
-        contigs = "samples/{sample}/assembly/spades/scaffolds.fasta",
+        contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
         abundance = "samples/{sample}/binning/maxbin/contig_abundance.txt"
     output:
         dynamic("samples/{sample}/binning/maxbin/{bin_id}.fasta")

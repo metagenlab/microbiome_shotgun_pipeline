@@ -19,7 +19,7 @@ rule plot_gc_cov_maxbin_bins:
     input:
         "samples/{sample}/binning/maxbin/maxbin_table.tab",
         "samples/{sample}/binning/maxbin/contig_abundance.txt",
-        "samples/{sample}/assembly/spades/scaffolds.fasta",
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     output:
         "samples/{sample}/binning/maxbin/gc_cov_buble_test.svg"
     shell:

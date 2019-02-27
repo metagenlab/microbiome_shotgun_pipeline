@@ -2,7 +2,7 @@ rule calculate_assembly_statistics_with_quast:
     conda:
         pipeline_path + "envs/quast.yml"
     input:
-        "samples/{sample}/assembly/spades/scaffolds.fasta"
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:
         "samples/{sample}/quality/quast/report.txt"
     log:

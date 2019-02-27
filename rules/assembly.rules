@@ -56,3 +56,34 @@ rule assemble_metagenome_corrected_paired_reads_with_spades:
         """
         spades.py --only-assembler -k 21,33,55,77,99,127 --meta -1 {input[R1_corrected]} -2 {input[R2_corrected]} -s {input[single_corrected]} -o $( dirname {output[contigs]}) --threads {threads} > {log}
         """
+
+rule fasta_filter_size:
+    conda:
+        pipeline_path + "envs/biopython.yml"
+    input:
+        contigs = "samples/{sample}/assembly/spades/contigs.fasta"
+    output:
+        large_contigs = "samples/{sample}/assembly/spades/large_contigs.fasta"
+    params:
+        config["minimum_contig_size"]
+    log:
+        logging_folder + "samples/{sample}/logs/spades_assembly.txt"
+    shell:
+        """
+        "awk '/^>/{{print (NR==1)?$0: \"\\n\" $0;next}} {{printf \"%s\", $0}}END{{print \"\"}}' {input} |  awk \'!/^>/ {{ next }} {{ getline seq }} length(seq) >= {params[0]} {{ print $0 \"\\n\" seq }}\'  > {output}"
+        """
+rule fasta_edit_header:
+    conda:
+        pipeline_path + "envs/biopython.yml"
+    input:
+        contigs = "samples/{sample}/assembly/spades/large_contigs.fasta"
+    output:
+        edited_contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
+    params:
+        config["minimum_contig_size"]
+    log:
+        logging_folder + "samples/{sample}/logs/spades_assembly.txt"
+    shell:
+        """
+        "sed 's/_length.*//' {input}  > {output}"
+        """
