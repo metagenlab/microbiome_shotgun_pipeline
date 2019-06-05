@@ -56,7 +56,7 @@ rule extract_contig_coverage:
 
 rule index_reference_fasta:
     conda:
-        "../envs/bwa-samtools.yml"
+        pipeline_path + "envs/bwa-samtools.yml"
     input:
         "{any_genome}.fasta"
     output:
@@ -70,7 +70,7 @@ rule index_reference_fasta:
 
 rule index_bam_file:
     conda:
-        "../envs/bwa-samtools.yml"
+        pipeline_path +  "envs/bwa-samtools.yml"
     input:
         "{any_bam}.bam"
     output:
