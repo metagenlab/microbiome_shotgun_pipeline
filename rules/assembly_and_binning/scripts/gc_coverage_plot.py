@@ -11,7 +11,9 @@ def gc_coverage_plot(contigs_file,
                      taxonomy_file=False,
                      output_prefix=False):
 
-    print("prefix:", output_prefix)
+    if output_prefix[-1] != '/':
+        output_prefix += '/'
+    print("output_prefix", output_prefix)
 
     import os
     import shell_command

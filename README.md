@@ -20,6 +20,7 @@
 - [ ] binnin BinSanity
 - [ ] bin refinment (https://github.com/cmks/DAS_Tool)
 - [ ] dereplication (https://github.com/MrOlm/drep)
+- [ ] show assembly contiguity on GC vs Coverage plot
 
 ### relative abundance
 
@@ -28,11 +29,11 @@
 
 ### AMR, virulence and mobility gene identification
 
+- [ ] VFDB + SwissProt toxins/virulence factors: extract data from fasta and sqlite database
 - [ ] COG X (Mobilome: prophages, transposons): ftp://ftp.ncbi.nih.gov/pub/COG/COG2014/data/cognames2003-2014.tab (119 entries)
 - [ ] UNIPROT Transposable element [KW-0814] (taxonomy:"Bacteria [2]" keyword:"Transposable element [KW-0814]" AND reviewed:yes) (433 entries)
 - [ ] CARD (protein)
     - [ ] remove variant model, resistance by absence, molecular bypass, ...
-- [ ] VFDB + SwissProt toxins/virulence factors
 - [ ] cluster at 95% identity
 - [ ] mmseqs2 indexing
 - [ ] mmseqs2 search
