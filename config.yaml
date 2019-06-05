@@ -18,3 +18,7 @@ minimum_contig_size: 500
 kaju_database: /home/tpillone/work/projets/dev/2018_11_annotation_pipeline/databases/kaiju/progenomes/
 
 #metagenomic profiling
+
+# virulence factor search
+virulence_database: databases/virulence/sqlite_db/virulence.db
+virulence_fasta: databases/virulence/merged/virulence_db_nr.faa

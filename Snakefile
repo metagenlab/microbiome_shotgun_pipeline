@@ -8,6 +8,16 @@ rule assembly:
        kaiju_phylum = expand("samples/{sample}/binning/kaiju/report_phylum.txt", sample = list(read_naming.keys())),
        #chekm_maxbin = expand("samples/{sample}/binning/maxbin/checkm_bacteria/storage/bin_stats.analyze.tsv", sample = list(read_naming.keys()))
 
+rule databases_setup:
+   input:
+       "reference_databases/virulence/VF_db.faa",
+       "reference_databases/virulence/VF_db_mmseqsDB"
+
+
+rule homology_search:
+   input:
+       expand("samples/{sample}/mmseq_search/virulence/VF_db/R1.m8", sample = list(read_naming.keys()))
+
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
 
@@ -31,3 +41,7 @@ include: "rules/assembly_and_binning/prodigal.rules"
 include: "rules/assembly_and_binning/bwa.rules"
 include: "rules/assembly_and_binning/assembly.rules"
 include: "rules/assembly_and_binning/binning.rules"
+
+# database setup
+include: "rules/databases/virulence/virulence.smk"
+include: "rules/databases/mmseqs2.smk"
