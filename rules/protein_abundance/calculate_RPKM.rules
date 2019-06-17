@@ -1,0 +1,24 @@
+
+
+rule extract_read_counts:
+    input:
+        "samples/{sample}/reads/trimmed/fastqc/{pair}_paired_fastqc/fastqc_data.txt",
+    output:
+        "samples/{sample}/reads/trimmed/fastqc/{pair}_paired_fastqc/{pair}_reads_count.txt"
+    shell:
+       """
+       echo sed 's/.*:Total Sequences\\t//' 
+       grep "Total Sequences" {input[0]} | sed 's/.*:Total Sequences\\t//' > {output[0]}
+       """
+
+rule calculate_RPKM:
+    conda:
+        '../../envs/biopython.yml'
+    input:
+        sample_list = expand("samples/{sample}/mmseq_search/{{data_type}}/{{db_name}}/best_hits.m8", sample=read_naming.keys()),
+        R1_counts = expand("samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/R1_reads_count.txt", sample=read_naming.keys()),
+        R2_counts = expand("samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc/R2_reads_count.txt", sample=read_naming.keys()),
+        reference_fasta = "reference_databases/{data_type}/{db_name}.faa"
+    output:
+        "report/mmseq_search/{data_type}/{db_name}/RPKM.db"
+    script: "scripts/calculate_RPKM.py"

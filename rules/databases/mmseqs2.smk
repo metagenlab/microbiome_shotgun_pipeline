@@ -21,16 +21,23 @@ rule execute_mmseqs2:
     threads:
         8
     params:
-        min_seq_id = 0.9
+        min_seq_id = 0.9,
+        min_aln_len = 24
     output:
         "samples/{sample}/mmseq_search/{data_type}/{db_name}/{pair}.m8"
     shell:
         """
-        mmseqs easy-search --threads {threads} --min-seq-id {params[0]} {input[1]} {input[0]} {output[0]} tmp
+        mmseqs easy-search --threads {threads} --min-seq-id {params[0]} --min-aln-len {params[1]} {input[1]} {input[0]} {output[0]} tmp
         """
 
 rule extract_best_hit:
+    input:
+        "samples/{sample}/mmseq_search/{data_type}/{db_name}/R1.m8",
+        "samples/{sample}/mmseq_search/{data_type}/{db_name}/R2.m8"
+    output:
+        "samples/{sample}/mmseq_search/{data_type}/{db_name}/best_hits.m8"
     shell:
        """
-       sort -u -k1,1 --merge samples/B6T_subset/mmseq_search/virulence/VF_db/R1.m8
+       sort -u -k1,1 --merge {input[0]} > {output[0]}
+       sort -u -k1,1 --merge {input[1]} >> {output[0]}
        """

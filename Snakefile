@@ -16,7 +16,8 @@ rule databases_setup:
 
 rule homology_search:
    input:
-       expand("samples/{sample}/mmseq_search/virulence/VF_db/R1.m8", sample = list(read_naming.keys()))
+       expand("samples/{sample}/mmseq_search/virulence/VF_db/best_hits.m8", sample = list(read_naming.keys())),
+       "report/mmseq_search/virulence/VF_db/RPKM.db"
 
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
@@ -45,3 +46,7 @@ include: "rules/assembly_and_binning/binning.rules"
 # database setup
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/mmseqs2.smk"
+
+# taxonomy abundance
+include: "rules/taxonomy_abundance/motus2.rules"
+include: "rules/protein_abundance/calculate_RPKM.rules"

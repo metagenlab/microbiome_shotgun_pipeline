@@ -1,0 +1,42 @@
+
+
+rule execute_motus2:
+    conda:
+        "../../envs/motus2.yml"
+    input:
+        "samples/{sample}/reads/trimmed/R1_paired.fastq",
+        "samples/{sample}/reads/trimmed/R2_paired.fastq"
+    threads:
+        8
+    output:
+        "samples/{sample}/motus2/{sample}.motus"
+    shell:
+        """
+        motus profile -f {input[0]} -r {input[1]} -t 8 -o {output[0]}
+        """
+
+
+def get_input_string(wildcards):
+    template = "samples/%s/motus2/%s.motus"
+    lst = []
+    for sample in read_naming.keys():
+        lst.append(template % (sample, sample))
+    return ','.join(lst)
+
+
+rule motus2_merge:
+    conda:
+        "../../envs/motus2.yml"
+    input:
+        expand("samples/{sample}/motus2/{sample}.motus", sample = list(read_naming.keys()))
+    threads:
+        8
+    params:
+        input_string = get_input_string
+    output:
+        "report/motus2/merged_profile.motus"
+    shell:
+        """
+        echo motus merge -i {params} -o {output[0]}
+        motus merge -i {params} -o {output[0]}
+        """
