@@ -23,6 +23,8 @@ rule assess_quality_paired_reads_with_fastqc:
         "samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc.zip",
         "samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc.html",
         "samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc.html",
+        "samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/fastqc_data.txt",
+        "samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc/fastqc_data.txt",
     log:
         logging_folder + "samples/{sample}/reads/trimmed/fastqc.txt",
     shell:
