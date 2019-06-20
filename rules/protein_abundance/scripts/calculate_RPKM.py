@@ -61,6 +61,7 @@ for sample in sample2sequence_accession2count:
         denominat = seq_length_nucl * reads_millions
 
         # calculate ratio
+        print("calculate ratio")
         RPKM = float(nominat)/float(denominat)
 
         cursor.execute(sql_template, (sample, sequence_accession, n_hits, RPKM))
