@@ -13,7 +13,7 @@ rule extract_read_counts:
 
 rule calculate_RPKM:
     conda:
-        '../../envs/biopython.yml'
+        '../../envs/biopython-pandas.yml'
     params:
         config["local_samples"]
     input:
