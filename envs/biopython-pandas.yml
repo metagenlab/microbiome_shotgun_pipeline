@@ -1,0 +1,6 @@
+channels:
+ - bioconda
+ - conda-forge
+dependencies:
+ - biopython = 1.70=np112py36_1
+ - pandas = 0.24.2
