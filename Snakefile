@@ -1,6 +1,8 @@
 
 include: "rules/making_sample_dataset.rules"
 
+print()
+
 rule assembly:
     input:
        qualimap_report = "report/multiqc_assembly/multiqc_report.html",

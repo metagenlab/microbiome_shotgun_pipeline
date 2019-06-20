@@ -7,13 +7,15 @@ rule extract_read_counts:
         "samples/{sample}/reads/trimmed/fastqc/{pair}_paired_fastqc/{pair}_reads_count.txt"
     shell:
        """
-       echo sed 's/.*:Total Sequences\\t//' 
+       echo sed 's/.*:Total Sequences\\t//'
        grep "Total Sequences" {input[0]} | sed 's/.*:Total Sequences\\t//' > {output[0]}
        """
 
 rule calculate_RPKM:
     conda:
         '../../envs/biopython.yml'
+    params:
+        config["local_samples"]
     input:
         sample_list = expand("samples/{sample}/mmseq_search/{{data_type}}/{{db_name}}/best_hits.m8", sample=read_naming.keys()),
         R1_counts = expand("samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/R1_reads_count.txt", sample=read_naming.keys()),

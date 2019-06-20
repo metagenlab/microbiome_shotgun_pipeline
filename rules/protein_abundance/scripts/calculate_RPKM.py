@@ -2,9 +2,14 @@
 
 from Bio import SeqIO
 import sqlite3
+import pandas
 
 conn = sqlite3.connect(snakemake.output[0])
 cursor = conn.cursor()
+
+sample_table = snakemake.params[0]
+
+all_samples = pandas.read_csv(sample_table, sep="\t", index_col=0)
 
 sample2read_count={}
 # get total number of reads if R1 and R2
