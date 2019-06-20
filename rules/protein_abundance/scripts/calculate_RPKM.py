@@ -18,7 +18,8 @@ for R2_count in snakemake.input["R2_counts"]:
         sample2read_count[sample_id] += int(f.readline().rstrip().split("\t")[1])
 for sample_id in sample2read_count:
     print("reads", sample2read_count[sample_id])
-    sample2read_count[sample_id] = float(sample2read_count[sample_id])/1000000
+    # get total number of reads
+    sample2read_count[sample_id] = float(sample2read_count[sample_id])
 print(sample2read_count)
 # get sequence length for normalization by sequence length
 records = SeqIO.parse(snakemake.input["reference_fasta"], 'fasta')
@@ -48,18 +49,20 @@ sql_template = 'insert into sequence_counts values (?, ?, ?, ?)'
 for sample in sample2sequence_accession2count:
     for sequence_accession in sample2sequence_accession2count[sample]:
         n_hits = sample2sequence_accession2count[sample][sequence_accession]
-        # divide by sequence length and number of million of reads
-        counts = sample2sequence_accession2count[sample][sequence_accession]
-        RPKM = counts/sample2read_count[sample]
-        seq_length = record2aa_sequence_length[sequence_accession]
-        norm_counts = counts/float(seq_length)
-        #print("counts\t%s" % counts)
-        #print("Seq length\t%s ==> %s" % (seq_length, norm_counts))
+
+        # multiply by 1000000 to get reads per million
+        # multiply by 1000 to calculate reads per kilobase
+        nominat = sample2sequence_accession2count[sample][sequence_accession] * 1000000 * 1000
+
+        # multiply protein length by 3 to get gene length
+        seq_length_nucl = record2aa_sequence_length[sequence_accession]
         reads_millions = sample2read_count[sample_id]
-        #print("reads_millions\t%s" % reads_millions)
-        #print(float(norm_counts), float(reads_millions))
-        RPKM = float(norm_counts) / float(reads_millions)
-        #print("RPKM\t%s" % RPKM)
+        # multiply library size by gene length
+        denominat = seq_length_nucl * reads_millions
+
+        # calculate ratio
+        RPKM = float(nominat)/float(denominat)
+
         cursor.execute(sql_template, (sample, sequence_accession, n_hits, RPKM))
     conn.commit()
 
