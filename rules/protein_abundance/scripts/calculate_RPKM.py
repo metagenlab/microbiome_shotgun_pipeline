@@ -41,11 +41,11 @@ for sample in snakemake.input["sample_list"]:
             else:
                 sample2sequence_accession2count[sample_id][data[1]] += 1
 
-sql = 'create table sequence_counts (sample varchar(200), accession varchar(200), n_hits INTEGER, RPKM INTEGER)'
+sql = 'create table sequence_counts (sample varchar(200), accession varchar(200), n_hits INTEGER, RPKM INTEGER, group_1 varchar(200), group_2 varchar (200))'
 cursor.execute(sql,)
 
 # load data into database
-sql_template = 'insert into sequence_counts values (?, ?, ?, ?)'
+sql_template = 'insert into sequence_counts values (?, ?, ?, ?, ?, ?)'
 for sample in sample2sequence_accession2count:
     for sequence_accession in sample2sequence_accession2count[sample]:
         n_hits = sample2sequence_accession2count[sample][sequence_accession]
@@ -64,7 +64,12 @@ for sample in sample2sequence_accession2count:
         print("calculate ratio")
         RPKM = float(nominat)/float(denominat)
 
-        cursor.execute(sql_template, (sample, sequence_accession, n_hits, RPKM))
+        cursor.execute(sql_template, (sample,
+                                      sequence_accession,
+                                      n_hits,
+                                      RPKM,
+                                      all_samples.loc[sample, "group_1"],
+                                      all_samples.loc[sample, "group_2"]))
     conn.commit()
 
 # index sequence accession
