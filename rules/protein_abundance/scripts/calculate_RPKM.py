@@ -75,6 +75,7 @@ cursor.execute(sql,)
 
 # load data into database
 sql_template = 'insert into sequence_counts values (?, ?, ?, ?, ?, ?, ?, ?)'
+acc2genus_ok = []
 for sample in sample2sequence_accession2count:
     for sequence_accession in sample2sequence_accession2count[sample]:
         n_hits = sample2sequence_accession2count[sample][sequence_accession]
@@ -102,9 +103,11 @@ for sample in sample2sequence_accession2count:
                                       all_samples.loc[sample, "group_2"],
                                       silix_acc,
                                       description))
-        genus_list = uniparc_accession2genus_list[sequence_accession]
-        for genus in genus_list:
-            cursor.execute(sql_taxonomy, [sequence_accession, genus])
+        if sequence_accession not in acc2genus_ok:
+            genus_list = uniparc_accession2genus_list[sequence_accession]
+            for genus in genus_list:
+                cursor.execute(sql_taxonomy, [sequence_accession, genus])
+            acc2genus_ok.append(sequence_accession)
     conn.commit()
 
 # index sequence accession
