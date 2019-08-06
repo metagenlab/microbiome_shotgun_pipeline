@@ -30,8 +30,8 @@ rule index_reference_genome:
 rule align_reads_to_reference_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
-    input: r1="samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
-            r2="samples/{sample}/reads/raw/{sample}_R2.fastq.gz",
+    input: r1="samples/{sample}/reads/trimmed/R1_paired.fastq",
+            r2="samples/{sample}/reads/trimmed/R2_paired.fastq",
             host_fa="host/{host_acc}.fa"
 
     output: temp("host/{host_acc}/{sample}.bam")
