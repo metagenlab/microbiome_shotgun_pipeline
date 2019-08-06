@@ -1,0 +1,71 @@
+
+rule all_decontam:
+    input: expand("host/{host_acc}/unmapped/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+
+
+
+rule decompress_reference_genome:
+    input: "host/{host_acc}.fna.gz"
+
+    output: temp("host/{host_acc}.fa")
+
+    shell: "zcat {input} > {output}"
+
+if config['reference_genome']['host']=='human':
+    index_alg='bwtsw'
+else:
+    index_alg='is'
+rule index_reference_genome:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: "host/{host_acc}.fa"
+
+    output: "host/{host_acc}.fa.amb","host/{host_acc}.fa.pac","host/{host_acc}.fa.ann",
+            "host/{host_acc}.fa.bwt","host/{host_acc}.fa.sa"
+
+    params: algorithm=index_alg, mem=config["indexing_mem"]
+
+    shell: "bwa index -b {params.mem} -a {params.algorithm} {input}"
+
+rule align_reads_to_reference_genome:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: r1="samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
+            r2="samples/{sample}/reads/raw/{sample}_R2.fastq.gz",
+            host_fa="host/{host_acc}.fa"
+
+    output: temp("host/{host_acc}/{sample}.bam")
+
+    threads: config['threads']
+
+    shell:
+        """
+        bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} | samtools sort -n -O BAM -o {output}
+        """
+
+#rule get_mapped_reads:
+#    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+#    input: "host/{filename}_{sample}.bam"
+
+#    output: "host/{filename}_{sample}_mapped.bam"
+
+#    shell: "samtools view -b -F 4 {input} | samtools sort -O BAM -o {output}"
+
+rule get_unmapped_reads:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: "host/{host_acc}/{sample}.bam"
+
+    output: "host/{host_acc}/unmapped/{sample}.bam"
+
+    shell: "samtools view -b -f 4 {input} > {output}"
+
+rule bam_to_fastq:
+    conda: pipeline_path + "envs/bedtools.yml"
+
+    input: "host/{host_acc}/unmapped/{sample}.bam"
+
+    output: "host/{host_acc}/unmapped/{sample}_R1.fq","host/{host_acc}/unmapped/{sample}_R2.fq"
+
+    shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"

@@ -1,6 +1,14 @@
 #mandatory, one of them or both
 local_samples: local_samples.tsv
 
+#Host filtering:
+
+reference_genome: {'host':'human','filename':'GCA_000001405.28_GRCh38.p13'}
+
+indexing_mem: 25000000
+
+threads: 8
+
 #assembly
 minimum_quality_base: 28
 minimum_read_length: 50
@@ -22,3 +30,4 @@ kaju_database: /home/tpillone/work/projets/dev/2018_11_annotation_pipeline/datab
 # virulence factor search
 virulence_database: databases/virulence/sqlite_db/virulence.db
 virulence_fasta: databases/virulence/merged/virulence_db_nr.faa
+

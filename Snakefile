@@ -24,6 +24,8 @@ rule homology_search:
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
 
+
+
 # general
 include: "rules/logging.rules"
 
@@ -37,6 +39,7 @@ include: "rules/QC/qualimap.rules"
 include: "rules/QC/quast.rules"
 include: "rules/QC/fastqc.rules"
 include: "rules/QC/trimmomatic.rules"
+include: "rules/QC/decontam_reads.rules"
 
 # metagenomic assembly
 include: "rules/assembly_and_binning/quality_check.rules"
