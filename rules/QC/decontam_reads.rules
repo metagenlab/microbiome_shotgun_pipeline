@@ -1,8 +1,6 @@
 
 rule all_decontam:
-    input: expand("host/{host_acc}/unmapped/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
-
-
+    input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
 
 rule decompress_reference_genome:
     input: "host/{host_acc}.fna.gz"
@@ -57,15 +55,16 @@ rule get_unmapped_reads:
 
     input: "host/{host_acc}/{sample}.bam"
 
-    output: "host/{host_acc}/unmapped/{sample}.bam"
+    output: "unmapped/{host_acc}/{sample}.bam"
 
     shell: "samtools view -b -f 4 {input} > {output}"
 
 rule bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
 
-    input: "host/{host_acc}/unmapped/{sample}.bam"
+    input: "unmapped/{host_acc}/{sample}.bam"
 
-    output: "host/{host_acc}/unmapped/{sample}_R1.fq","host/{host_acc}/unmapped/{sample}_R2.fq"
+    output: "unmapped/{host_acc}/{sample}_R1.fq",
+            "unmapped/{host_acc}/{sample}_R2.fq"
 
     shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"

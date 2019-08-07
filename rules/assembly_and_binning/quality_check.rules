@@ -51,7 +51,7 @@ rule execute_kaiju_proteins:
     conda:
         pipeline_path + "envs/kaiju.yml"
     params:
-        database_dir = config["kaju_database"],
+        database_dir = config["kaiju_database"],
     input:
         "samples/{sample}/annotation/{sample}.faa"
     output:
@@ -70,7 +70,7 @@ rule kaiju_add_phylum_names:
         "samples/{sample}/binning/kaiju/locus_phylum_taxonomy.tab",
     shell:
         '''
-         addTaxonNames -i {input[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum -o {output[0]}
+         addTaxonNames -i {input[0]} -t {config[kaiju_database]}nodes.dmp -n {config[kaiju_database]}names.dmp -r phylum -o {output[0]}
         '''
 
 # if config['meta'] != True:
@@ -83,7 +83,7 @@ rule kaiju_report_phylum:
         "samples/{sample}/binning/kaiju/report_phylum.txt",
     shell:
         '''
-        kaijuReport -i {input[0]} -o {output[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum
+        kaijuReport -i {input[0]} -o {output[0]} -t {config[kaiju_database]}nodes.dmp -n {config[kaiju_database]}names.dmp -r phylum
         '''
 
 

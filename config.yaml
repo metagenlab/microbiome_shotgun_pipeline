@@ -23,8 +23,9 @@ spades_kmer_sizes: 21,33,55,77,99,111,127
 minimum_contig_size: 500
 
 #taxonomy profiling
-kaju_database: /home/tpillone/work/projets/dev/2018_11_annotation_pipeline/databases/kaiju/progenomes/
-
+kaiju_database: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/progenomes
+nodes_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/nodes.dmp
+names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/names.dmp
 #metagenomic profiling
 
 # virulence factor search

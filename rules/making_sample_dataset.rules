@@ -9,7 +9,9 @@ def get_read_naming_patterns(directory):
     result = []
     extension= {}
     for fname in os.listdir(directory):
-        if fname.endswith("fastq.gz") or fname.endswith("fq.gz") or fname.endswith("fastq") or fname.endswith("fq"):
+        if  fname.endswith("fastq") or fname.endswith("fq"):
+            raise(IOError("Input reads should be gzipped!!!"))
+        if fname.endswith("fastq.gz") or fname.endswith("fq.gz"): #or fname.endswith("fastq") or fname.endswith("fq"):
             regex_str = '(_L0+[1-9]+)?_(R)?(1|2)(\.|_)' #regex for finding R1 and R2, if L001 is present before, it is also included
             regex = re.compile(regex_str)
             ext = re.search(regex, fname)
