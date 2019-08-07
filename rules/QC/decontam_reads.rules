@@ -34,7 +34,7 @@ rule align_reads_to_reference_genome:
 
     output: temp("host/{host_acc}/{sample}.bam")
 
-    threads: 8
+    threads: 20
 
     shell:
         """
