@@ -23,5 +23,6 @@ rule classification_summary:
 
     params: nodes=config["nodes_dmp"],names=config["names_dmp"]
 
-    shell: "kaiju2table -t {params.nodes} -n {params.names} -r genus -o {output} {input}"
+    shell: "kaiju2table -t {params.nodes} -n {params.names} -r species -l superkingdom,phylum,class,order,family,genus,species -o {output} {input}"
+
 
