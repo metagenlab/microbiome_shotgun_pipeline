@@ -1,2 +1,16 @@
 rule all_kraken2:
     input: expand("kraken2/{sample}.tsv",sample=list(read_naming.keys()))
+
+rule kraken2_on_paired_reads:
+    conda: pipeline_path + "envs/kraken2.yml"
+
+    input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",host_acc=config['reference_genome']['filename'] \
+                  ,rp=['1','2'],sample=list(read_naming.keys()))
+
+    output: "kraken2/{sample}/cseqs_1.fq","kraken2/{sample}/cseqs_2.fq"
+
+    params: threads=20, db_path=config["kraken2_database"]
+
+    shell: "kraken2  --db {params.db_path} --threads {params.threads} --paired \
+            --classified-out kraken2/{{sample}}/cseqs#.fq {input[0]} {input[1]}"
+
