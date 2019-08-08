@@ -1,0 +1,2 @@
+rule all_kraken2:
+    input: expand("kraken2/{sample}.tsv",sample=list(read_naming.keys()))
