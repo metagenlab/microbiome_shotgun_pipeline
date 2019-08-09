@@ -6,4 +6,4 @@ rule all_PathseqDB:
 rule download_data_from_ftp:
     output: "PathseqDB/{filename}"
 
-    shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{{filename}} {input} -P {output}"
+    shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{filename} {input} -P {output}"
