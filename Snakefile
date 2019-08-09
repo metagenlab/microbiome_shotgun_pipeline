@@ -51,6 +51,7 @@ include: "rules/assembly_and_binning/binning.rules"
 # database setup
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/mmseqs2.smk"
+include: "rules/databases/Pathseq/Pathseq.rules"
 
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
