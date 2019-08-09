@@ -1,9 +1,10 @@
 rule all_PathseqDB:
-    input: expand("PathseqDB/{filename}",\
-                  filename=["pathseq_host.tar.gz","pathseq_microbe.tar.gz",\
-                            "pathseq_microbe_list.txt","pathseq_taxonomy.tar.gz"])
+    input: "PathseqDB/pathseq_host.tar.gz",
+           "PathseqDB/pathseq_microbe.tar.gz",
+           "PathseqDB/pathseq_microbe_list.txt",
+           "PathseqDB/pathseq_taxonomy.tar.gz"
 
 rule download_data_from_ftp:
     output: "PathseqDB/{filename}"
 
-    shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{filename} {input} -P {output}"
+    shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename} {input} -P {output}"
