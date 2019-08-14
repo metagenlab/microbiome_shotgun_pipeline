@@ -1,10 +1,14 @@
 rule all_PathseqDB:
-    input: "PathseqDB/pathseq_host.bfi",
+    input: "PathseqDB/pathseq_host.fa.fai",
+           "PathseqDB/pathseq_host.fa",
+           "PathseqDB/pathseq_host.bfi",
            "PathseqDB/pathseq_host.fa.img",
+           "PathseqDB/pathseq_host.dict",
+           "PathseqDB/pathseq_microbe.fa.fai",
            "PathseqDB/pathseq_microbe.fa",
            "PathseqDB/pathseq_microbe.fa.img",
            "PathseqDB/pathseq_microbe.dict",
-           "Pathseq/pathseq_taxonomy.db"
+           "PathseqDB/pathseq_taxonomy.db"
 
 
 rule download_data_from_ftp:
@@ -15,23 +19,23 @@ rule download_data_from_ftp:
 rule decompress_host_data:
     input: "PathseqDB/pathseq_host.tar.gz"
 
-    output: "PathseqDB/pathseq_host.bfi",
-            "PathseqDB/pathseq_host.fa.img"
+    output: "PathseqDB/pathseq_host.{extension}"
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
 rule decompress_microbe_data:
     input: "PathseqDB/pathseq_microbe.tar.gz"
 
-    output: "PathseqDB/pathseq_microbe.fa",
-            "PathseqDB/pathseq_microbe.fa.img",
-            "PathseqDB/pathseq_microbe.dict"
+    output: "PathseqDB/pathseq_microbe.{extension}"
+
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
 rule decompress_taxonomy_data:
     input: "PathseqDB/pathseq_taxonomy.tar.gz"
 
-    output: "Pathseq/pathseq_taxonomy.db"
+    output: "PathseqDB/pathseq_taxonomy.db"
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
+
+
