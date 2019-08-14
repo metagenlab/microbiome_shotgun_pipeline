@@ -60,4 +60,5 @@ include: "rules/protein_abundance/calculate_RPKM.rules"
 #taxonomy profiling
 #kaiju
 include: "rules/taxonomy_profiling/kaiju.rules"
-include: "rules/taxonomy_profiling/kraken2.rules"
+#include: "rules/taxonomy_profiling/kraken2.rules"
+include: "rules/taxonomy_profiling/Pathseq.rules"
