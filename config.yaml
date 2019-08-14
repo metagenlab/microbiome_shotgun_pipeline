@@ -28,6 +28,14 @@ nodes_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progeno
 names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/names.dmp
 ##Kraken2
 kraken2_database: path/to/DB
+
+#Pathseq
+Pathseq_database: path/to/DB
+kmer_size: 31
+kmer_mask: 16
+#K-mer masking allows mismatches to occur at one or more specified positions.
+#Masking the middle base is recommended to enhance host read detection. (see PathSeqBuildKmers doc)
+
 #metagenomic profiling
 
 # virulence factor search
