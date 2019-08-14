@@ -12,16 +12,26 @@ rule download_data_from_ftp:
 
     shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P PathseqDB"
 
-rule decompress_data:
-    input: "PathseqDB/pathseq_host.tar.gz",
-           "PathseqDB/pathseq_microbe.tar.gz",
-           "PathseqDB/pathseq_taxonomy.tar.gz"
+rule decompress_host_data:
+    input: "PathseqDB/pathseq_host.tar.gz"
 
     output: "PathseqDB/pathseq_host.bfi",
-            "PathseqDB/pathseq_host.fa.img",
-            "PathseqDB/pathseq_microbe.fa",
+            "PathseqDB/pathseq_host.fa.img"
+
+    shell: "tar -I pigz -xvf {input} -C PathseqDB"
+
+rule decompress_microbe_data:
+    input: "PathseqDB/pathseq_microbe.tar.gz"
+
+    output: "PathseqDB/pathseq_microbe.fa",
             "PathseqDB/pathseq_microbe.fa.img",
-            "PathseqDB/pathseq_microbe.dict",
-            "Pathseq/pathseq_taxonomy.db"
+            "PathseqDB/pathseq_microbe.dict"
+
+    shell: "tar -I pigz -xvf {input} -C PathseqDB"
+
+rule decompress_taxonomy_data:
+    input: "PathseqDB/pathseq_taxonomy.tar.gz"
+
+    output: "Pathseq/pathseq_taxonomy.db"
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
