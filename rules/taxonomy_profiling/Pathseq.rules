@@ -1,5 +1,5 @@
 rule all_Pathseq:
-    input: expand("Pathseq/output/{sample}/scores.txt",sample=list(read_naming.keys()))
+    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
 
 rule untrimmed_fastq_to_bam:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
@@ -7,7 +7,7 @@ rule untrimmed_fastq_to_bam:
     input: r1="samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
            r2="samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
 
-    output: "Pathseq/{sample}.bam"
+    output: "Pathseq/{sample}/input_reads.bam"
 
     shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample}"
 
@@ -26,18 +26,18 @@ rule build_host_kmer:
 rule classify_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: bam="Pathseq/{sample}.bam",
+    input: bam="Pathseq/{sample}/input_reads.bam",
            host_kmer="PathseqDB/pathseq_host.bfi",
-           host_ind="PathseqDB/pathseq_host.fa.img",
+           host_bwa="PathseqDB/pathseq_host.fa.img",
            microbe_fa="PathseqDB/pathseq_microbe.fa",
-           microbe_ind="PathseqDB/pathseq_microbe.fa.img",
+           microbe_bwa="PathseqDB/pathseq_microbe.fa.img",
            microbe_dict="PathseqDB/pathseq_microbe.dict",
            tax_db="PathseqDB/pathseq_taxonomy.db"
 
-    output: score_out="Pathseq/output/{sample}/scores.txt",
-            bam_out="Pathseq/output/{sample}/output_reads.bam",
-            filter_met="Pathseq/output/{sample}/filter_metrics.txt",
-            score_met="Pathseq/output/{sample}/score_metrics.txt"
+    output: score_out="Pathseq/{sample}/output/scores.txt",
+            bam_out="Pathseq/{sample}/output/output_reads.bam",
+            filter_met="Pathseq/{sample}/output/filter_metrics.txt",
+            score_met="Pathseq/{sample}/output/score_metrics.txt"
 
     params: min_clip_len=config["min_clip_len"],
             min_score=config["min_score_identity"],
@@ -49,8 +49,8 @@ rule classify_reads:
         """
         gatk PathSeqPipelineSpark --input {input.bam} \
                                   --kmer-file {input.host_kmer} \
-                                  --filter-bwa-image {input.host_ind} \
-                                  --microbe-bwa-image {input.microbe_ind} \
+                                  --filter-bwa-image {input.host_bwa} \
+                                  --microbe-bwa-image {input.microbe_bwa} \
                                   --microbe-fasta {input.microbe_fa} \
                                   --taxonomy-file {input.tax_db} \
                                   --min-clipped-read-length {params.min_clip_len} \
