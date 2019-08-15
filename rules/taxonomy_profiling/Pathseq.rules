@@ -45,6 +45,9 @@ rule classify_reads:
 
     threads: 32
 
+    log:
+        logging_folder+"Pathseq/{sample}/logs/PathseqPipelineSpark.log"
+
     shell:
         """
         gatk PathSeqPipelineSpark --input {input.bam} \
