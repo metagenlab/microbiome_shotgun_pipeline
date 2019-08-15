@@ -11,12 +11,12 @@ rule all_PathseqDB:
            "PathseqDB/pathseq_taxonomy.db"
 
 
-rule download_data_from_ftp:
+rule download_Pathseq_DB_from_ftp:
     output: "PathseqDB/{filename}.gz",
 
     shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P PathseqDB"
 
-rule decompress_host_data:
+rule decompress_host_DB:
     input: "PathseqDB/pathseq_host.tar.gz"
 
     output: "PathseqDB/pathseq_host.fa.fai",
@@ -27,7 +27,7 @@ rule decompress_host_data:
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
-rule decompress_microbe_data:
+rule decompress_microbe_DB:
     input: "PathseqDB/pathseq_microbe.tar.gz"
 
     output: "PathseqDB/pathseq_microbe.fa.fai",
@@ -38,7 +38,7 @@ rule decompress_microbe_data:
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
-rule decompress_taxonomy_data:
+rule decompress_taxonomy_DB:
     input: "PathseqDB/pathseq_taxonomy.tar.gz"
 
     output: "PathseqDB/pathseq_taxonomy.db"
