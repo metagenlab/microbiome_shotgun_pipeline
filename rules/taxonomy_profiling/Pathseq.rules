@@ -47,18 +47,18 @@ rule classify_reads:
 
     shell:
         """
-        gatk PathSeqPipelineSpark --input {input.bam} /
-                                  --kmer-file {input.host_kmer} /
-                                  --filter-bwa-image {input.host_ind} /
-                                  --microbe-bwa-image {input.microbe_ind} /
-                                  --microbe-fasta {input.microbe_fa} /
-                                  --taxonomy-file {input.tax_db} /
-                                  --min-clipped-read-length {params.min_clip_len} /
-                                  --min-score-identity {params.min_score} /
-                                  --identity-margin {params.margin} /
-                                  --scores-output {output.score_out} /
-                                  --output {output.score_out} /
-                                  --filter-metrics {output.filter_met} /
+        gatk PathSeqPipelineSpark --input {input.bam} \
+                                  --kmer-file {input.host_kmer} \
+                                  --filter-bwa-image {input.host_ind} \
+                                  --microbe-bwa-image {input.microbe_ind} \
+                                  --microbe-fasta {input.microbe_fa} \
+                                  --taxonomy-file {input.tax_db} \
+                                  --min-clipped-read-length {params.min_clip_len} \
+                                  --min-score-identity {params.min_score} \
+                                  --identity-margin {params.margin} \
+                                  --scores-output {output.score_out} \
+                                  --output {output.score_out} \
+                                  --filter-metrics {output.filter_met} \
                                   --score-metrics {output.score_met}
         """
 
