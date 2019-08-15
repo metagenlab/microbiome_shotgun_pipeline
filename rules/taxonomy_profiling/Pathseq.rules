@@ -7,9 +7,12 @@ rule untrimmed_fastq_to_bam:
     input: r1="samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
            r2="samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
 
+    log:
+        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+
     output: "Pathseq/{sample}/input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample}"
+    shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} 2> {log}"
 
 rule build_host_kmer:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
@@ -46,7 +49,7 @@ rule classify_reads:
     threads: 32
 
     log:
-        logging_folder+"Pathseq/{sample}/logs/PathseqPipelineSpark.log"
+        logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
     shell:
         """
@@ -60,9 +63,9 @@ rule classify_reads:
                                   --min-score-identity {params.min_score} \
                                   --identity-margin {params.margin} \
                                   --scores-output {output.score_out} \
-                                  --output {output.score_out} \
+                                  --output {output.bam_out} \
                                   --filter-metrics {output.filter_met} \
-                                  --score-metrics {output.score_met}
+                                  --score-metrics {output.score_met} 2> {log}
         """
 
 
