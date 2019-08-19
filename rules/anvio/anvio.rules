@@ -1,7 +1,21 @@
 
+
 rule anvio_contig_database:
     input:
         scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    output:
+        "samples/{sample}/anvio/contigs_db/contigs-fixed.fasta"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-script-reformat-fasta {input.scaffolds} -o {output[0]} -l 1000 --simplify-names
+        """
+
+
+rule anvio_contig_database:
+    input:
+        scaffolds = "samples/{sample}/anvio/contigs_db/contigs-fixed.fasta",
     output:
         "samples/{sample}/anvio/contigs_db/contigs.db"
     log:
@@ -35,3 +49,4 @@ rule anvio_contig_stats:
         """
         anvi-display-contigs-stats {input[0]} > {output[0]}
         """
+
