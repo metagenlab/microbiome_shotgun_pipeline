@@ -41,7 +41,7 @@ rule assemble_metagenome_corrected_paired_reads_with_spades:
     threads:
         16
     resources:
-        mem_gb=120
+        mem_gb=160
     conda:
         pipeline_path + "envs/spades.yml"
     input:
