@@ -1,5 +1,6 @@
 rule all_Pathseq:
-    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
+    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
+           expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
 
 rule untrimmed_fastq_to_bam:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
@@ -68,5 +69,18 @@ rule classify_reads:
                                   --score-metrics {output.score_met} 2> {log}
         """
 
+rule Pathseq_to_krona:
+    input: "Pathseq/{sample}/output/scores.txt"
 
+    output: temp("Pathseq/{sample}/output/krona.txt")
 
+    script: "scripts/Pathseq2Krona.py"
+
+rule krona_plot:
+    conda: pipeline_path + "envs/krona.yml"
+    
+    input: "Pathseq/{sample}/output/krona.txt"
+
+    output: "Pathseq/{sample}/output/krona.html"
+
+    shell: "ktImportText -o {output} {input}"
