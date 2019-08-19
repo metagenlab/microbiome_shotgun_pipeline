@@ -53,7 +53,7 @@ rule execute_kaiju_proteins:
     params:
         database_dir = config["kaju_database"],
     input:
-        "samples/{sample}/annotation/{sample}.faa"
+        "samples/{sample}/gene_call/{sample}.faa"
     output:
          "samples/{sample}/binning/kaiju/kaiju_output.txt",
     shell:

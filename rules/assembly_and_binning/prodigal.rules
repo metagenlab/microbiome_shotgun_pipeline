@@ -4,9 +4,9 @@ rule orfing_with_prodigal:
     input:
         contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:
-        "samples/{sample}/annotation/{sample}.faa",
+        "samples/{sample}/gene_call/{sample}.faa",
     log:
-        "samples/{sample}/annotation/prodigal/{sample}.log",
+        "samples/{sample}/gene_call/prodigal/{sample}.log",
     shell:
         """
         prodigal -a {output[0]} -i {input[contigs]} -m -o 'temp.gbk' -p 'single' -q -f 'gbk'
