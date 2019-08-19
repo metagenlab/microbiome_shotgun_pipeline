@@ -15,7 +15,7 @@ rule correct_error_paired_reads_with_spades:
         logging_folder + "samples/{sample}/logs/spades_read_correction.txt"
     shell:
          """
-         spades.py --only-error-correction -1 {input[R1_trimmed]} -2 {input[R2_trimmed]} -o $(dirname $(dirname {output[0]})) --threads {threads} -m 30 > {log}
+         spades.py --only-error-correction -1 {input[R1_trimmed]} -2 {input[R2_trimmed]} -o $(dirname $(dirname {output[0]})) --threads {threads} > {log}
          """
 
 rule correct_error_single_reads_with_spades:
