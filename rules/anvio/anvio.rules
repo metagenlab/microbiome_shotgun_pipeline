@@ -1,0 +1,37 @@
+
+rule anvio_contig_database:
+    input:
+        scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    output:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-gen-contigs-database -f {input.scaffolds} -o {output[0]} -n 'contigs datbase'
+        """
+
+rule anvio_run_hmms:
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    output:
+        "samples/{sample}/anvio/hmm.log"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-run-hmms -c {input[0]} > {output[0]}
+        """
+
+rule anvio_contig_stats:
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+        "samples/{sample}/anvio/hmm.log"
+    output:
+        "samples/{sample}/anvio/contigs_db/statistics.tab"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-display-contigs-stats {input[0]} > {output[0]}
+        """
