@@ -50,3 +50,15 @@ rule anvio_contig_stats:
         anvi-display-contigs-stats {input[0]} > {output[0]}
         """
 
+
+rule anvio_run_cog:
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    output:
+        "samples/{sample}/anvio/cog.log"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-run-ncbi-cogs -c {input[0]} > {output[0]}
+        """
