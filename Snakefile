@@ -21,6 +21,11 @@ rule homology_search:
        expand("samples/{sample}/mmseq_search/virulence/VF_db/best_hits.m8", sample = list(read_naming.keys())),
        "report/mmseq_search/virulence/VF_db/RPKM.db"
 
+rule anvio:
+    input:
+        expand("samples/{sample}/anvio/contigs_db/contigs.db", sample = list(read_naming.keys())),
+
+
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
 
