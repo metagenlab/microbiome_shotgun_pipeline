@@ -1,3 +1,4 @@
+db_path=config["pathseq_database"]
 rule all_PathseqDB:
     input: "PathseqDB/pathseq_host.fa.fai",
            "PathseqDB/pathseq_host.fa",
@@ -12,9 +13,16 @@ rule all_PathseqDB:
 
 
 rule download_Pathseq_DB_from_ftp:
-    output: "PathseqDB/{filename}.gz",
+    output: "{filename}.gz",
 
-    shell: "wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P PathseqDB"
+    params: dir=db_path
+
+    shell:
+        """
+        cd {params.dir}
+        mkdir PathseqDB
+        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P PathseqDB
+        """
 
 rule decompress_host_DB:
     input: "PathseqDB/pathseq_host.tar.gz"
