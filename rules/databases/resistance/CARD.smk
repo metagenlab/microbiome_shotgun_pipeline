@@ -28,7 +28,6 @@ rule extract_CARD:
     shell:
         """
         tar -xvf {input[0]} -C reference_databases/resistance
-        tar -xvzf {input[1]} -C reference_databases/resistance
-        #mv reference_databases/resistance/card-data/* reference_databases/resistance/
+        tar -xvf {input[1]} -C reference_databases/resistance
         mv reference_databases/resistance/protein_fasta_protein_homolog_model.fasta reference_databases/resistance/CARD_protein_homolog_model.faa
         """
