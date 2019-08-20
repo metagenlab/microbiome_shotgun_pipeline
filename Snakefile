@@ -26,7 +26,8 @@ rule homology_search:
 
 rule anvio:
     input:
-        expand("samples/{sample}/anvio/contigs_db/contigs.db", sample = list(read_naming.keys())),
+        expand("samples/{sample}/assembly/spades/large_contigs_edit.fasta", sample = list(read_naming.keys()))
+        #expand("samples/{sample}/anvio/contigs_db/contigs.db", sample = list(read_naming.keys())),
 
 
 pipeline_path = workflow.basedir + '/'
