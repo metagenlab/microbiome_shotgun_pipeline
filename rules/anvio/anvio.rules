@@ -1,6 +1,8 @@
 
 
 rule anvio_contig_database:
+    conda:
+        pipeline_path + "envs/anvio.yml"
     input:
         scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     output:
@@ -14,6 +16,8 @@ rule anvio_contig_database:
 
 
 rule anvio_run_hmms:
+    conda:
+        pipeline_path + "envs/anvio.yml"
     input:
         "samples/{sample}/anvio/contigs_db/contigs.db"
     output:
@@ -26,6 +30,8 @@ rule anvio_run_hmms:
         """
 
 rule anvio_contig_stats:
+    conda:
+        pipeline_path + "envs/anvio.yml"
     input:
         "samples/{sample}/anvio/contigs_db/contigs.db"
         "samples/{sample}/anvio/hmm.log"
@@ -40,6 +46,8 @@ rule anvio_contig_stats:
 
 
 rule anvio_run_cog:
+    conda:
+        pipeline_path + "envs/anvio.yml"
     input:
         "samples/{sample}/anvio/contigs_db/contigs.db"
     output:
