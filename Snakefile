@@ -56,6 +56,7 @@ include: "rules/assembly_and_binning/binning.rules"
 
 # database setup
 include: "rules/databases/virulence/virulence.smk"
+include: "rules/databases/resistance/CARD.smk"
 include: "rules/databases/mmseqs2.smk"
 
 # taxonomy abundance
