@@ -19,7 +19,10 @@ rule databases_setup:
 rule homology_search:
    input:
        expand("samples/{sample}/mmseq_search/virulence/VF_db/best_hits.m8", sample = list(read_naming.keys())),
-       "report/mmseq_search/virulence/VF_db/RPKM.db"
+       "report/mmseq_search/virulence/VF_db/RPKM.db",
+       expand("samples/{sample}/mmseq_search/resistance/CARD_protein_variant_model/best_hits.m8", sample = list(read_naming.keys())),
+       "report/mmseq_search/resistance/CARD_protein_variant_model/RPKM.db",
+
 
 rule anvio:
     input:
