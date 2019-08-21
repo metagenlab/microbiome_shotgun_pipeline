@@ -9,4 +9,5 @@ dependencies:
  - r-svglite = 1.2.2 
  - r-dplyr = 0.8.0.1 
  - r-tibble = 2.1.1
- - icu = 64.2
+ - icu = 58.*
+ - lxml
