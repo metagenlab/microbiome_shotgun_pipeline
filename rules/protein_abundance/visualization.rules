@@ -1,0 +1,17 @@
+
+rule plot_virulence:
+    conda:
+        '../../envs/r-plots.yml'
+    params:
+        config["local_samples"]
+    input:
+        "report/mmseq_search/{data_type}/{db_name}/RPKM.db"
+    output:
+        "report/mmseq_search/{data_type}/{db_name}/plots/VF_counts.svg"
+        "report/mmseq_search/{data_type}/{db_name}/plots/taxonomy_Evry_WWTP.svg"
+        "report/mmseq_search/{data_type}/{db_name}/plots/distribution_rpkm.svg"
+        "report/mmseq_search/{data_type}/{db_name}/plots/distribution_counts.svg"
+        "report/mmseq_search/{data_type}/{db_name}/plots/heatmap.pdf"
+        "report/mmseq_search/{data_type}/{db_name}/plots/log2_treated_vs_untreated.pdf"
+        "report/mmseq_search/{data_type}/{db_name}/plots/RPKM_vs_log2_change.pdf"
+    script: "scripts/virulence_visualization.R"
