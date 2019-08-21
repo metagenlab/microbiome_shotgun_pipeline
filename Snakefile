@@ -22,6 +22,7 @@ rule homology_search:
        "report/mmseq_search/virulence/VF_db/annotation.log",
        expand("samples/{sample}/mmseq_search/resistance/CARD_protein_homolog_model/best_hits.m8", sample = list(read_naming.keys())),
        "report/mmseq_search/resistance/CARD_protein_homolog_model/annotation.log",
+       "report/mmseq_search/virulence/VF_db/plots/VF_counts.svg",
 
 
 rule anvio:
