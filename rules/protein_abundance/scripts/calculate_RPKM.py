@@ -7,9 +7,6 @@ import pandas
 conn = sqlite3.connect(snakemake.output[0])
 cursor = conn.cursor()
 
-sql = 'attach "%s" as virulencedb' % snakemake.input["virulence_database"]
-cursor.execute(sql)
-
 sample_table = snakemake.params[0]
 
 all_samples = pandas.read_csv(sample_table, sep="\t", index_col=0)
