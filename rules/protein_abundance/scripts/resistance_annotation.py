@@ -43,7 +43,7 @@ for accession in card_accession_list:
         # macrolide antibiotic;fluoroquinolone antibiotic;aminoglycoside antibiotic;lincosamide antibiotic;carbapenem;fosfomycin;cephalosporin;glycylcycline;bicyclomycin;penam;nucleoside antibiotic;tetracycline antibiotic;peptide antibiotic;acridine dye;oxazolidinone antibiotic;rifamycin antibiotic;diaminopyrimidine antibiotic;phenicol antibiotic;isoniazid;penem;benzalkonium chloride;rhodamine;antibacterial free fatty acids;nitroimidazole antibiotic
         #print(drug_class)
         #print(resistance_mechanism)
-    exept: 
+    except: 
         print("problem with", aro_accession)
         problems+=1
 print(problems)
