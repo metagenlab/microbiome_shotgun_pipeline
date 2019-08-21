@@ -10,5 +10,5 @@ dependencies:
  - r-svglite
  - r-dplyr
  - r-tibble
- - icu = 58.*
+ - icu
  - lxml
