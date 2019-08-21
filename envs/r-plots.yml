@@ -1,0 +1,11 @@
+channels:
+ - r
+ - conda-forge
+dependencies:
+ - r-ggplot2 = 3.1.1
+ - r-reshape2 =  1.4.3
+ - r-rsqlite = 2.1.1
+ - r-gplots = 3.0.1.1 
+ - r-svglite = 1.2.2 
+ - r-dplyr = 0.8.0.1 
+ - r-tibble = 2.1.1
