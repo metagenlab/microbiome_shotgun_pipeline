@@ -29,11 +29,15 @@ sql = 'select distinct accession from sequence_counts'
 cursor.execute(sql)
 card_accession_list = [i[0] for i in cursor.fetchall()]
 
-print(aro)
-problems = 0
-total = 0
+sql1 = 'create table accession2aro (protein_accession varchar(200), aro_accession varchar(200), aro_name varchar(200), aro_description TEXT, resistance_mechanism TEXT, AMR_family TEXT)'
+cursor.execute(sql1)
+sql2 = 'create table aro_accession2drug_class (aro_accession varchar(200), drug_class TEXT)'
+cursor.execute(sql2)
+
+aro_accession2drug_class_list = {}
+
+sql_template = 'insert into accession2aro values (?, ?, ?, ?, ?, ?)'
 for accession in card_accession_list:
-    total+=1
     aro_accession = aro_index.loc[accession, "ARO Accession"]
     aro_name = aro.loc[aro_accession, "Name"]
     aro_description = aro.loc[aro_accession, "Description"]
@@ -52,4 +56,21 @@ for accession in card_accession_list:
         resistance_mechanism = aro_categories_index.loc[alternative_sequences[0], "Resistance Mechanism"]
         AMR_family = aro_categories_index.loc[alternative_sequences[0], "AMR Gene Family"]
         drug_class = aro_categories_index.loc[alternative_sequences[0], "Drug Class"]
-print("ok")
+    if aro_accession not in aro_accession2drug_class_list:
+        aro_accession2drug_class_list[aro_accession] = drug_class.split(";")
+    
+    cursor.execute(sql_template, (accession,
+                                  aro_accession,
+                                  aro_name,
+                                  aro_description,
+                                  resistance_mechanism,
+                                  AMR_family))
+
+sql_template_2 = 'insert into aro_accession2drug_class values (?, ?)'
+
+for aro in aro_accession2drug_class_list:
+    for drug_class in aro_accession2drug_class_list[aro]:
+        cursor.execute(sql_template_2, (aro, drug_class))
+
+conn.commit()   
+print("ok--")
