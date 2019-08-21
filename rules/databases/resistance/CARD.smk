@@ -25,6 +25,9 @@ rule extract_CARD:
     output:
         "reference_databases/resistance/CARD_protein_homolog_model.faa",
         "reference_databases/resistance/card.json",
+        "reference_databases/resistance/aro_index.tsv",
+        "reference_databases/resistance/aro.tsv",
+        "reference_databases/resistance/aro_categories_index.tsv",
     shell:
         """
         tar -xvf {input[0]} -C reference_databases/resistance

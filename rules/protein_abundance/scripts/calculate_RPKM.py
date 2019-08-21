@@ -67,6 +67,7 @@ for sample in sample2sequence_accession2count:
         # multiply protein length by 3 to get gene length
         seq_length_nucl = record2aa_sequence_length[sequence_accession]
         reads_millions = sample2read_count[sample_id]
+        
         # multiply library size by gene length
         denominat = seq_length_nucl * reads_millions
 

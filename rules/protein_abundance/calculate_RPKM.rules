@@ -29,11 +29,22 @@ rule calculate_RPKM:
 rule add_annotation_virulence:
     conda:
         '../../envs/biopython-pandas.yml'
-    params:
-        config["local_samples"]
     input:
         virulence_database = "databases/virulence/sqlite_db/virulence.db",
-        RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db"
+        RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db",
     output:
         "report/mmseq_search/virulence/VF_db/annotation.log"
     script: "scripts/virulence_annotation.py"
+
+
+rule add_annotation_resistance:
+    conda:
+        '../../envs/biopython-pandas.yml'
+    input:
+        aro_index = "reference_databases/resistance/aro_index.tsv",
+        aro = "reference_databases/resistance/aro.tsv",
+        aro_categories_index = "reference_databases/resistance/aro_categories_index.tsv",
+        RPKM_database = "report/mmseq_search/resistance/CARD_protein_homolog_model/RPKM.db",
+    output:
+        "report/mmseq_search/resistance/CARD_protein_homolog_model/annotation.log"
+    script: "scripts/resistance_annotation.py"

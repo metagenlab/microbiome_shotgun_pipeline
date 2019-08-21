@@ -13,8 +13,6 @@ cursor.execute(sql)
 sql = 'create table uniparc_accession2genus (accession varchar(200), genus varchar(400))'
 cursor.execute(sql)
 
-sample_table = snakemake.params[0]
-
 uniparc_accession2silix_acc_and_consensus_annotation = {}
 sql = 'select uniparc_accession,silix_name,description from uniparc2silix_90 t1 inner join uniparc_consensus_annotation t2 on t1.uniparc_id=t2.uniparc_id;'
 
@@ -30,8 +28,6 @@ for row in cursor.execute(sql).fetchall():
         uniparc_accession2genus_list[row[0]] = [row[1]]
     else:
         uniparc_accession2genus_list[row[0]].append(row[1])
-
-all_samples = pandas.read_csv(sample_table, sep="\t", index_col=0)
 
 sql = 'create table uniparc_accession2annotation (accession varchar(200), silix_accession varchar(200), annotation TEXT)'
 
