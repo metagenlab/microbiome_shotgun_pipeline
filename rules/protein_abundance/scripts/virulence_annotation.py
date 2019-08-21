@@ -42,20 +42,26 @@ cursor.execute(sql,)
 # load data into database
 sql_template = 'insert into uniparc_accession2annotation values (?, ?, ?)'
 acc2genus_ok = []
-for sample in sample2sequence_accession2count:
 
-        silix_acc = uniparc_accession2silix_acc_and_consensus_annotation[sequence_accession][0]
-        description = uniparc_accession2silix_acc_and_consensus_annotation[sequence_accession][1]
+# get uniparc accession list
+sql = 'select distinct accession from sequence_counts'
+cursor.execute(sql)
+uniparc_accession_list = [i[0] for i in cursor.fetchall()]
+
+for uniparc_accession in uniparc_accession_list:
+
+        silix_acc = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][0]
+        description = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][1]
         
-        cursor.execute(sql_template, (sequence_accession,
+        cursor.execute(sql_template, (uniparc_accession,
                                       silix_acc,
                                       description))
 
-        if sequence_accession not in acc2genus_ok:
-            genus_list = uniparc_accession2genus_list[sequence_accession]
+        if uniparc_accession not in acc2genus_ok:
+            genus_list = uniparc_accession2genus_list[uniparc_accession]
             for genus in genus_list:
-                cursor.execute(sql_taxonomy, [sequence_accession, genus])
-            acc2genus_ok.append(sequence_accession)
+                cursor.execute(sql_taxonomy, [uniparc_accession, genus])
+            acc2genus_ok.append(uniparc_accession)
     conn.commit()
 
 # index sequence accession
