@@ -12,5 +12,3 @@ dependencies:
  - r-tibble
  - icu = 58.*
  - lxml
- - r-kernsmooth
- - libopenblas
