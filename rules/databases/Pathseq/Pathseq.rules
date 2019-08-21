@@ -13,7 +13,7 @@ rule all_PathseqDB:
 
 
 rule download_Pathseq_DB_from_ftp:
-    output: "{filename}.gz",
+    output: f"{db_path}/pathseq_{{filename}}.tar.gz",
 
     params: dir=db_path
 
