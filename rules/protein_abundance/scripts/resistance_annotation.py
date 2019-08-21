@@ -29,10 +29,12 @@ sql = 'select distinct accession from sequence_counts'
 cursor.execute(sql)
 card_accession_list = [i[0] for i in cursor.fetchall()]
 
+print(aro)
+
 for accession in card_accession_list:
     aro_accession = aro_index.loc[accession, "ARO Accession"]
     aro_name = aro[aro_accession, "Name"]
-    aro_description = aro[aro_accession, "Name"]
+    aro_description = aro[aro_accession, "Description"]
     resistance_mechanism = aro_categories_index[accession, "Resistance Mechanism"]
     AMR_family = aro_categories_index[accession, "AMR Gene Family"]
     drug_class = aro_categories_index[accession, "Drug Class"]
