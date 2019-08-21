@@ -5,7 +5,7 @@ import sqlite3
 import pandas
 
 # output
-o = open(snakemake.output[0], 'r')
+o = open(snakemake.output[0], 'w')
 
 conn = sqlite3.connect(snakemake.input["RPKM_database"])
 cursor = conn.cursor()
