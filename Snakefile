@@ -63,6 +63,7 @@ include: "rules/databases/mmseqs2.smk"
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
 include: "rules/protein_abundance/calculate_RPKM.rules"
+include: "rules/protein_abundance/visualization.rules"
 
 # anvio 
 include: "rules/anvio/anvio.rules"
