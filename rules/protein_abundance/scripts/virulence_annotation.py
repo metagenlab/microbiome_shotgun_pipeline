@@ -50,19 +50,19 @@ uniparc_accession_list = [i[0] for i in cursor.fetchall()]
 
 for uniparc_accession in uniparc_accession_list:
 
-        silix_acc = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][0]
-        description = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][1]
-        
-        cursor.execute(sql_template, (uniparc_accession,
-                                      silix_acc,
-                                      description))
+    silix_acc = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][0]
+    description = uniparc_accession2silix_acc_and_consensus_annotation[uniparc_accession][1]
+    
+    cursor.execute(sql_template, (uniparc_accession,
+                                    silix_acc,
+                                    description))
 
-        if uniparc_accession not in acc2genus_ok:
-            genus_list = uniparc_accession2genus_list[uniparc_accession]
-            for genus in genus_list:
-                cursor.execute(sql_taxonomy, [uniparc_accession, genus])
-            acc2genus_ok.append(uniparc_accession)
-    conn.commit()
+    if uniparc_accession not in acc2genus_ok:
+        genus_list = uniparc_accession2genus_list[uniparc_accession]
+        for genus in genus_list:
+            cursor.execute(sql_taxonomy, [uniparc_accession, genus])
+        acc2genus_ok.append(uniparc_accession)
+conn.commit()
 
 # index sequence accession
 sql_index_1 = 'create index acc3 on uniparc_accession2annotation (accession);'
