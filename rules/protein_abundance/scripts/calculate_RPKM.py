@@ -51,6 +51,7 @@ for sample in snakemake.input["sample_list"]:
                 sample2sequence_accession2count[sample_id][data[1]] += 1
 
 sql = 'create table sequence_counts (sample varchar(200), accession varchar(200), n_hits INTEGER, RPKM INTEGER, group_1 varchar(200), group_2 varchar (200)'
+cursor.execute()
 
 # load data into database
 sql_template = 'insert into sequence_counts values (?, ?, ?, ?, ?, ?)'
