@@ -5,7 +5,7 @@ rule plot_virulence:
     params:
         config["local_samples"]
     input:
-        "report/mmseq_search/{data_type}/{db_name}/RPKM.db"
+        "report/mmseq_search/virulence/VF_db/RPKM.db"
     output:
         "report/mmseq_search/virulence/VF_db/plots/VF_counts.svg",
         "report/mmseq_search/virulence/VF_db/plots/taxonomy_Evry_WWTP.svg",
