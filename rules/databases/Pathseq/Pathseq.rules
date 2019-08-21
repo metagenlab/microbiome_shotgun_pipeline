@@ -1,15 +1,15 @@
 db_path=config["pathseq_database"]
 rule all_PathseqDB:
-    input: "PathseqDB/pathseq_host.fa.fai",
-           "PathseqDB/pathseq_host.fa",
-           "PathseqDB/pathseq_host.bfi",
-           "PathseqDB/pathseq_host.fa.img",
-           "PathseqDB/pathseq_host.dict",
-           "PathseqDB/pathseq_microbe.fa.fai",
-           "PathseqDB/pathseq_microbe.fa",
-           "PathseqDB/pathseq_microbe.fa.img",
-           "PathseqDB/pathseq_microbe.dict",
-           "PathseqDB/pathseq_taxonomy.db"
+    input: f"{db_path}/pathseq_host.fa.fai",
+           f"{db_path}/pathseq_host.fa",
+           f"{db_path}/pathseq_host.bfi",
+           f"{db_path}/pathseq_host.fa.img",
+           f"{db_path}/pathseq_host.dict",
+           f"{db_path}/pathseq_microbe.fa.fai",
+           f"{db_path}/pathseq_microbe.fa",
+           f"{db_path}/pathseq_microbe.fa.img",
+           f"{db_path}/pathseq_microbe.dict",
+           f"{db_path}/pathseq_taxonomy.db"
 
 
 rule download_Pathseq_DB_from_ftp:
@@ -19,37 +19,35 @@ rule download_Pathseq_DB_from_ftp:
 
     shell:
         """
-        cd {params.dir}
-        mkdir PathseqDB
-        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P PathseqDB
+        wget ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/pathseq/{wildcards.filename}.gz -P {params.dir}
         """
 
 rule decompress_host_DB:
-    input: "PathseqDB/pathseq_host.tar.gz"
+    input: f"{db_path}/pathseq_host.tar.gz"
 
-    output: "PathseqDB/pathseq_host.fa.fai",
-            "PathseqDB/pathseq_host.fa",
-            "PathseqDB/pathseq_host.bfi",
-            "PathseqDB/pathseq_host.fa.img",
-            "PathseqDB/pathseq_host.dict"
+    output: f"{db_path}/pathseq_host.fa.fai",
+            f"{db_path}/pathseq_host.fa",
+            f"{db_path}/pathseq_host.bfi",
+            f"{db_path}/pathseq_host.fa.img",
+            f"{db_path}/pathseq_host.dict"
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
 rule decompress_microbe_DB:
-    input: "PathseqDB/pathseq_microbe.tar.gz"
+    input: f"{db_path}/pathseq_microbe.tar.gz"
 
-    output: "PathseqDB/pathseq_microbe.fa.fai",
-            "PathseqDB/pathseq_microbe.fa",
-            "PathseqDB/pathseq_microbe.fa.img",
-            "PathseqDB/pathseq_microbe.dict"
+    output: f"{db_path}/pathseq_microbe.fa.fai",
+            f"{db_path}/pathseq_microbe.fa",
+            f"{db_path}/pathseq_microbe.fa.img",
+            f"{db_path}/pathseq_microbe.dict"
 
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 
 rule decompress_taxonomy_DB:
-    input: "PathseqDB/pathseq_taxonomy.tar.gz"
+    input: f"{db_path}/pathseq_taxonomy.tar.gz"
 
-    output: "PathseqDB/pathseq_taxonomy.db"
+    output: f"{db_path}/pathseq_taxonomy.db"
 
     shell: "tar -I pigz -xvf {input} -C PathseqDB"
 

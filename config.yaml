@@ -30,7 +30,7 @@ names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progeno
 kraken2_database: path/to/DB
 
 #Pathseq
-pathseq_database: /media/data/databases/
+pathseq_database: /media/data/databases/PathseqDB
 kmer_size: 31
 kmer_mask: 16 #K-mer masking allows mismatches to occur at one or more specified positions.
               #Masking the middle base is recommended to enhance host read detection.(see PathSeqBuildKmers doc)
