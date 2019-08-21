@@ -4,6 +4,9 @@ from Bio import SeqIO
 import sqlite3
 import pandas
 
+# output
+o = open(snakemake.output, 'r')
+
 conn = sqlite3.connect(snakemake.input["RPKM_database"])
 cursor = conn.cursor()
 
@@ -68,3 +71,5 @@ sql_index_2 = 'create index acc2 on uniparc_accession2genus (accession);'
 cursor.execute(sql_index_2,)
 
 conn.commit()
+o.write("ok")
+o.close()

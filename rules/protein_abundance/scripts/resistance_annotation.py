@@ -5,6 +5,10 @@ from Bio import SeqIO
 import sqlite3
 import pandas
 
+# output
+
+o = open(snakemake.output, 'r')
+
 # ARO Accession
 # Model ID
 # Model Name
@@ -73,4 +77,5 @@ for aro in aro_accession2drug_class_list:
         cursor.execute(sql_template_2, (aro, drug_class))
 
 conn.commit()   
-print("ok--")
+o.write("ok")
+o.close()
