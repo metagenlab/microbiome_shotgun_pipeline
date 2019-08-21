@@ -13,3 +13,4 @@ dependencies:
  - icu = 58.*
  - lxml
  - r-kernsmooth
+ - libblas
