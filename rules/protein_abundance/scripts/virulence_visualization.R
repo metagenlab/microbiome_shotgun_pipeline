@@ -38,10 +38,14 @@ p <- p+ theme(axis.text.x = element_text(angle = 90))+ facet_grid(. ~ group_1, s
 
 ggsave(snakemake@output[["plot1"]], p, height=5, width=8)
 
+
+
 # PLOT 2
 pdf(snakemake@output[["plot1"]], height=9, width=5)
 for (i in unique(sample_table$group_1)) { 
-    res <- dbSendQuery(con, paste('select group_2,genus,count(*) as n from (select distinct sample,t1.accession,group_2,genus from sequence_counts t1 inner join uniparc_accession2genus t2 on t1.accession=t2.accession where group_1="', i ,'") A group by group_2,A.genus order by n DESC;'))
+    str <- paste('select group_2,genus,count(*) as n from (select distinct sample,t1.accession,group_2,genus from sequence_counts t1 inner join uniparc_accession2genus t2 on t1.accession=t2.accession where group_1="', i ,'") A group by group_2,A.genus order by n DESC;')
+    print(str)
+    res <- dbSendQuery(con, str)
     print("table")
     print(res)
     table_genus <- dbFetch(res)
@@ -58,3 +62,4 @@ for (i in unique(sample_table$group_1)) {
     p <- p + theme(axis.text.x = element_text(angle = 90))
     print(p)
 }
+dev.off()
