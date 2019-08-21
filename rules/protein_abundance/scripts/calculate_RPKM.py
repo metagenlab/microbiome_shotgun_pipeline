@@ -52,8 +52,12 @@ print(sample2read_count)
 records = SeqIO.parse(snakemake.input["reference_fasta"], 'fasta')
 record2aa_sequence_length = {}
 for record in records:
-    record2aa_sequence_length[record.name] = len(record.seq)
-
+    if '|' in record.id:
+        acc = record.id.split("|")[1]
+    else:
+        acc = record.id
+    record2aa_sequence_length[acc] = len(record.seq)
+print(record2aa_sequence_length)
 # get number of match for each sequence
 sample2sequence_accession2count = {}
 for sample in snakemake.input["sample_list"]:
