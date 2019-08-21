@@ -2,18 +2,29 @@ rule all_Pathseq:
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
            expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
 
+def get_path_list(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return expand("samples/%s/reads/raw/%s_R{n}.fastq.gz" % (original_names[wildcards.sample], original_names[wildcards.sample]), n=range(1,3))
+    else:
+        return "samples/%s/reads/raw/%s_single.fastq.gz" % (original_names[wildcards.sample], original_names[wildcards.sample])
+
+
 rule untrimmed_fastq_to_bam:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: r1="samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
-           r2="samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
+    input: get_path_list
 
     log:
         logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     output: "Pathseq/{sample}/input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} 2> {log}"
+    run:
+        if len(original_names[wildcards.sample])==2:
+            shell("gatk FastqToSam -F1 {input[0]} -F2 {input[1]} -O {output} -SM {wildcards.sample} 2> {log}")
+        else:
+            shell("gatk FastqToSam -F1 {input[0]} -O {output} -SM {wildcards.sample} 2> {log}")
 
 db_path=config["pathseq_database"]
 
@@ -22,7 +33,7 @@ rule build_host_kmer:
 
     input: "host/{host_acc}.fa"
 
-    output: f"{db_path}/custom/{host_acc}.bfi"
+    output: f"{db_path}/custom/{{host_acc}}.bfi"
 
     params: kmer_size=config["kmer_size"],kmer_mask=config["kmer_mask"]
 
