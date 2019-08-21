@@ -11,3 +11,4 @@ dependencies:
  - r-tibble = 2.1.1
  - icu = 58.*
  - lxml
+ - r-kernsmooth
