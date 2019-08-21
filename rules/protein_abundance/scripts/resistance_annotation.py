@@ -33,11 +33,11 @@ print(aro)
 
 for accession in card_accession_list:
     aro_accession = aro_index.loc[accession, "ARO Accession"]
-    aro_name = aro[aro_accession, "Name"]
-    aro_description = aro[aro_accession, "Description"]
-    resistance_mechanism = aro_categories_index[accession, "Resistance Mechanism"]
-    AMR_family = aro_categories_index[accession, "AMR Gene Family"]
-    drug_class = aro_categories_index[accession, "Drug Class"]
+    aro_name = aro.loc[aro_accession, "Name"]
+    aro_description = aro.loc[aro_accession, "Description"]
+    resistance_mechanism = aro_categories_index.loc[accession, "Resistance Mechanism"]
+    AMR_family = aro_categories_index.loc[accession, "AMR Gene Family"]
+    drug_class = aro_categories_index.loc[accession, "Drug Class"]
     print(accession)
     print(drug_class)
     print(resistance_mechanism)
