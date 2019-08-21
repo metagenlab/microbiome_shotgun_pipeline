@@ -7,7 +7,7 @@ import pandas
 
 # output
 
-o = open(snakemake.output, 'r')
+o = open(snakemake.output[0], 'r')
 
 # ARO Accession
 # Model ID
