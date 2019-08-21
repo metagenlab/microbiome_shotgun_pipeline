@@ -31,7 +31,9 @@ card_accession_list = [i[0] for i in cursor.fetchall()]
 
 print(aro)
 problems = 0
+total = 0
 for accession in card_accession_list:
+    total+=1
     aro_accession = aro_index.loc[accession, "ARO Accession"]
     aro_name = aro.loc[aro_accession, "Name"]
     aro_description = aro.loc[aro_accession, "Description"]
@@ -44,6 +46,6 @@ for accession in card_accession_list:
         #print(drug_class)
         #print(resistance_mechanism)
     except: 
-        print("problem with", aro_accession)
+        print("problem with", aro_accession, accession)
         problems+=1
-print(problems)
+print(problems, total)
