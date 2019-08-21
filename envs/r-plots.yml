@@ -3,7 +3,7 @@ channels:
  - conda-forge
 dependencies:
  - r-ggplot2 = 3.1.1
- - r-reshape2 =  1.4.3
+ - r-reshape2 = 1.4.3
  - r-rsqlite = 2.1.1
  - r-gplots = 3.0.1.1 
  - r-svglite = 1.2.2 
