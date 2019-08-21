@@ -48,7 +48,7 @@ for accession in card_accession_list:
     except:
         # some missing sequences in aro_categories_index
         # use another seq to retrieve aro annotation
-        seq_list = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index["Accession"] != accession), "Accession"]
+        seq_list = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index.index != accession)].index
         print("problem with", aro_accession, accession)
         print("alternative seqs with same aro", seq_list)
         problems+=1
