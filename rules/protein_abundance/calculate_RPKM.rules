@@ -32,7 +32,7 @@ rule add_annotation_virulence:
     params:
         config["local_samples"]
     input:
-        virulence_database = "databases/virulence/sqlite_db/virulence.db"
+        virulence_database = "databases/virulence/sqlite_db/virulence.db",
         RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db"
     output:
         "report/mmseq_search/virulence/VF_db/annotation.log"
