@@ -2,7 +2,7 @@ channels:
  - r
  - conda-forge
 dependencies:
- - r-base = 3.6.0
+ - r-base = 3.5*
  - r-ggplot2
  - r-reshape2
  - r-rsqlite
