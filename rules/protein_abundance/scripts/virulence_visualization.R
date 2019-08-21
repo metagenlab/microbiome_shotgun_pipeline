@@ -8,7 +8,7 @@ library("tibble")
 
 
 # get sample table
-sample_table <- read.table(snakemake@params[["sample_table"]])
+sample_table <- read.csv(snakemake@params[["sample_table"]], sep='\t')
 
 # get table
 con <- dbConnect(RSQLite::SQLite(), snakemake@input[["database"]])
