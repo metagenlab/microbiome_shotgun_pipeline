@@ -7,7 +7,8 @@ library("dplyr")
 library("tibble")
 
 # get table
-con <- dbConnect(RSQLite::SQLite(), snakemake@input[[0]])
+print(snakemake@input[["database"]])
+con <- dbConnect(RSQLite::SQLite(), snakemake@input[["database"]])
 res <- dbSendQuery(con, "SELECT * FROM sequence_counts")
 rpkm_table <- dbFetch(res)
 
