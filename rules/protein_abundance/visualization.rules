@@ -7,11 +7,11 @@ rule plot_virulence:
     input:
         database = "report/mmseq_search/virulence/VF_db/RPKM.db"
     output:
-        "report/mmseq_search/virulence/VF_db/plots/VF_counts.svg",
-        "report/mmseq_search/virulence/VF_db/plots/taxonomy_Evry_WWTP.svg",
-        "report/mmseq_search/virulence/VF_db/plots/distribution_rpkm.svg",
-        "report/mmseq_search/virulence/VF_db/plots/distribution_counts.svg",
-        "report/mmseq_search/virulence/VF_db/plots/heatmap.pdf",
-        "report/mmseq_search/virulence/VF_db/plots/log2_treated_vs_untreated.pdf",
-        "report/mmseq_search/virulence/VF_db/plots/RPKM_vs_log2_change.pdf",
+        plot1 = "report/mmseq_search/virulence/VF_db/plots/VF_counts.svg",
+        plot2 = "report/mmseq_search/virulence/VF_db/plots/taxonomy_Evry_WWTP.svg",
+        plot3 = "report/mmseq_search/virulence/VF_db/plots/distribution_rpkm.svg",
+        plot4 = "report/mmseq_search/virulence/VF_db/plots/distribution_counts.svg",
+        plot5 = "report/mmseq_search/virulence/VF_db/plots/heatmap.pdf",
+        plot6 = "report/mmseq_search/virulence/VF_db/plots/log2_treated_vs_untreated.pdf",
+        plot7 = "report/mmseq_search/virulence/VF_db/plots/RPKM_vs_log2_change.pdf",
     script: "scripts/virulence_visualization.R"
