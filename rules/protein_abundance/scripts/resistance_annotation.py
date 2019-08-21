@@ -45,7 +45,11 @@ for accession in card_accession_list:
         # macrolide antibiotic;fluoroquinolone antibiotic;aminoglycoside antibiotic;lincosamide antibiotic;carbapenem;fosfomycin;cephalosporin;glycylcycline;bicyclomycin;penam;nucleoside antibiotic;tetracycline antibiotic;peptide antibiotic;acridine dye;oxazolidinone antibiotic;rifamycin antibiotic;diaminopyrimidine antibiotic;phenicol antibiotic;isoniazid;penem;benzalkonium chloride;rhodamine;antibacterial free fatty acids;nitroimidazole antibiotic
         #print(drug_class)
         #print(resistance_mechanism)
-    except: 
+    except:
+        # some missing sequences in aro_categories_index
+        # use another seq to retrieve aro annotation
+        seq_list = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index["Accession"] != accession), "Accession"]
         print("problem with", aro_accession, accession)
+        print("alternative seqs with same aro", seq_list)
         problems+=1
 print(problems, total)
