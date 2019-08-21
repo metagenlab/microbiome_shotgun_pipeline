@@ -48,8 +48,8 @@ for accession in card_accession_list:
     except:
         # some missing sequences in aro_categories_index
         # use another seq to retrieve aro annotation
-        seq_list = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index.index != accession)].index
-        print("problem with", aro_accession, accession)
-        print("alternative seqs with same aro", seq_list)
-        problems+=1
-print(problems, total)
+        alternative_sequences = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index.index != accession)].index.tolist()
+        resistance_mechanism = aro_categories_index.loc[alternative_sequences[0], "Resistance Mechanism"]
+        AMR_family = aro_categories_index.loc[alternative_sequences[0], "AMR Gene Family"]
+        drug_class = aro_categories_index.loc[alternative_sequences[0], "Drug Class"]
+print("ok")
