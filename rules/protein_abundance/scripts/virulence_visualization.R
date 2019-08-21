@@ -47,8 +47,8 @@ for (i in unique(sample_table$group_1)) {
     print(str)
     res <- dbSendQuery(con, str)
     print("table")
-    print(res)
     table_genus <- dbFetch(res)
+    print(table_genus)
     table_genus_dcast <- dcast(table_genus, genus~group_2, value.var="n")
     table_genus_dcast[is.na(table_genus_dcast)] <- 0
 
