@@ -60,4 +60,4 @@ ggsave(snakemake@output[[3]], p, height=6, width=8)
  p <- ggplot(rpkm_table, aes(y = n_hits, x=sample, fill=group_2))
  p <- p + geom_boxplot(outlier.colour="red", outlier.shape=8, outlier.size=4) 
  p <- p + theme(axis.text.x = element_text(angle = 90)) + facet_grid(. ~ group_1, scales="free")
- 
+ ggsave(snakemake@output[[4]], p, height=6, width=8)
