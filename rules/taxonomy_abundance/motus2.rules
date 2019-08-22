@@ -44,7 +44,7 @@ rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
     input:
-        expand("samples/{sample}/motus2/{{absolute_or_relative}/{{rank}}/{sample}.motus", sample = list(read_naming.keys()))
+        expand("samples/{sample}/motus2/{{absolute_or_relative}}/{{rank}}/{sample}.motus", sample = list(read_naming.keys()))
     threads:
         8
     params:
