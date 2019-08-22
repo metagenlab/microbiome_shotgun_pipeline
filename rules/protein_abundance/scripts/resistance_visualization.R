@@ -82,6 +82,7 @@ res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,t2.AMR_family,SU
 ")
 AMR_family_RPKM <- dbFetch(res)
 AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="family_sum")
+AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
 print(AMR_family_RPKM_dcast)
 dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(AMR_family_RPKM_dcast))))
 order <- order.dendrogram(dendro)
