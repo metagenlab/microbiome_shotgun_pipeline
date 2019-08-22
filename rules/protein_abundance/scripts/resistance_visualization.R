@@ -55,3 +55,9 @@ dev.off()
 p <- ggplot(rpkm_table, aes(x = n_hits, fill=group_2))
 p <- p + geom_histogram(colour = "white") + facet_grid(group_2 ~ group_1)
 ggsave(snakemake@output[[3]], p, height=6, width=8)
+
+# PLOT 4: read counts boxplots
+ p <- ggplot(rpkm_table, aes(y = n_hits, x=sample, fill=group_2))
+ p <- p + geom_boxplot(outlier.colour="red", outlier.shape=8, outlier.size=4) 
+ p <- p + theme(axis.text.x = element_text(angle = 90)) + facet_grid(. ~ group_1, scales="free")
+ 
