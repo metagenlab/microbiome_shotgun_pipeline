@@ -77,6 +77,7 @@ for sample in sample2sequence_accession2count:
         group_1 = all_samples.loc[sample, "group_1"]
         group_2 = all_samples.loc[sample, "group_2"]
         print("RPKM", RPKM)
+        print("groups", group_1, group_2)
         cursor.execute(sql_template, (sample,
                                       sequence_accession,
                                       n_hits,
