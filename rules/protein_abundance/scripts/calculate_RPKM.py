@@ -67,19 +67,22 @@ for sample in sample2sequence_accession2count:
         # multiply protein length by 3 to get gene length
         seq_length_nucl = record2aa_sequence_length[sequence_accession]
         reads_millions = sample2read_count[sample_id]
-        
+
         # multiply library size by gene length
         denominat = seq_length_nucl * reads_millions
 
         # calculate ratio
         RPKM = float(nominat)/float(denominat)
+        print("sample", sample)
+        group_1 = all_samples.loc[sample, "group_1"]
+        group_2 = all_samples.loc[sample, "group_2"]
 
         cursor.execute(sql_template, (sample,
                                       sequence_accession,
                                       n_hits,
                                       RPKM,
-                                      all_samples.loc[sample, "group_1"],
-                                      all_samples.loc[sample, "group_2"]))
+                                      group_1,
+                                      group_2))
     conn.commit()
 
 # index sequence accession
