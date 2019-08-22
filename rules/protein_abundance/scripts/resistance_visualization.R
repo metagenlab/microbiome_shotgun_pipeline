@@ -84,7 +84,7 @@ AMR_family_RPKM <- dbFetch(res)
 AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="family_sum")
 AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
 # reorder rows based on rowSum
-AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(AMR_family_RPKM_dcast),decreasing=T),]
+AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(as.numeric(AMR_family_RPKM_dcast)),decreasing=T),]
 # match index matrix rownames to 
 ordered_rows <- rownames(AMR_family_RPKM_dcast)
 AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
