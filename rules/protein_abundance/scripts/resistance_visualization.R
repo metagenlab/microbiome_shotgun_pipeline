@@ -50,3 +50,8 @@ p <- p+ theme(axis.text.x = element_text(angle = 90))+ facet_grid(. ~ group_1, s
 
 ggsave(snakemake@output[[2]], p, height=5, width=8)
 dev.off()
+
+# PLOT 3: distribution of read counts
+p <- ggplot(rpkm_table, aes(x = n_hits, fill=group_2))
+p <- p + geom_histogram(colour = "white") + facet_grid(group_2 ~ group_1)
+ggsave(snakemake@output[[3]], p, height=6, width=8)

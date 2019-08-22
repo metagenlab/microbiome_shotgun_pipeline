@@ -27,4 +27,5 @@ rule plot_resistance:
     output:
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RES_counts.svg",
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RES_counts_more_than_10.svg",
+        "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/read_counts_distribution.svg",
     script: "scripts/resistance_visualization.R"
