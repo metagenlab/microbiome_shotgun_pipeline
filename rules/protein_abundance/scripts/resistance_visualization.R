@@ -85,10 +85,8 @@ AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="fa
 AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
 # use samw row names and col names
 rownames(AMR_family_RPKM_dcast) <- AMR_family_RPKM_dcast[,1]
-print(AMR_family_RPKM_dcast)
 # transpose the table
 AMR_family_RPKM_dcast <- t(AMR_family_RPKM_dcast[,2:length(AMR_family_RPKM_dcast[1,])])
-print(AMR_family_RPKM_dcast)
 # reorder rows based on rowSum
 AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(AMR_family_RPKM_dcast),decreasing=F),]
 # match index matrix rownames to 
@@ -96,9 +94,30 @@ ordered_rows <- rownames(AMR_family_RPKM_dcast)
 AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
-print("ok2")
 p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = family_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
-print("ok3")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 ggsave(snakemake@output[[6]], p, height=12, width=20)
+
+
+# PLOT 7 RPKM heatmap resistance mechanism 
+res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,t2.resistance_mechanism,SUM(t1.RPKM) as mechanism_sum from sequence_counts t1 inner join accession2aro t2 on t1.accession=t2.protein_accession group by t1.sample,t1.group_1,t1.group_2,t2.resistance_mechanism order by mechanism_sum DESC;;
+")
+AMR_family_RPKM <- dbFetch(res)
+AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="mechanism_sum")
+AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
+# use samw row names and col names
+rownames(AMR_family_RPKM_dcast) <- AMR_family_RPKM_dcast[,1]
+# transpose the table
+AMR_family_RPKM_dcast <- t(AMR_family_RPKM_dcast[,2:length(AMR_family_RPKM_dcast[1,])])
+# reorder rows based on rowSum
+AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(AMR_family_RPKM_dcast),decreasing=F),]
+# match index matrix rownames to 
+ordered_rows <- rownames(AMR_family_RPKM_dcast)
+AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
+                                    levels = ordered_rows, 
+                                    ordered = TRUE)
+p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = mechanism_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- p + theme(axis.text.x = element_text(angle = 90))
+p <- p + facet_grid( . ~ group_2, scales="free")
+ggsave(snakemake@output[[7]], p, height=12, width=20)

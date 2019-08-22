@@ -31,4 +31,5 @@ rule plot_resistance:
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/read_counts_boxplots.svg",
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RPKM_heatmap_complete.svg",
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RPKM_heatmap_AMR_family.svg",
+        "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RPKM_heatmap_mechanism.svg",
     script: "scripts/resistance_visualization.R"
