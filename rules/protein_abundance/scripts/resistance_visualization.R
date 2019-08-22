@@ -85,8 +85,10 @@ AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="fa
 AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
 # use samw row names and col names
 rownames(AMR_family_RPKM_dcast) <- AMR_family_RPKM_dcast[,1]
+print(AMR_family_RPKM_dcast)
 # transpose the table
 AMR_family_RPKM_dcast <- t(AMR_family_RPKM_dcast[,2:length(AMR_family_RPKM_dcast[1,])])
+print(AMR_family_RPKM_dcast)
 # reorder rows based on rowSum
 AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(as.numeric(AMR_family_RPKM_dcast)),decreasing=T),]
 # match index matrix rownames to 
