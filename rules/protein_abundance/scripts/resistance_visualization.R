@@ -63,8 +63,7 @@ ggsave(snakemake@output[[3]], p, height=6, width=8)
  ggsave(snakemake@output[[4]], p, height=6, width=8)
 
 
- # PLOT 5 RPKM heatmap
-
+ # PLOT 5 RPKM heatmap all
 dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(rpkm_log2_table_dcast))))
 order <- order.dendrogram(dendro)
 
@@ -76,3 +75,22 @@ p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 ggsave(snakemake@output[[5]], p, height=6, width=8)
+
+
+# PLOT 5 RPKM heatmap family 
+res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,t2.AMR_family,SUM(t1.RPKM) as family_sum from sequence_counts t1 inner join accession2aro t2 on t1.accession=t2.protein_accession group by t1.sample,t1.group_1,t1.group_2,t2.AMR_family order by family_sum DESC;
+")
+AMR_family_RPKM <- dbFetch(res)
+AMR_family_RPKM_dcast <- dcast(rpkm_table, sample~accession, value.var="family_sum")
+
+dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(AMR_family_RPKM_dcast))))
+order <- order.dendrogram(dendro)
+
+AMR_family_RPKM$AMR_family <- factor(x = rpkm_table$AMR_family,
+                                    levels = rownames(AMR_family_RPKM_dcast)[order], 
+                                    ordered = TRUE)
+
+p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- p + theme(axis.text.x = element_text(angle = 90))
+p <- p + facet_grid( . ~ group_2, scales="free")
+ggsave(snakemake@output[[6]], p, height=6, width=8)
