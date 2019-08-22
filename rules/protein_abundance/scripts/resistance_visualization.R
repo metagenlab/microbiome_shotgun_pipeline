@@ -72,7 +72,7 @@ rpkm_table$accession <- factor(x = rpkm_table$accession,
                                levels = rownames(rpkm_log2_table_dcast)[order], 
                                ordered = TRUE)
 
-p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient1()# + scale_fill_gradient(low = "white", high = "steelblue")
+p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 ggsave(snakemake@output[[5]], p, height=6, width=8)
