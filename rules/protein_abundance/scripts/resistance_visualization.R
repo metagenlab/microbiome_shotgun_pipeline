@@ -86,12 +86,13 @@ AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
 print(AMR_family_RPKM_dcast)
 dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(AMR_family_RPKM_dcast))))
 order <- order.dendrogram(dendro)
-
+print("ok")
 AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
                                     levels = rownames(AMR_family_RPKM_dcast)[order], 
                                     ordered = TRUE)
-
-p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue")
+print("ok2")
+p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = family_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
+print("ok3")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 ggsave(snakemake@output[[6]], p, height=6, width=8)
