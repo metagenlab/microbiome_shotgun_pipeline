@@ -36,11 +36,11 @@ rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
     input:
-        expand("samples/{sample}/motus2/{{absolute_or_relative}}/{{rank}}/profile.motus", sample = list(read_naming.keys()))
+        expand("samples/{sample}/motus2/relative/{{rank}}/profile.motus", sample = list(read_naming.keys()))
     threads:
         8
     output:
-        "report/motus2/{absolute_or_relative}/{rank}/merged_profile.motus"
+        "report/motus2/relative/{rank}/merged_profile.motus"
     shell:
         """
         echo motus merge -i {params} -o {output[0]}
