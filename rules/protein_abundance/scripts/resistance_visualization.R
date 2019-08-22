@@ -61,3 +61,18 @@ ggsave(snakemake@output[[3]], p, height=6, width=8)
  p <- p + geom_boxplot(outlier.colour="red", outlier.shape=8, outlier.size=4) 
  p <- p + theme(axis.text.x = element_text(angle = 90)) + facet_grid(. ~ group_1, scales="free")
  ggsave(snakemake@output[[4]], p, height=6, width=8)
+
+
+ # PLOT 5 RPKM heatmap
+
+dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(rpkm_log2_table_dcast))))
+order <- order.dendrogram(dendro)
+
+rpkm_table$accession <- factor(x = rpkm_table$accession,
+                               levels = rownames(rpkm_log2_table_dcast)[order], 
+                               ordered = TRUE)
+
+p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient1()# + scale_fill_gradient(low = "white", high = "steelblue")
+p <- p + theme(axis.text.x = element_text(angle = 90))
+p <- p + facet_grid( . ~ group_2, scales="free")
+ggsave(snakemake@output[[5]], p, height=6, width=8)
