@@ -36,7 +36,7 @@ p <- ggplot(data=table_counts, aes(x=sample, y=n, fill=group_2))
 p <- p + geom_bar(stat="identity")
 p <- p+ theme(axis.text.x = element_text(angle = 90))+ facet_grid(. ~ group_1, scales="free")
 
-ggsave(snakemake@output[["plot1"]], p, height=5, width=8)
+ggsave(snakemake@output[[1]], p, height=5, width=8)
 dev.off()
 
 
