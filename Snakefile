@@ -19,7 +19,7 @@ rule motus:
     input:
         "report/motus2/relative/phylum/merged_profile.motus",
         "report/motus2/relative/genus/merged_profile.motus",
-        "report/motus2/relative/species/merged_profile.motus",
+        "report/motus2/relative/mOTU/merged_profile.motus",
 
 rule homology_search:
    input:
