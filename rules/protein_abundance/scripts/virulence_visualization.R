@@ -60,5 +60,6 @@ for (i in unique(sample_table$group_1)) {
     p <- ggplot(table_genus , aes(group_2, genus)) + geom_tile(aes(fill = n)) + scale_fill_gradient(low = "yellow", high = "steelblue")
     p <- p + theme(axis.text.x = element_text(angle = 90))
     print(p)
+    ggsave(paste0("test", i, ".svg"), p, height=9, width=5)
 }
 dev.off()
