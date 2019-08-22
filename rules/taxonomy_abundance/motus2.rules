@@ -1,6 +1,6 @@
 
 
-rule execute_motus2:
+rule execute_motus2_relative:
     conda:
         "../../envs/motus2.yml"
     input:
@@ -9,10 +9,26 @@ rule execute_motus2:
     threads:
         8
     output:
-        "samples/{sample}/motus2/{sample}.motus"
+        "samples/{sample}/motus2/relative/{rank}/{sample}.motus"
     shell:
         """
-        motus profile -f {input[0]} -r {input[1]} -t 8 -o {output[0]}
+        motus profile -f {input[0]} -r {input[1]} -t 8 -o {output[0]} -k {wildcards.rank}
+        """
+
+
+rule execute_motus2_absolute:
+    conda:
+        "../../envs/motus2.yml"
+    input:
+        "samples/{sample}/reads/trimmed/R1_paired.fastq",
+        "samples/{sample}/reads/trimmed/R2_paired.fastq"
+    threads:
+        8
+    output:
+        "samples/{sample}/motus2/absolute/{rank}/{sample}.motus"
+    shell:
+        """
+        motus profile -f {input[0]} -r {input[1]} -c -t 8 -o {output[0]} -k {wildcards.rank}
         """
 
 
@@ -28,13 +44,13 @@ rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
     input:
-        expand("samples/{sample}/motus2/{sample}.motus", sample = list(read_naming.keys()))
+        expand("samples/{sample}/motus2/{absolute_or_relative}/{rank}/{sample}.motus", sample = list(read_naming.keys()))
     threads:
         8
     params:
         input_string = get_input_string
     output:
-        "report/motus2/merged_profile.motus"
+        "report/motus2/{absolute_or_relative}/{rank}/merged_profile.motus"
     shell:
         """
         echo motus merge -i {params} -o {output[0]}

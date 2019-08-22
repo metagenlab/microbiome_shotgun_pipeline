@@ -15,6 +15,11 @@ rule databases_setup:
        "reference_databases/virulence/VF_db.faa",
        "reference_databases/virulence/VF_db_mmseqsDB"
 
+rule motus:
+    input:
+        "report/motus2/relative/phylum/merged_profile.motus"
+        "report/motus2/relative/genus/merged_profile.motus"
+        "report/motus2/relative/species/merged_profile.motus"
 
 rule homology_search:
    input:
