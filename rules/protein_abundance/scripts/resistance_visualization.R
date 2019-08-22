@@ -95,4 +95,4 @@ p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = fam
 print("ok3")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-ggsave(snakemake@output[[6]], p, height=8, width=20)
+ggsave(snakemake@output[[6]], p, height=12, width=20)
