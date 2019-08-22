@@ -26,7 +26,7 @@ rule plot_resistance:
         database = "report/mmseq_search/resistance/CARD_protein_homolog_model/RPKM.db"
     output:
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RES_counts.svg",
-        "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RES_counts_more_than_10.svg",
+        "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/RES_counts_more_than_100.svg",
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/read_counts_distribution.svg",
         "report/mmseq_search/resistance/CARD_protein_homolog_model/plots/read_counts_boxplots.svg",
     script: "scripts/resistance_visualization.R"
