@@ -83,6 +83,10 @@ res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,t2.AMR_family,SU
 AMR_family_RPKM <- dbFetch(res)
 AMR_family_RPKM_dcast <- dcast(AMR_family_RPKM, sample~AMR_family, value.var="family_sum")
 AMR_family_RPKM_dcast[is.na(AMR_family_RPKM_dcast)] <- 0
+# use samw row names and col names
+rownames(AMR_family_RPKM_dcast) <- AMR_family_RPKM_dcast[,1]
+# transpose the table
+AMR_family_RPKM_dcast <- t(AMR_family_RPKM_dcast[,2:length(AMR_family_RPKM_dcast[1,])])
 # reorder rows based on rowSum
 AMR_family_RPKM_dcast <- AMR_family_RPKM_dcast[order(rowSums(as.numeric(AMR_family_RPKM_dcast)),decreasing=T),]
 # match index matrix rownames to 
