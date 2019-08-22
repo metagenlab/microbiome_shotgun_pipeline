@@ -50,7 +50,7 @@ rule motus2_merge:
     params:
         input_string = get_input_string
     output:
-        "report/motus2/{absolute_or_relative}/{rank}/merged_profile.motus"
+        "report/motus2/{absolute_or_relative}/{rank}/merged_profile.txt"
     shell:
         """
         echo motus merge -i {params} -o {output[0]}
