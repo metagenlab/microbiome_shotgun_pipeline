@@ -41,12 +41,10 @@ ggsave(snakemake@output[["plot1"]], p, height=5, width=8)
 
 
 # PLOT 2
-pdf(snakemake@output[["plot2"]], onefile = TRUE)
+pdf(snakemake@output[["plot2"]])
 for (i in unique(sample_table$group_1)) { 
     str <- paste0('select group_2,genus,count(*) as n from (select distinct sample,t1.accession,group_2,genus from sequence_counts t1 inner join uniparc_accession2genus t2 on t1.accession=t2.accession where group_1="', i ,'") A group by group_2,A.genus order by n DESC;')
-    print(str)
     res <- dbSendQuery(con, str)
-    print("table")
     table_genus <- dbFetch(res)
     print(table_genus)
     table_genus_dcast <- dcast(table_genus, genus~group_2, value.var="n")
@@ -54,6 +52,7 @@ for (i in unique(sample_table$group_1)) {
 
     dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(table_genus_dcast))))
     order <- order.dendrogram(dendro)
+
     table_genus$genus <- factor(x = table_genus$genus,
                                 levels = table_genus_dcast[,1][order], 
                                 ordered = TRUE)
