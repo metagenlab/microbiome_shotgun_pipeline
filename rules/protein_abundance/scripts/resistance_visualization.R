@@ -41,7 +41,7 @@ ggsave(snakemake@output[[1]], p, height=5, width=8)
 dev.off()
 
 # PLOT 2 number of different resistance genes with more than 10 counts
-res <- dbSendQuery(con, "SELECT * from (SELECT sample,group_2,group_1,count(*) as n FROM sequence_counts group by sample,group_2,group_1) A where n > 99")
+res <- dbSendQuery(con, "SELECT sample,group_2,group_1,count(*) as n from (SELECT sample,group_2,group_1 FROM sequence_counts where n_hits > 9) A group by sample,group_2,group_1")
 table_counts <- dbFetch(res)
 
 p <- ggplot(data=table_counts, aes(x=sample, y=n, fill=group_2))
