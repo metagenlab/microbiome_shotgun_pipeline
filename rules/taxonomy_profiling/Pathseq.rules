@@ -78,6 +78,8 @@ rule classify_reads:
 
     threads: 32
 
+    resources: mem_mb=32000
+
     log:
         logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
@@ -95,7 +97,8 @@ rule classify_reads:
                                   --scores-output {output.score_out} \
                                   --output {output.bam_out} \
                                   --filter-metrics {output.filter_met} \
-                                  --score-metrics {output.score_met} 2> {log}
+                                  --score-metrics {output.score_met} \
+                                  --executor-cores {threads} 2> {log}
         """
 
 rule Pathseq_to_krona:
