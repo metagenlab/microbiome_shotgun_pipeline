@@ -41,7 +41,6 @@ dev.off()
 
 
 # PLOT 2
-pdf(snakemake@output[["plot2"]])
 for (i in unique(sample_table$group_1)) { 
     str <- paste0('select group_2,genus,count(*) as n from (select distinct sample,t1.accession,group_2,genus from sequence_counts t1 inner join uniparc_accession2genus t2 on t1.accession=t2.accession where group_1="', i ,'") A group by group_2,A.genus order by n DESC;')
     res <- dbSendQuery(con, str)
@@ -58,8 +57,6 @@ for (i in unique(sample_table$group_1)) {
                                 ordered = TRUE)
 
     p <- ggplot(table_genus , aes(group_2, genus)) + geom_tile(aes(fill = n)) + scale_fill_gradient(low = "yellow", high = "steelblue")
-    p <- p + theme(axis.text.x = element_text(angle = 90))
-    print(p)
-    ggsave(paste0("test", i, ".svg"), p, height=9, width=5)
+    p <- p + theme(axis.text.x = element_text(angle = 90)) + ggtitle(i)
+    ggsave(paste0("report/mmseq_search/virulence/VF_db/plots/taxonomy_", i, ".svg"), p, height=9, width=5)
 }
-dev.off()

@@ -8,10 +8,10 @@ rule plot_virulence:
         database = "report/mmseq_search/virulence/VF_db/RPKM.db"
     output:
         plot1 = "report/mmseq_search/virulence/VF_db/plots/VF_counts.svg",
-        plot2 = "report/mmseq_search/virulence/VF_db/plots/taxonomy_Evry_WWTP.pdf",
         #plot3 = "report/mmseq_search/virulence/VF_db/plots/distribution_rpkm.svg",
         #plot4 = "report/mmseq_search/virulence/VF_db/plots/distribution_counts.svg",
         #plot5 = "report/mmseq_search/virulence/VF_db/plots/heatmap.pdf",
         #plot6 = "report/mmseq_search/virulence/VF_db/plots/log2_treated_vs_untreated.pdf",
         #plot7 = "report/mmseq_search/virulence/VF_db/plots/RPKM_vs_log2_change.pdf",
+        expand("report/mmseq_search/virulence/VF_db/plots/taxonomy_{group}.svg", group = list(set((all_samples["group_1"]))))
     script: "scripts/virulence_visualization.R"
