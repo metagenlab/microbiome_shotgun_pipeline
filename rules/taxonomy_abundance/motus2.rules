@@ -36,7 +36,7 @@ def get_input_string(wildcards):
     template = "samples/%s/motus2/absolute/{wildcards.rank}/profile.motus"
     lst = []
     for sample in read_naming.keys():
-        lst.append(template % (sample, sample))
+        lst.append(template % (sample))
     return ','.join(lst)
 
 
