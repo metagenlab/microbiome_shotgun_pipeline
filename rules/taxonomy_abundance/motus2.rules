@@ -32,17 +32,27 @@ rule execute_motus2_absolute:
         """
 
 
+def get_input_string(wildcards):
+    template = "samples/%s/motus2/%s.motus"
+    lst = []
+    for sample in read_naming.keys():
+        lst.append(template % (sample, sample))
+    return ','.join(lst)
+
+
 rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
     input:
         expand("samples/{sample}/motus2/relative/{{rank}}/profile.motus", sample = list(read_naming.keys()))
+    params:
+        input_string = get_input_string
     threads:
         8
     output:
         "report/motus2/relative/{rank}/merged_profile.motus"
     shell:
         """
-        echo motus merge -i {params} -o {output[0]}
+        echo motus merge -i {input} -o {output[0]}
         motus merge -i {params} -o {output[0]}
         """
