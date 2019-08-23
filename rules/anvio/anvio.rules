@@ -29,6 +29,7 @@ rule anvio_run_hmms:
         anvi-run-hmms -c {input[0]} > {output[0]}
         """
 
+
 rule anvio_contig_stats:
     conda:
         pipeline_path + "envs/anvio.yml"

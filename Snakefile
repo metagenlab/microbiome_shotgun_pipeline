@@ -74,3 +74,6 @@ include: "rules/protein_abundance/visualization.rules"
 
 # anvio 
 include: "rules/anvio/anvio.rules"
+
+# annotation
+include: "rules/annotation/rgi.rules"
