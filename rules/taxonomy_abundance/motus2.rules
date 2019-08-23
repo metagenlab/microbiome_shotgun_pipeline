@@ -33,7 +33,7 @@ rule execute_motus2_absolute:
 
 
 def get_input_string(wildcards):
-    template = "samples/%s/motus2/absolute/%s/profile.motus"
+    template = "samples/%s/motus2/relative/%s/profile.motus"
     lst = []
     for sample in read_naming.keys():
         lst.append(template % (sample, wildcards.rank))
