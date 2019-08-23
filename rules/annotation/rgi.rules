@@ -10,5 +10,5 @@ rule execute_rgi:
         "samples/{sample}/annotation/rgi/rgi.json"
     shell:
         """
-        rgi -t contig -i {input[0]} -o $(dirname {output[0]})/rgi
+        rgi main -t contig -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi
         """
