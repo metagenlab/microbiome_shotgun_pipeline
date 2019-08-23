@@ -37,6 +37,9 @@ rule anvio:
         expand("samples/{sample}/gene_call/{sample}.faa", sample = list(read_naming.keys())),
         #expand("samples/{sample}/anvio/contigs_db/contigs.db", sample = list(read_naming.keys())),
 
+rule annotation:
+    input:
+        expand("samples/{sample}/annotation/rgi/rgi.json", sample = list(read_naming.keys()))
 
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
