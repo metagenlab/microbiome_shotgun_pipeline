@@ -1,5 +1,5 @@
 
-rule execute_rgi:
+rule execute_deepvirfinder:
     input:
         scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     singularity:
