@@ -3,7 +3,7 @@ rule execute_rgi:
     input:
         scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     singularity:
-        "docker://quay.io/biocontainers/rgi:5.0.0--py36hed695b0_0"
+        "docker://metagenlab/rgi_5.0.0-v3.0.4"
     threads:
         8
     output:
