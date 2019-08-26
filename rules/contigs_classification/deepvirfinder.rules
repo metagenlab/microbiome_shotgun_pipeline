@@ -10,5 +10,5 @@ rule execute_deepvirfinder:
         "samples/{sample}/contigs_classification/deepvirfinder/rgi.json"
     shell:
         """
-        python dvf.py -i {input[0]} -o samples/{wildcards.sample}/contigs_classification/deepvirfinder -l 500 -c {threads}
+        dvf.py -i {input[0]} -o samples/{wildcards.sample}/contigs_classification/deepvirfinder -l 500 -c {threads}
         """
