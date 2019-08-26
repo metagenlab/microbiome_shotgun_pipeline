@@ -5,9 +5,9 @@ rule execute_deepvirfinder:
     singularity:
         "docker://metagenlab/deepvirfinder:1.0"
     threads:
-        8
+        16
     output:
-        "samples/{sample}/contigs_classification/deepvirfinder/rgi.json"
+        "samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt"
     shell:
         """
         dvf.py -i {input[0]} -o samples/{wildcards.sample}/contigs_classification/deepvirfinder -l 500 -c {threads}
