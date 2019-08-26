@@ -80,3 +80,6 @@ include: "rules/anvio/anvio.rules"
 
 # annotation
 include: "rules/annotation/rgi.rules"
+
+# contig classification
+include: "rules/contigs_classification/deepvirfinder.rules"

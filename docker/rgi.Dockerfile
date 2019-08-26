@@ -18,4 +18,14 @@ RUN bash test.sh
 
 RUN apt-get clean
 
+#WORKDIR /data/
+
+#RUN curl https://card.mcmaster.ca/download/0/broadstreet-v3.0.4.tar.gz > broadstreet-v3.0.4.tar.bz2 
+
+#RUN bunzip2 broadstreet-v3.0.4.tar.bz2 
+
+#RUN tar xvf broadstreet-v3.0.4.tar
+
+#RUN rgi load --local -i card.json
+
 CMD ["rgi"]

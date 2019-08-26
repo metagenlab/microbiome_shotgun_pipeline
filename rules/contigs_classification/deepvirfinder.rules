@@ -1,0 +1,14 @@
+
+rule execute_rgi:
+    input:
+        scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    singularity:
+        "docker://metagenlab/deepvirfinder:1.0"
+    threads:
+        8
+    output:
+        "samples/{sample}/contigs_classification/deepvirfinder/rgi.json"
+    shell:
+        """
+        python dvf.py -i {input[0]} -o samples/{wildcards.sample}/contigs_classification/deepvirfinder -l 500 -c {threads}
+        """
