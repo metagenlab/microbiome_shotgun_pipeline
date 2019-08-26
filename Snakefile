@@ -39,7 +39,8 @@ rule anvio:
 
 rule annotation:
     input:
-        expand("samples/{sample}/annotation/rgi/rgi.json", sample = list(read_naming.keys()))
+        expand("samples/{sample}/annotation/rgi/rgi.json", sample = list(read_naming.keys())),
+        expand("samples/{sample}/contigs_classification/deepvirfinder/rgi.json", sample = list(read_naming.keys()))
 
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
