@@ -53,6 +53,7 @@ include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/mmseqs2.smk"
 include: "rules/databases/Pathseq/Pathseq.rules"
 include: "rules/databases/Ezvir/Ezvir_db.rules"
+include: "rules/databases/SURPI/surpi_db.rules"
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
 include: "rules/protein_abundance/calculate_RPKM.rules"
