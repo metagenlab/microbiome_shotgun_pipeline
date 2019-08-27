@@ -22,7 +22,7 @@ rpkm_table$description <- apply(rpkm_table[ , c("aro_name","accession") ] , 1 , 
 
 print(head(rpkm_table))
 # prepare matrix of RPKM_log2
-rpkm_log2_table_dcast <- dcast(rpkm_table, sample~accession, value.var="RPKM_log2")
+rpkm_log2_table_dcast <- dcast(rpkm_table, sample~description, value.var="RPKM_log2")
 # replace na by 0
 rpkm_log2_table_dcast[is.na(rpkm_log2_table_dcast)] <- log2(1)
 # use samw row names and col names
