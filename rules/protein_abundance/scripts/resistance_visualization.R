@@ -89,7 +89,7 @@ p <- ggplot(rpkm_table, aes(sample, description)) + geom_tile(aes(fill = RPKM_lo
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
-ggsave(snakemake@output[[5]], p, height=28, width=8)
+ggsave(snakemake@output[[5]], p, height=38, width=8)
 
 print("PLOTTING 6")
 # PLOT 6 RPKM heatmap family 
