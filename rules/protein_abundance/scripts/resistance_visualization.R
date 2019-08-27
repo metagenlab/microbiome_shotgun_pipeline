@@ -98,7 +98,7 @@ AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
 p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = family_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
-p <- p + geom_text(aes(label = round(family_sum, 1)), size=1.2) 
+p <- p + geom_text(aes(label = round(family_sum, 1), size=1.2)) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 ggsave(snakemake@output[[6]], p, height=13, width=20)
