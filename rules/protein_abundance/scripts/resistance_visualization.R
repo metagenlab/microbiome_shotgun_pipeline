@@ -68,11 +68,19 @@ print("PLOTTING 4")
 
 print("PLOTTING 5")
  # PLOT 5 RPKM heatmap all
-dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(rpkm_log2_table_dcast))))
-order <- order.dendrogram(dendro)
+#dendro <- as.dendrogram(hclust(d = dist(x = as.matrix(rpkm_log2_table_dcast))))
+#order <- order.dendrogram(dendro)
 
+#rpkm_table$accession <- factor(x = rpkm_table$accession,
+#                               levels = rownames(rpkm_log2_table_dcast)[order], 
+#                               ordered = TRUE)
+
+# reorder rows based on rowSum
+rpkm_table <- rpkm_table[order(rowSums(rpkm_table),decreasing=F),]
+# match index matrix rownames to 
+ordered_rows <- rownames(rpkm_table)
 rpkm_table$accession <- factor(x = rpkm_table$accession,
-                               levels = rownames(rpkm_log2_table_dcast)[order], 
+                               levels = ordered_rows, 
                                ordered = TRUE)
 
 p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
@@ -113,7 +121,7 @@ res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,t2.resistance_me
 resistance_mechanism_RPKM <- dbFetch(res)
 resistance_mechanism_RPKM_dcast <- dcast(resistance_mechanism_RPKM, sample~resistance_mechanism, value.var="mechanism_sum")
 resistance_mechanism_RPKM_dcast[is.na(resistance_mechanism_RPKM_dcast)] <- 0
-# use samw row names and col names
+# use same row names and col names
 rownames(resistance_mechanism_RPKM_dcast) <- resistance_mechanism_RPKM_dcast[,1]
 # transpose the table
 resistance_mechanism_RPKM_dcast <- t(resistance_mechanism_RPKM_dcast[,2:length(resistance_mechanism_RPKM_dcast[1,])])
