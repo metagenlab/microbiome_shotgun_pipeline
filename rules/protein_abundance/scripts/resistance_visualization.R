@@ -86,7 +86,7 @@ rpkm_table$accession <- factor(x = rpkm_table$accession,
 p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-p <- p + theme_bw()
+p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
 ggsave(snakemake@output[[5]], p, height=26, width=8)
 
 print("PLOTTING 6")
@@ -111,7 +111,7 @@ p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = fam
 p <- p + geom_text(aes(label = round(family_sum, 1)), size=2) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-p <- p + theme_bw()
+p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
 ggsave(snakemake@output[[6]], p, height=13, width=15)
 
 print("PLOTTING 7")
@@ -135,7 +135,7 @@ resistance_mechanism_RPKM$resistance_mechanism <- factor(x = resistance_mechanis
 p <- ggplot(resistance_mechanism_RPKM, aes(sample, resistance_mechanism)) + geom_tile(aes(fill = mechanism_sum)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-p <- p + theme_bw()
+p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
 ggsave(snakemake@output[[7]], p, height=12, width=20)
 
 print("PLOTTING 8")
@@ -158,5 +158,5 @@ drug_class_RPKM$drug_class <- factor(x = drug_class_RPKM$drug_class,
 p <- ggplot(drug_class_RPKM, aes(sample, drug_class)) + geom_tile(aes(fill = drug_class_RPKM)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-p <- p + theme_bw()
+p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
 ggsave(snakemake@output[[8]], p, height=12, width=20)
