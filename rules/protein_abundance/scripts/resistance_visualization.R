@@ -13,11 +13,12 @@ sample_table <- read.csv(snakemake@params[["sample_table"]], sep='\t')
 
 # get table
 con <- dbConnect(RSQLite::SQLite(), snakemake@input[["database"]])
-res <- dbSendQuery(con, "SELECT * FROM sequence_counts")
+res <- dbSendQuery(con, "SELECT t1.*, t2.aro_name FROM sequence_counts t1 inner join accession2aro t2 on t1.accession=t2.protein_accession")
 rpkm_table <- dbFetch(res)
 
 # claculate RPKM log2
 rpkm_table$RPKM_log2 <- log2(rpkm_table$RPKM + 1)
+rpkm_table$description <- paste(pkm_table$aro_name, pkm_table$accession)
 
 # prepare matrix of RPKM_log2
 rpkm_log2_table_dcast <- dcast(rpkm_table, sample~accession, value.var="RPKM_log2")
@@ -79,15 +80,15 @@ print("PLOTTING 5")
 rpkm_log2_table_dcast <- rpkm_log2_table_dcast[order(rowSums(rpkm_log2_table_dcast),decreasing=F),]
 # match index matrix rownames to 
 ordered_rows <- rownames(rpkm_log2_table_dcast)
-rpkm_table$accession <- factor(x = rpkm_table$accession,
+rpkm_table$description <- factor(x = rpkm_table$description,
                                levels = ordered_rows, 
                                ordered = TRUE)
 
-p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
+p <- ggplot(rpkm_table, aes(sample, description)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
-ggsave(snakemake@output[[5]], p, height=26, width=8)
+ggsave(snakemake@output[[5]], p, height=28, width=8)
 
 print("PLOTTING 6")
 # PLOT 6 RPKM heatmap family 
