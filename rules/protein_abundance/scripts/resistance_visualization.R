@@ -18,7 +18,7 @@ rpkm_table <- dbFetch(res)
 
 # claculate RPKM log2
 rpkm_table$RPKM_log2 <- log2(rpkm_table$RPKM + 1)
-rpkm_table$description <- paste(pkm_table$aro_name, pkm_table$accession)
+rpkm_table$description <- paste(rpkm_table$aro_name, rpkm_table$accession)
 
 # prepare matrix of RPKM_log2
 rpkm_log2_table_dcast <- dcast(rpkm_table, sample~accession, value.var="RPKM_log2")
