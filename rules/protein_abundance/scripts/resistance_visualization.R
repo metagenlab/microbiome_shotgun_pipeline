@@ -133,13 +133,14 @@ resistance_mechanism_RPKM$resistance_mechanism <- factor(x = resistance_mechanis
                                     levels = ordered_rows, 
                                     ordered = TRUE)
 p <- ggplot(resistance_mechanism_RPKM, aes(sample, resistance_mechanism)) + geom_tile(aes(fill = mechanism_sum)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
+p <- p + geom_text(aes(label = round(mechanism_sum, 1)), size=2) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
-ggsave(snakemake@output[[7]], p, height=12, width=20)
+ggsave(snakemake@output[[7]], p, height=12, width=15)
 
 print("PLOTTING 8")
-# PLOT 8 RPKM heatmap resistance mechanism 
+# PLOT 8 RPKM heatmap drug class
 res <- dbSendQuery(con, "select t1.sample,t1.group_1,t1.group_2,drug_class, sum(t1.RPKM) as drug_class_RPKM from sequence_counts t1 inner join accession2aro t2 on t1.accession=t2.protein_accession inner join aro_accession2drug_class t3 on t2.aro_accession=t3.aro_accession group by t1.sample,t1.group_1,t1.group_2,drug_class;")
 drug_class_RPKM <- dbFetch(res)
 drug_class_RPKM_dcast <- dcast(drug_class_RPKM, sample~drug_class, value.var="drug_class_RPKM")
@@ -156,7 +157,8 @@ drug_class_RPKM$drug_class <- factor(x = drug_class_RPKM$drug_class,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
 p <- ggplot(drug_class_RPKM, aes(sample, drug_class)) + geom_tile(aes(fill = drug_class_RPKM)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
+p <- p + geom_text(aes(label = round(drug_class_RPKM, 1)), size=2) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
-ggsave(snakemake@output[[8]], p, height=12, width=20)
+ggsave(snakemake@output[[8]], p, height=12, width=15)
