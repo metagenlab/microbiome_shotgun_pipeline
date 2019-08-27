@@ -101,7 +101,7 @@ p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = fam
 p <- p + geom_text(aes(label = round(family_sum, 1)), size=2) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
-ggsave(snakemake@output[[6]], p, height=13, width=20)
+ggsave(snakemake@output[[6]], p, height=13, width=15)
 
 print("PLOTTING 7")
 # PLOT 7 RPKM heatmap resistance mechanism 
