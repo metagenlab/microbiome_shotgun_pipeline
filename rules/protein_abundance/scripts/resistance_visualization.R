@@ -86,6 +86,7 @@ rpkm_table$description <- factor(x = rpkm_table$description,
                                ordered = TRUE)
 
 p <- ggplot(rpkm_table, aes(sample, description)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
+p <- p + geom_text(aes(label = round(drug_class_RPKM, 1)), size=1) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
