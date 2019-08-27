@@ -38,17 +38,8 @@ rule align_reads_to_reference_genome:
 
     shell:
         """
-        bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} | samtools sort -n -O BAM -o {output}
+            bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} | samtools sort -n -O BAM -o {output}
         """
-
-#rule get_mapped_reads:
-#    conda: pipeline_path + "envs/bwa-samtools.yml"
-
-#    input: "host/{filename}_{sample}.bam"
-
-#    output: "host/{filename}_{sample}_mapped.bam"
-
-#    shell: "samtools view -b -F 4 {input} | samtools sort -O BAM -o {output}"
 
 rule get_unmapped_reads:
     conda: pipeline_path + "envs/bwa-samtools.yml"
@@ -68,3 +59,67 @@ rule bam_to_fastq:
             "unmapped/{host_acc}/{sample}_R2.fq"
 
     shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
+
+rule all_deconatam_with_Pathseq:
+    input: expand("Pathseq/{sample}/filtered_reads/filter_metrics.txt",sample=list(read_naming.keys()))
+
+rule raw_paired_fastq_to_bam:
+    singularity: "docker://broadinstitute/gatk:4.1.3.0"
+
+    input: "samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
+           "samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
+
+    log:
+        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+
+    output: "Pathseq/{sample}/PE_input_reads.bam"
+
+    shell: "gatk FastqToSam -F1 {input[0]} -F2 {input[1]} -O {output} -SM {wildcards.sample} 2> {log}"
+
+rule raw_single_fastq_to_bam:
+    singularity: "docker://broadinstitute/gatk:4.1.3.0"
+
+    input: "samples/{sample}/reads/raw/{sample}_single.fastq.gz"
+
+    log:
+        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+
+    output: "Pathseq/{sample}/SE_input_reads.bam"
+
+    shell: "gatk FastqToSam -F1 {input[0]} -O {output} -SM {wildcards.sample} 2> {log}"
+
+def get_bam_input(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return "Pathseq/{sample}/PE_input_reads.bam"
+    else:
+        return "Pathseq/{sample}/SE_input_reads.bam"
+
+db_path=config["pathseq_database"]
+
+rule filter_reads:
+    singularity: "docker://broadinstitute/gatk:4.1.3.0"
+
+    input: get_bam_input
+
+    output: paired_reads="Pathseq/{sample}/filtered_reads/Paired_reads.bam",
+            unpaired_reads="Pathseq/{sample}/filtered_reads/Unpaired_reads.bam",
+            filter_met="Pathseq/{sample}/filtered_reads/filter_metrics.txt"
+
+    params: min_clip_len=config["min_clip_len"],
+            host_kmer=f"{db_path}/pathseq_host.bfi",
+            host_bwa=f"{db_path}/pathseq_host.fa.img"
+
+    shell:
+        """     
+         gatk PathSeqFilterSpark  \
+           --input {input} \
+           --paired-output {output.paired_reads} \
+           --unpaired-output {output.unpaired_reads} \
+           --min-clipped-read-length {params.min_clip_len} \
+           --kmer-file {params.host_kmer} \
+           --filter-bwa-image {params.host_bwa} \
+           --filter-metrics {output.filter_met} \
+           --bam-partition-size 4000000
+        """
+
