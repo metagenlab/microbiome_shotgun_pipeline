@@ -36,7 +36,7 @@ table_counts <- dbFetch(res)
 p <- ggplot(data=table_counts, aes(x=sample, y=n, fill=group_2))
 p <- p + geom_bar(stat="identity")
 p <- p+ theme(axis.text.x = element_text(angle = 90))+ facet_grid(. ~ group_1, scales="free")
-
+p <- p + theme_bw()
 ggsave(snakemake@output[[1]], p, height=5, width=8)
 dev.off()
 
@@ -48,7 +48,7 @@ table_counts <- dbFetch(res)
 p <- ggplot(data=table_counts, aes(x=sample, y=n, fill=group_2))
 p <- p + geom_bar(stat="identity")
 p <- p+ theme(axis.text.x = element_text(angle = 90))+ facet_grid(. ~ group_1, scales="free")
-
+p <- p + theme_bw()
 ggsave(snakemake@output[[2]], p, height=5, width=8)
 dev.off()
 
@@ -56,6 +56,7 @@ print("PLOTTING 4")
 # PLOT 3: distribution of read counts
 p <- ggplot(rpkm_table, aes(x = n_hits, fill=group_2))
 p <- p + geom_histogram(colour = "white") + facet_grid(group_2 ~ group_1)
+p <- p + theme_bw()
 ggsave(snakemake@output[[3]], p, height=6, width=8)
 
 print("PLOTTING 4")
@@ -74,9 +75,10 @@ rpkm_table$accession <- factor(x = rpkm_table$accession,
                                levels = rownames(rpkm_log2_table_dcast)[order], 
                                ordered = TRUE)
 
-p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- ggplot(rpkm_table, aes(sample, accession)) + geom_tile(aes(fill = RPKM_log2)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
+p <- p + theme_bw()
 ggsave(snakemake@output[[5]], p, height=26, width=8)
 
 print("PLOTTING 6")
@@ -97,10 +99,11 @@ ordered_rows <- rownames(AMR_family_RPKM_dcast)
 AMR_family_RPKM$AMR_family <- factor(x = AMR_family_RPKM$AMR_family,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
-p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = family_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- ggplot(AMR_family_RPKM, aes(sample, AMR_family)) + geom_tile(aes(fill = family_sum)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + geom_text(aes(label = round(family_sum, 1)), size=2) 
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
+p <- p + theme_bw()
 ggsave(snakemake@output[[6]], p, height=13, width=15)
 
 print("PLOTTING 7")
@@ -121,9 +124,10 @@ ordered_rows <- rownames(resistance_mechanism_RPKM_dcast)
 resistance_mechanism_RPKM$resistance_mechanism <- factor(x = resistance_mechanism_RPKM$resistance_mechanism,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
-p <- ggplot(resistance_mechanism_RPKM, aes(sample, resistance_mechanism)) + geom_tile(aes(fill = mechanism_sum)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- ggplot(resistance_mechanism_RPKM, aes(sample, resistance_mechanism)) + geom_tile(aes(fill = mechanism_sum)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
+p <- p + theme_bw()
 ggsave(snakemake@output[[7]], p, height=12, width=20)
 
 print("PLOTTING 8")
@@ -143,7 +147,8 @@ ordered_rows <- rownames(drug_class_RPKM_dcast)
 drug_class_RPKM$drug_class <- factor(x = drug_class_RPKM$drug_class,
                                     levels = ordered_rows, 
                                     ordered = TRUE)
-p <- ggplot(drug_class_RPKM, aes(sample, drug_class)) + geom_tile(aes(fill = drug_class_RPKM)) + scale_fill_gradient(low = "white", high = "steelblue")
+p <- ggplot(drug_class_RPKM, aes(sample, drug_class)) + geom_tile(aes(fill = drug_class_RPKM)) + scale_fill_gradient(low = "white", high = "steelblue", na.value = "grey50")
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
+p <- p + theme_bw()
 ggsave(snakemake@output[[8]], p, height=12, width=20)
