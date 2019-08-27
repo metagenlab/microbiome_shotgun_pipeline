@@ -1,0 +1,85 @@
+db_path_ezvir=config["ezvir_database"]
+
+def aggregate_input(wildcards):
+    checkpoint_output = checkpoints.write_all_fasta.get(**wildcards).output[0]
+    return expand(db_path_ezvir + "index/{i}.1.bt2",
+           i=glob_wildcards(os.path.join(checkpoint_output, "{i}.fa")).i)
+
+rule all_ezvir_db:
+        input:  "Ezvir/genome_lenghts.csv",
+                "Ezvir/genome_names.csv",
+                aggregate_input
+
+
+rule decompress_database:
+    input: db_path_ezvir + "EZV0.1-database.fasta.gz"
+
+    output: db_path_ezvir + "EZV0.1-database.fa"
+
+    shell: "zcat {input} > {output}"
+
+
+
+
+checkpoint write_all_fasta:
+    input: db_path_ezvir + "EZV0.1-database.fa"
+
+    output: directory(os.path.join(db_path_ezvir,"index"))
+
+    run:
+        from Bio import SeqIO
+        import os
+        handle=SeqIO.parse(input[0],'fasta')
+        os.mkdir(os.path.join(db_path_ezvir,"index"))
+        for record in handle:
+            acc=record.id.split('|')
+            ids=acc[len(acc)-2].replace('.','_')
+            genome_path=os.path.join(db_path_ezvir,"index",ids+".fa")
+            SeqIO.write(record,genome_path,'fasta')
+
+
+rule genrate_required_files:
+    input: db_path_ezvir + "EZV0.1-database.fa"
+
+    output: "Ezvir/genome_lenghts.csv",
+            "Ezvir/genome_names.csv"
+    run:
+        import pandas as pd
+        from Bio import SeqIO
+        fasta_db=input[0]
+        handle=SeqIO.parse(fasta_db,'fasta')
+        desc=[]
+        gen_len=[]
+        ids=[]
+        for record in handle:
+            desc.append(record.description.split(record.id+' ')[1].replace(' ','_').replace(',','_').replace('/','_'))
+            gen_len.append(len(record.seq))
+            acc=record.id.split('|')
+            ids.append(acc[len(acc)-2].replace('.','_'))
+        genome_lengths_table=pd.DataFrame(gen_len,ids,columns=['genome_length'])
+        genome_lengths_table.to_csv("Ezvir/genome_lenghts.csv",sep='\t')
+        genome_names=pd.DataFrame(desc,ids,columns=['genome_names'])
+        genome_names.to_csv("Ezvir/genome_names.csv",sep='\t')
+
+
+
+rule index_database:
+    conda: pipeline_path + "envs/ezvir.yml"
+
+    input:  db_path_ezvir + "index/{genome_id}.fa"
+
+    output: db_path_ezvir + "index/{genome_id}.1.bt2",
+            db_path_ezvir + "index/{genome_id}.2.bt2",
+            db_path_ezvir + "index/{genome_id}.3.bt2",
+            db_path_ezvir + "index/{genome_id}.4.bt2",
+            db_path_ezvir + "index/{genome_id}.rev.1.bt2",
+            db_path_ezvir + "index/{genome_id}.rev.2.bt2"
+
+    params: db_path_ezvir + "index/{genome_id}"
+
+    log:
+        logging_folder + "Ezvir/{genome_id}/indexing.log"
+
+    threads: 1
+
+    shell: "bowtie2-build --threads {threads} -f {input} {params} &> {log}"
