@@ -137,7 +137,7 @@ p <- p + geom_text(aes(label = round(mechanism_sum, 1)), size=2)
 p <- p + theme(axis.text.x = element_text(angle = 90))
 p <- p + facet_grid( . ~ group_2, scales="free")
 p <- p + theme_bw() + theme(axis.text.x = element_text(angle = 90)) 
-ggsave(snakemake@output[[7]], p, height=8, width=10)
+ggsave(snakemake@output[[7]], p, height=6, width=10)
 
 print("PLOTTING 8")
 # PLOT 8 RPKM heatmap drug class
