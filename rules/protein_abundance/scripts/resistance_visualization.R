@@ -20,6 +20,7 @@ rpkm_table <- dbFetch(res)
 rpkm_table$RPKM_log2 <- log2(rpkm_table$RPKM + 1)
 rpkm_table$description <- apply(rpkm_table[ , c("aro_name","accession") ] , 1 , paste , collapse = "-" )
 
+print(head(rpkm_table))
 # prepare matrix of RPKM_log2
 rpkm_log2_table_dcast <- dcast(rpkm_table, sample~accession, value.var="RPKM_log2")
 # replace na by 0
