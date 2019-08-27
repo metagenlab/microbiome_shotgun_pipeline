@@ -12,7 +12,7 @@ rule all_surpi_db:
             directory(ncbi_abs_path)
 
 rule dl_data:
-    singularity: "docker://r/unlhcc/surpi"
+    singularity: "docker://unlhcc/surpi"
 
     params: surpi_db
 
