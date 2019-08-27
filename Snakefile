@@ -52,7 +52,7 @@ include: "rules/assembly_and_binning/binning.rules"
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/mmseqs2.smk"
 include: "rules/databases/Pathseq/Pathseq.rules"
-
+include: "rules/databases/Ezvir/Ezvir_db.rules"
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
 include: "rules/protein_abundance/calculate_RPKM.rules"
@@ -62,3 +62,4 @@ include: "rules/protein_abundance/calculate_RPKM.rules"
 include: "rules/taxonomy_profiling/kaiju.rules"
 #include: "rules/taxonomy_profiling/kraken2.rules"
 include: "rules/taxonomy_profiling/Pathseq.rules"
+include: "rules/taxonomy_profiling/Ezvir.rules"
