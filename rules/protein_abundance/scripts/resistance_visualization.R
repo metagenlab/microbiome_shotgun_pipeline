@@ -76,9 +76,9 @@ print("PLOTTING 5")
 #                               ordered = TRUE)
 
 # reorder rows based on rowSum
-rpkm_table <- rpkm_table[order(rowSums(rpkm_table),decreasing=F),]
+rpkm_log2_table_dcast <- rpkm_log2_table_dcast[order(rowSums(rpkm_log2_table_dcast),decreasing=F),]
 # match index matrix rownames to 
-ordered_rows <- rownames(rpkm_table)
+ordered_rows <- rownames(rpkm_log2_table_dcast)
 rpkm_table$accession <- factor(x = rpkm_table$accession,
                                levels = ordered_rows, 
                                ordered = TRUE)
