@@ -1,0 +1,26 @@
+surpi_db=config["surpi_database"]
+
+import datetime
+import os
+dirname='NCBI'
+NCBI_dir=f"{dirname}_{datetime.datetime.now():%m%d%Y}"
+reference_abs_path=os.path.join(surpi_db,"reference")
+ncbi_abs_path=os.path.join(surpi_db,NCBI_dir)
+
+rule all_surpi_db:
+    input: directory(reference_abs_path),
+            directory(ncbi_abs_path)
+
+rule dl_data:
+    singularity: "docker://r/unlhcc/surpi"
+
+    params: surpi_db
+
+    output: directory(reference_abs_path),
+            directory(ncbi_abs_path)
+
+    shell:
+        """
+        cd {params}
+        create_SURPI_data.sh
+        """
