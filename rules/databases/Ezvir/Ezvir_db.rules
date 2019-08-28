@@ -52,7 +52,7 @@ rule genrate_required_files:
         gen_len=[]
         ids=[]
         for record in handle:
-            desc.append(record.description.split(record.id+' ')[1].replace(' ','_').replace(',','-').replace('/','-').replace('[','_').replace(']','_'))
+            desc.append(record.description.split(record.id+' ')[1].replace(' ','_').replace(',','-').replace('/','-').replace('[','_').replace(']','_').replace('{','_').replace('}','_'))
             gen_len.append(len(record.seq))
             acc=record.id.split('|')
             ids.append(acc[len(acc)-2].replace('.','_'))
