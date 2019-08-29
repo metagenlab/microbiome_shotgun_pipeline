@@ -3,7 +3,7 @@ rule all_ezvir:
     input: expand("Ezvir/{sample}/genomes_with_cov.csv",sample=list(read_naming.keys()))
 
 
-rule map_paired_reads:
+rule map_decontaminated_PE_reads:
     conda: pipeline_path + "envs/ezvir.yml"
 
     input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -18,6 +18,22 @@ rule map_paired_reads:
     shell:
         """
         bowtie2 -p {threads} -q1 {input.r1} -q2 {input.r2} \
+        -x {params.genome_path} | samtools view -bS -F 12 | samtools sort -n -O BAM -o {output} 
+        """
+rule map_decontaminated_SE_reads:
+    conda: pipeline_path + "envs/ezvir.yml"
+
+    input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+    params: genome_path=db_path_ezvir + "index/{genome_id}"
+
+    threads: 1
+
+    output: "Ezvir/{sample}/bam/{genome_id}.bam"
+
+    shell:
+        """
+        bowtie2 -p {threads} -q {input} \
         -x {params.genome_path} | samtools view -bS -F 12 | samtools sort -n -O BAM -o {output} 
         """
 
