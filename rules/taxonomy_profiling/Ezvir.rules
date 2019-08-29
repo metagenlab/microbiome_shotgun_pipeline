@@ -1,19 +1,19 @@
 db_path_ezvir=config["ezvir_database"]
 rule all_ezvir:
-    input: expand("Ezvir/test_cut-0_p1-plot.pdf",sample=list(read_naming.keys()))
+    input: expand("Ezvir/{sample}/genomes_with_cov.csv",sample=list(read_naming.keys()))
 
 
 rule map_paired_reads:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: r1=expand("unmapped/{host_acc}/{sample}_R1.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys())),
-            r2=expand("unmapped/{host_acc}/{sample}_R2.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys()))
+    input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+            r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
     params: genome_path=db_path_ezvir + "index/{genome_id}"
 
-    threads: 10
+    threads: 1
 
-    output: "Ezvir/alignments/{genome_id}.bam"
+    output: "Ezvir/{sample}/bam/{genome_id}.bam"
 
     shell:
         """
@@ -21,30 +21,62 @@ rule map_paired_reads:
         -x {params.genome_path} | samtools view -bS -F 12 | samtools sort -n -O BAM -o {output} 
         """
 
+import pandas as pd
+table=pd.read_csv("Ezvir/genome_names.csv",delimiter='\t',index_col=0)
+fasta_ids=list(table.index)
+genome_names=list(table["genome_names"])
+names_dict=dict(zip(fasta_ids,genome_names))
+
+
 rule calculate_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/alignments/{genome_id}.bam"
+    input: "Ezvir/{sample}/bam/{genome_id}.bam"
 
-    output: "Ezvir/coverage/{genome_id}.csv"
+    output: "Ezvir/{sample}/coverage/{genome_id}.csv"
 
-    shell: "bedtools genomecov -d -ibam {input} > {output}"
+    params: gen_len="Ezvir/genome_lenghts.csv",
+            #file_nam=lambda wildcards: names_dict[wildcards.genome_id]
 
+    shell:
+        """
+        bedtools genomecov -d -ibam -g {params.gen_len} {input} > {output}
+        """
 
-rule phase_1_report:
-    conda: pipeline_path + "envs/ezvir.yml"
+checkpoint delete_empty_files:
+    input: expand("Ezvir/{{sample}}/coverage/{genome_id}.csv",genome_id=fasta_ids)
 
-    input: "Ezvir/coverage/{genome_id}.csv"
-
-    output: "Ezvir/test_cut-0_p1-plot.pdf",
-            "Ezvir/test_cut-0_p1-values.txt",
-            "Ezvir/BEST-GENOMES.ezv",
-            "Ezvir/ALL-RESULTS.ezv"
-
+    output: "Ezvir/{sample}/genomes_with_cov.csv"
 
     params: script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir"
 
-    shell: "{params.script_path}/Report.r -c Ezvir/COLORS.ezv -j GENOMES_NO-ANIMAL-140527.ezv -i {input} -o test > {output}"
+    log:
+        logging_folder + "Ezvir/{sample}/delete_empty_files.log"
+
+    shell:
+        """   
+        {params.script_path}/remove_0_cov_files {input} {output} 2>>{log}
+        """
+
+
+
+
+
+#rule phase_1_report:
+#    conda: pipeline_path + "envs/ezvir.yml"
+
+#    input: aggregate_csv
+
+#    output: "Ezvir/{sample}/output/output.log"
+
+ #   params: script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir"
+
+  #  shell:
+   #     """
+    #    cd Ezvir/{wildcards.sample}/output
+     #   {params.script_path}/Report.r -c Ezvir/COLORS.ezv -j GENOMES_NO-ANIMAL-140527.ezv -i {input} -o {wildcards.sample}
+      #  echo 'done' > {output}
+       # """
 
 
 
