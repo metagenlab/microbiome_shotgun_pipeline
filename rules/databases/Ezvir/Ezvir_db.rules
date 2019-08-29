@@ -5,9 +5,11 @@ def aggregate_input(wildcards):
     return expand(db_path_ezvir + "index/{i}.1.bt2",
            i=glob_wildcards(os.path.join(checkpoint_output, "{i}.fa")).i)
 
+checkpoint_genome_len=checkpoints.genrate_required_files.get(**wildcards).output[0]
+checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
 rule all_ezvir_db:
-        input:  "Ezvir/genome_lenghts.csv",
-                "Ezvir/genome_names.csv",
+        input:  checkpoint_genome_len,
+                checkpoint_genome_nam,
                 aggregate_input
 
 
@@ -38,7 +40,7 @@ checkpoint write_all_fasta:
             SeqIO.write(record,genome_path,'fasta')
 
 
-rule genrate_required_files:
+checkpoint genrate_required_files:
     input: db_path_ezvir + "EZV0.1-database.fa"
 
     output: "Ezvir/genome_lenghts.csv",
