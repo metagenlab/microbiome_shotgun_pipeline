@@ -2,7 +2,7 @@
 rule all_decontam:
     input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
 
-rule decompress_reference_genome:
+rule decompress_host_genome:
     input: "host/{host_acc}.fna.gz"
 
     output: temp("host/{host_acc}.fa")
@@ -13,7 +13,7 @@ if config['reference_genome']['host']=='human':
     index_alg='bwtsw'
 else:
     index_alg='is'
-rule index_reference_genome:
+rule index_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
     input: "host/{host_acc}.fa"
@@ -25,14 +25,14 @@ rule index_reference_genome:
 
     shell: "bwa index -b {params.mem} -a {params.algorithm} {input}"
 
-rule align_reads_to_reference_genome:
+rule align_PE_reads_to_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
     input: r1="samples/{sample}/reads/trimmed/R1_paired.fastq",
             r2="samples/{sample}/reads/trimmed/R2_paired.fastq",
             host_fa="host/{host_acc}.fa"
 
-    output: temp("host/{host_acc}/{sample}.bam")
+    output: temp("host/{host_acc}/PE_{sample}.bam")
 
     threads: 20
 
@@ -41,24 +41,62 @@ rule align_reads_to_reference_genome:
             bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} | samtools sort -n -O BAM -o {output}
         """
 
+rule align_SE_reads_to_host_genome:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: r1="samples/{sample}/reads/trimmed/single.fastq",
+            host_fa="host/{host_acc}.fa"
+
+    output: temp("host/{host_acc}/SE_{sample}.bam")
+
+    threads: 20
+
+    shell:
+        """
+            bwa mem -M -t {threads} {input.host_fa} {input.r1} | samtools sort -n -O BAM -o {output}
+        """
+def get_bam_input_decontam(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return "host/{host_acc}/SE_{sample}.bam"
+    else:
+        return "host/{host_acc}/PE_{sample}.bam"
+
 rule get_unmapped_reads:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
-    input: "host/{host_acc}/{sample}.bam"
+    input: get_bam_input_decontam
 
     output: "unmapped/{host_acc}/{sample}.bam"
 
     shell: "samtools view -b -f 4 {input} > {output}"
 
-rule bam_to_fastq:
-    conda: pipeline_path + "envs/bedtools.yml"
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
 
-    input: "unmapped/{host_acc}/{sample}.bam"
+if paired:
+    rule bam_to_fastq:
+        conda: pipeline_path + "envs/bedtools.yml"
 
-    output: "unmapped/{host_acc}/{sample}_R1.fq",
-            "unmapped/{host_acc}/{sample}_R2.fq"
+        input: "unmapped/{host_acc}/{sample}.bam"
 
-    shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
+        output: "unmapped/{host_acc}/{sample}_R1.fq",
+                "unmapped/{host_acc}/{sample}_R2.fq"
+
+        shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
+else:
+    rule bam_to_fastq:
+        conda: pipeline_path + "envs/bedtools.yml"
+
+        input: "unmapped/{host_acc}/{sample}.bam"
+
+        output: "unmapped/{host_acc}/{sample}_single.fq"
+
+        shell: "bedtools bamtofastq -i {input} -fq {output}"
 
 rule all_deconatam_with_Pathseq:
     input: expand("Pathseq/{sample}/filtered_reads/filter_metrics.txt",sample=list(read_naming.keys()))
@@ -88,7 +126,7 @@ rule raw_single_fastq_to_bam:
 
     shell: "gatk FastqToSam -F1 {input[0]} -O {output} -SM {wildcards.sample} 2> {log}"
 
-def get_bam_input(wildcards):
+def get_bam_input_pathseq(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
         return "Pathseq/{sample}/PE_input_reads.bam"
@@ -100,7 +138,7 @@ db_path=config["pathseq_database"]
 rule filter_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: get_bam_input
+    input: get_bam_input_pathseq
 
     output: paired_reads="Pathseq/{sample}/filtered_reads/Paired_reads.bam",
             unpaired_reads="Pathseq/{sample}/filtered_reads/Unpaired_reads.bam",
