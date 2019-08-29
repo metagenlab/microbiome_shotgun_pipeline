@@ -376,8 +376,8 @@ colors <- rbind(colors, c("padding","white"))
 
 
 ### make the plots ###
-covinfo = paste("cut-", opt$min_coverage, sep="")
-filename = paste(opt$outheader, covinfo, "p1-plot.pdf", sep = "_")
+# = paste("cut-", opt$min_coverage, sep="")
+filename = paste(opt$outheader,"p1-plot.pdf", sep = "_")
 # if phase-2, write the short name into filename
 if (!is.null(opt$phase2)) {
     filename = paste(opt$outheader, covinfo, opt$phase2,"p2-plot.pdf", sep = "_")
