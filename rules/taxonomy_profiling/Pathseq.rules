@@ -26,7 +26,7 @@ rule untrimmed_paired_fastq_to_bam:
 rule untrimmed_single_fastq_to_bam:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: "samples/{sample}/reads/raw/{sample}_single.fastq.gz"
+    input: "samples/{sample}/reads/raw/single_{sample}.fastq.gz"
 
     log:
         logging_folder+"Pathseq/{sample}/FastqToSam.log"

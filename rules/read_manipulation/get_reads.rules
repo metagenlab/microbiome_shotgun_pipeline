@@ -14,7 +14,7 @@ rule copy_fastq_single_from_link:
     input:
         lambda wildcards: link_directory + original_names[wildcards.sample]+ "_" +read_naming[wildcards.sample][0]
     output:
-        temp("samples/{sample}/reads/raw/{sample}_single.fastq.gz")
+        temp("samples/{sample}/reads/raw/single_{sample}.fastq.gz")
     shell:
         """
         cp {input[0]} {output[0]}
