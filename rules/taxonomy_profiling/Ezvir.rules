@@ -13,7 +13,7 @@ rule map_decontaminated_PE_reads:
 
     threads: 1
 
-    output: "Ezvir/{sample}/bam/{genome_id}.bam"
+    output: "Ezvir/{sample}/bam/PE_{genome_id}.bam"
 
     shell:
         """
@@ -29,7 +29,7 @@ rule map_decontaminated_SE_reads:
 
     threads: 1
 
-    output: "Ezvir/{sample}/bam/{genome_id}.bam"
+    output: "Ezvir/{sample}/bam/SE_{genome_id}.bam"
 
     shell:
         """
@@ -46,11 +46,17 @@ def get_gen_id_names(wildcards):
     names_dict=dict(zip(fasta_ids,genome_names))
     return names_dict
 
+def get_bam_input(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return "Ezvir/{sample}/bam/PE_{genome_id}.bam"
+    else:
+        return "Ezvir/{sample}/bam/SE_{genome_id}.bam"
 
 rule calculate_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/bam/{genome_id}.bam"
+    input: get_bam_input
 
     output: "Ezvir/{sample}/coverage/{genome_id}.csv"
 

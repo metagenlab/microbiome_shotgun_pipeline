@@ -57,10 +57,11 @@ rule align_SE_reads_to_host_genome:
         """
 def get_bam_input_decontam(wildcards):
     fastq_list = read_naming[wildcards.sample]
+    print(fastq_list)
     if len(fastq_list) == 2:
-        return "host/{host_acc}/SE_{sample}.bam"
-    else:
         return "host/{host_acc}/PE_{sample}.bam"
+    else:
+        return "host/{host_acc}/SE_{sample}.bam"
 
 rule get_unmapped_reads:
     conda: pipeline_path + "envs/bwa-samtools.yml"
@@ -71,32 +72,27 @@ rule get_unmapped_reads:
 
     shell: "samtools view -b -f 4 {input} > {output}"
 
-def paired(wildcards):
-    fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
-        return True
-    else:
-        return False
 
-if paired:
-    rule bam_to_fastq:
-        conda: pipeline_path + "envs/bedtools.yml"
 
-        input: "unmapped/{host_acc}/{sample}.bam"
 
-        output: "unmapped/{host_acc}/{sample}_R1.fq",
-                "unmapped/{host_acc}/{sample}_R2.fq"
+rule PE_bam_to_fastq:
+    conda: pipeline_path + "envs/bedtools.yml"
 
-        shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
-else:
-    rule bam_to_fastq:
-        conda: pipeline_path + "envs/bedtools.yml"
+    input: "unmapped/{host_acc}/{sample}.bam"
 
-        input: "unmapped/{host_acc}/{sample}.bam"
+    output: "unmapped/{host_acc}/{sample}_R1.fq",
+            "unmapped/{host_acc}/{sample}_R2.fq"
 
-        output: "unmapped/{host_acc}/{sample}_single.fq"
+    shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
 
-        shell: "bedtools bamtofastq -i {input} -fq {output}"
+rule SE_bam_to_fastq:
+    conda: pipeline_path + "envs/bedtools.yml"
+
+    input: "unmapped/{host_acc}/{sample}.bam"
+
+    output: "unmapped/{host_acc}/{sample}_single.fq"
+
+    shell: "bedtools bamtofastq -i {input} -fq {output}"
 
 rule all_deconatam_with_Pathseq:
     input: expand("Pathseq/{sample}/filtered_reads/filter_metrics.txt",sample=list(read_naming.keys()))
