@@ -11,8 +11,10 @@ def get_req_files(wildcards):
     return expand(checkpoint_genome_len,checkpoint_genome_nam)
 
 rule all_ezvir_db:
-        input:  get_req_files,
-                aggregate_input
+        input:  aggregate_input,
+                "Ezvir/genome_lengths.csv",
+                "Ezvir/genome_names.csv"
+
 
 
 rule decompress_database:
