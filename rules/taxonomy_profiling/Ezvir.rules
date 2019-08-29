@@ -22,10 +22,13 @@ rule map_paired_reads:
         """
 
 import pandas as pd
-table=pd.read_csv("Ezvir/genome_names.csv",delimiter='\t',index_col=0)
-fasta_ids=list(table.index)
-genome_names=list(table["genome_names"])
-names_dict=dict(zip(fasta_ids,genome_names))
+def get_gen_id_names(wildcards):
+    checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
+    table=pd.read_csv(checkpoint_genome_nam,delimiter='\t',index_col=0)
+    fasta_ids=list(table.index)
+    genome_names=list(table["genome_names"])
+    names_dict=dict(zip(fasta_ids,genome_names))
+    return names_dict
 
 
 rule calculate_genome_coverage:
@@ -44,7 +47,7 @@ rule calculate_genome_coverage:
         """
 
 checkpoint delete_empty_files:
-    input: expand("Ezvir/{{sample}}/coverage/{genome_id}.csv",genome_id=fasta_ids)
+    input: expand("Ezvir/{{sample}}/coverage/{genome_id}.csv",genome_id=lambda wildcards: list(get_gen_id_names.keys()))
 
     output: "Ezvir/{sample}/genomes_with_cov.csv"
 

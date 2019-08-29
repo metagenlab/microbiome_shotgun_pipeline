@@ -5,11 +5,13 @@ def aggregate_input(wildcards):
     return expand(db_path_ezvir + "index/{i}.1.bt2",
            i=glob_wildcards(os.path.join(checkpoint_output, "{i}.fa")).i)
 
-checkpoint_genome_len=checkpoints.genrate_required_files.get(**wildcards).output[0]
-checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
+def get_req_files(wildcards):
+    checkpoint_genome_len=checkpoints.genrate_required_files.get(**wildcards).output[0]
+    checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
+    return expand(checkpoint_genome_len,checkpoint_genome_nam)
+
 rule all_ezvir_db:
-        input:  checkpoint_genome_len,
-                checkpoint_genome_nam,
+        input:  get_req_files,
                 aggregate_input
 
 
