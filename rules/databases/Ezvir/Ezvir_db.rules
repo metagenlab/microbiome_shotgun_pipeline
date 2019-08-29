@@ -26,6 +26,8 @@ rule decompress_database:
 
 
 checkpoint write_all_fasta:
+    conda: pipeline_path + "envs/ezvir.yml"
+
     input: db_path_ezvir + "EZV0.1-database.fa"
 
     output: directory(os.path.join(db_path_ezvir,"index"))
@@ -43,6 +45,8 @@ checkpoint write_all_fasta:
 
 
 checkpoint genrate_required_files:
+    conda: pipeline_path + "envs/ezvir.yml"
+    
     input: db_path_ezvir + "EZV0.1-database.fa"
 
     output: "Ezvir/genome_lenghts.csv",
