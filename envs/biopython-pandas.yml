@@ -2,5 +2,5 @@ channels:
  - bioconda
  - conda-forge
 dependencies:
- - biopython = 1.70=np112py36_1
- - pandas = 0.24.2
+ - biopython = 1.72
+ - pandas = 0.25.1
