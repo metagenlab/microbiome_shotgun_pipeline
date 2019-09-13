@@ -58,12 +58,11 @@ rule calculate_genome_coverage:
 
     output: "Ezvir/{sample}/coverage/{genome_id}.csv"
 
-    params: gen_len="Ezvir/genome_lenghts.csv",
-            #file_nam=lambda wildcards: names_dict[wildcards.genome_id]
+    params: gen_len="Ezvir/genome_lenghts.csv"
 
     shell:
         """
-        bedtools genomecov -d -ibam -g {params.gen_len} {input} > {output}
+        bedtools genomecov -d -ibam {input} > {output}
         """
 
 checkpoint delete_empty_files:
