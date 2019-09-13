@@ -34,7 +34,7 @@ rule map_decontaminated_SE_reads:
     shell:
         """
         bowtie2 -p {threads} -q {input} \
-        -x {params.genome_path} | samtools view -bS -F 12 | samtools sort -n -O BAM -o {output} 
+        -x {params.genome_path} | samtools view -bS -F 4 | samtools sort -n -O BAM -o {output} 
         """
 
 import pandas as pd
