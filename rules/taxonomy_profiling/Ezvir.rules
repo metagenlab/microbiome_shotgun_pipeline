@@ -1,6 +1,11 @@
 db_path_ezvir=config["ezvir_database"]
+
+def get_csv_list(wildcards):
+    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
+    return expand("Ezvir/{sample}/coverage/{i}.csv",i=glob_wildcards(os.path.join(checkpoint_output,"{i}.bam")).i,sample=list(read_naming.keys()))
+
 rule all_ezvir:
-    input: expand("Ezvir/{sample}/genomes_with_cov.csv",sample=list(read_naming.keys()))
+    input: get_csv_list
 
 
 rule map_decontaminated_PE_reads:
@@ -55,17 +60,12 @@ checkpoint copy_non_empty_bam:
     shell: "find Ezvir/{sample}/bam -type f -size +400c -exec cp {} {output} \;"
 
 
-def get_non_empty_bams(wildcards):
-    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
-    return expand("Ezvir/{{sample}}/non-empty-bams/{i}",i=glob_wildcards(os.path.join(checkpoint_output, "{i}.bam")).i)
-
 rule calculate_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
+    input: "Ezvir/{sample}/non-empty-bams/{i}.bam"
 
-    input: get_non_empty_bams
-
-    output: "Ezvir/{sample}/coverage/{genome_id}.csv"
+    output: "Ezvir/{sample}/coverage/{i}.csv"
 
     shell:
         """
