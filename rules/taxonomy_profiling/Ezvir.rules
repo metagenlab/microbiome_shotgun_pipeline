@@ -36,50 +36,41 @@ rule map_decontaminated_SE_reads:
         bowtie2 -p {threads} -q {input} \
         -x {params.genome_path} | samtools view -bS -F 4 | samtools sort -n -O BAM -o {output} 
         """
-
 import pandas as pd
-def get_csv_list(wildcards):
+def get_bam_list(wildcards):
     checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
     table=pd.read_csv(checkpoint_genome_nam,delimiter='\t',index_col=0)
     fasta_ids=list(table.index)
-    return expand("Ezvir/{{sample}}/coverage/{genome_id}.csv",genome_id=fasta_ids)
-
-def get_bam_input(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
-        return "Ezvir/{sample}/bam/PE_{genome_id}.bam"
+        return expand("Ezvir/{{sample}}/coverage/PE_{genome_id}.bam",genome_id=fasta_ids)
     else:
-        return "Ezvir/{sample}/bam/SE_{genome_id}.bam"
+        return expand("Ezvir/{{sample}}/coverage/SE_{genome_id}.bam",genome_id=fasta_ids)
+
+checkpoint copy_non_empty_bam:
+    input: get_bam_list
+
+    output: directory("Ezvir/{sample}/non-empty-bams")
+
+    shell: "find Ezvir/{sample}/bam -type f -size +400c -exec cp {} {output} \;"
+
+
+def get_non_empty_bams(wildcards):
+    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
+    return expand("Ezvir/{{sample}}/non-empty-bams/{i}",i=glob_wildcards(os.path.join(checkpoint_output, "{i}.bam")).i)
 
 rule calculate_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: get_bam_input
+
+    input: get_non_empty_bams
 
     output: "Ezvir/{sample}/coverage/{genome_id}.csv"
-
-    params: gen_len="Ezvir/genome_lenghts.csv"
 
     shell:
         """
         bedtools genomecov -d -ibam {input} > {output}
         """
-
-checkpoint delete_empty_files:
-    input: get_csv_list
-
-    output: "Ezvir/{sample}/genomes_with_cov.csv"
-
-    params: script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir"
-
-    log:
-        logging_folder + "Ezvir/{sample}/delete_empty_files.log"
-
-    shell:
-        """   
-        {params.script_path}/remove_0_cov_files {input} {output} 2>>{log}
-        """
-
 
 
 
