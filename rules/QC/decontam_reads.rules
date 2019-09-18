@@ -57,7 +57,6 @@ rule align_SE_reads_to_host_genome:
         """
 def get_bam_input_decontam(wildcards):
     fastq_list = read_naming[wildcards.sample]
-    print(fastq_list)
     if len(fastq_list) == 2:
         return "host/{host_acc}/PE_{sample}.bam"
     else:
