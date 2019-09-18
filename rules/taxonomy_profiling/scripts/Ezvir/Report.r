@@ -203,9 +203,10 @@ for (file in FN) {
     # remove extension (.csv) from genome name
     bn = basename(file)
     gen_name = gsub(".csv","",bn)
-
+    gen_name=gsub("SE_","",gen_name)
+    gen_name=gsub("PE_","",gen_name)
     # get row in "genomes" with corresponding short name
-    intersect <- match(gen_name, genomes$gname)
+    intersect <- match(gen_name, genomes$gid)
 
     ### catch the case when label names don't match ###
     # using list of names to plot (GENOMES.ezv), can have subsets of all virus tested.
@@ -380,11 +381,11 @@ colors <- rbind(colors, c("padding","white"))
 filename = paste(opt$outheader,"p1-plot.pdf", sep = "_")
 # if phase-2, write the short name into filename
 if (!is.null(opt$phase2)) {
-    filename = paste(opt$outheader, covinfo, opt$phase2,"p2-plot.pdf", sep = "_")
+    filename = paste(opt$outheader,opt$phase2,"p2-plot.pdf", sep = "_")
 }
 #if blacklist was used, add 'BL' to filename
 if (!is.null(opt$blacklist)) {
-    filename = paste(opt$outheader, covinfo, "BL-p1-plot.pdf", sep = "_")
+    filename = paste(opt$outheader,"BL-p1-plot.pdf", sep = "_")
 }
 
 pdf(filename)
@@ -482,11 +483,11 @@ dev.off()
 
 # write values from the points on plot to a table
 if (!is.null(opt$phase2)) {
-    write.table(pv,file=paste(opt$outheader, covinfo, opt$phase2, "p2-values.txt", sep = "_"), sep = ',', row.names=pv$LN, col.names=NA)
+    write.table(pv,file=paste(opt$outheader,opt$phase2, "p2-values.txt", sep = "_"), sep = ',', row.names=pv$LN, col.names=NA)
 }
 
 if (is.null(opt$phase2)) {
-    write.table(pv,file=paste(opt$outheader, covinfo, "p1-values.txt", sep = "_"), sep = ',', row.names=pv$LN, col.names=NA)
+    write.table(pv,file=paste(opt$outheader,"p1-values.txt", sep = "_"), sep = ',', row.names=pv$LN, col.names=NA)
 
     # write BEST genomes names file for use in CC-analysis
     bestinfo = bg[,c("ID","GN","LN", "DC", "DCN")]
