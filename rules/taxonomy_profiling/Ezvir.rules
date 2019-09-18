@@ -1,8 +1,7 @@
 db_path_ezvir=config["ezvir_database"]
 
 rule all_ezvir:
-    input: "Ezvir/{sample}/all.csv"
-
+    input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
 rule map_decontaminated_PE_reads:
     conda: pipeline_path + "envs/ezvir.yml"
@@ -44,16 +43,21 @@ def get_bam_list(wildcards):
     fasta_ids=list(table.index)
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
-        return expand("Ezvir/{{sample}}/bam/PE_{genome_id}.bam",genome_id=fasta_ids)
+        bam_list=expand("Ezvir/{{sample}}/bam/PE_{genome_id}.bam",genome_id=fasta_ids)
     else:
-        return expand("Ezvir/{{sample}}/bam/SE_{genome_id}.bam",genome_id=fasta_ids)
+        bam_list=expand("Ezvir/{{sample}}/bam/SE_{genome_id}.bam",genome_id=fasta_ids)
+    return bam_list
 
 checkpoint copy_non_empty_bam:
     input: get_bam_list
 
     output: directory("Ezvir/{sample}/non-empty-bams")
 
-    shell: "find Ezvir/{sample}/bam -type f -size +400c -exec cp {} {output} \;"
+    shell:
+        """
+        mkdir {output}
+        find Ezvir/{wildcards.sample}/bam -type f -size +400c -exec cp {{}} {output} \;
+        """
 
 
 rule calculate_genome_coverage:
@@ -80,22 +84,40 @@ rule cat_coverage_tables:
 
 
 
+rule phase_1_report:
+    conda: pipeline_path + "envs/ezvir.yml"
 
-#rule phase_1_report:
-#    conda: pipeline_path + "envs/ezvir.yml"
+    input: "Ezvir/{sample}/all.csv"
 
-#    input: aggregate_csv
+    output: "Ezvir/{sample}/report/{sample}_p1-plot.pdf",
+            "Ezvir/{sample}/report/ALL-RESULTS.ezv",
+            "Ezvir/{sample}/report/BEST-GENOMES.ezv"
 
-#    output: "Ezvir/{sample}/output/output.log"
+    params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Report.r",
+            csv_dir="../coverage",
 
- #   params: script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir"
+    shell:
+        """
+        cd Ezvir/{wildcards.sample}/report
+        Rscript {params.report_script_path} -c ../../COLORS.ezv -j ../../Ezvir_names_db.ezv -i {params.csv_dir} -o {wildcards.sample}
+        """
+rule generate_coverage_histograms:
+    conda: pipeline_path + "envs/ezvir.yml"
 
-  #  shell:
-   #     """
-    #    cd Ezvir/{wildcards.sample}/output
-     #   {params.script_path}/Report.r -c Ezvir/COLORS.ezv -j GENOMES_NO-ANIMAL-140527.ezv -i {input} -o {wildcards.sample}
-      #  echo 'done' > {output}
-       # """
+    input: "Ezvir/{sample}/report/BEST-GENOMES.ezv"
+
+    output: "Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf"
+
+    params: cov_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Coverage_histograms.r",
+            csv_dir="../coverage",
+            target_family=config["virus_family"]
+
+    shell:
+         """
+         cd Ezvir/{wildcards.sample}/report
+         Rscript {params.cov_script_path} -d {params.csv_dir} -b BEST-GENOMES.ezv -s {params.target_family}
+         """
+
 
 
 
