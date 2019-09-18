@@ -1,11 +1,7 @@
 db_path_ezvir=config["ezvir_database"]
 
-def get_csv_list(wildcards):
-    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
-    return expand("Ezvir/{sample}/coverage/{i}.csv",i=glob_wildcards(os.path.join(checkpoint_output,"{i}.bam")).i,sample=list(read_naming.keys()))
-
 rule all_ezvir:
-    input: get_csv_list
+    input: "Ezvir/{sample}/all.csv"
 
 
 rule map_decontaminated_PE_reads:
@@ -48,9 +44,9 @@ def get_bam_list(wildcards):
     fasta_ids=list(table.index)
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
-        return expand("Ezvir/{{sample}}/coverage/PE_{genome_id}.bam",genome_id=fasta_ids)
+        return expand("Ezvir/{{sample}}/bam/PE_{genome_id}.bam",genome_id=fasta_ids)
     else:
-        return expand("Ezvir/{{sample}}/coverage/SE_{genome_id}.bam",genome_id=fasta_ids)
+        return expand("Ezvir/{{sample}}/bam/SE_{genome_id}.bam",genome_id=fasta_ids)
 
 checkpoint copy_non_empty_bam:
     input: get_bam_list
@@ -71,6 +67,16 @@ rule calculate_genome_coverage:
         """
         bedtools genomecov -d -ibam {input} > {output}
         """
+def get_csv_list(wildcards):
+    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
+    return expand("Ezvir/{{sample}}/coverage/{i}.csv",i=glob_wildcards(os.path.join(checkpoint_output,"{i}.bam")).i)
+
+rule cat_coverage_tables:
+    input: get_csv_list
+
+    output: "Ezvir/{sample}/all.csv"
+
+    shell: "cat {input} >> {output}"
 
 
 
