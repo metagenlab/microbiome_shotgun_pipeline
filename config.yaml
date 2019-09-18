@@ -39,6 +39,7 @@ min_score_identity : 0.9
 identity_margin: 0.02
 ##EZvir
 ezvir_database: /media/data/databases/EZvir/
+virus_family: Hepatitis_E
 ##SURPI
 surpi_database: /media/data/databases/SURPI/
 #metagenomic profiling
