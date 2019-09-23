@@ -36,7 +36,17 @@
 - [ ] CARD (protein)
     - [ ] remove variant model, resistance by absence, molecular bypass, ...
 - [ ] cluster at 95% identity
-- [ ] mmseqs2 indexing
-- [ ] mmseqs2 search
-- [ ] calculate RPKM (reads per million per sequence length)
-- [ ] heatmap abundance of VF
+- [X] mmseqs2 indexing
+- [X] mmseqs2 search
+- [ ] deepvirfinder
+- [X] calculate RPKM (reads per million per sequence length)
+- [X] heatmap abundance of VF
+- [ ] checkM => get list of core hmm
+- [ ] identification of mobile genetic elements
+    - [ ] plot contig size of resistance encoding contigs vs non resistance encoding plasmids 
+    - [ ] idem with separation by mechanism
+    - [ ] BLASTn plasmid database
+    - [ ] hmm search plasmid database?
+    - [ ] extract COG mobilome from COG database, rpsblast COG mobilome only
+
+ select COG_name,t1.description,code,t3.description from cog_names_2014 t1 inner join cog_id2cog_category t2 on t1.COG_id=t2.COG_id inner join code2category t3 on t2.category_id=t3.category_id where code="X";
