@@ -57,10 +57,11 @@ include: "rules/databases/SURPI/surpi_db.rules"
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
 include: "rules/protein_abundance/calculate_RPKM.rules"
+include: "rules/databases/Kraken/Kraken_db.rules"
 
 #taxonomy profiling
 #kaiju
 include: "rules/taxonomy_profiling/kaiju.rules"
-#include: "rules/taxonomy_profiling/kraken2.rules"
+include: "rules/taxonomy_profiling/kraken2.rules"
 include: "rules/taxonomy_profiling/Pathseq.rules"
 include: "rules/taxonomy_profiling/Ezvir.rules"
