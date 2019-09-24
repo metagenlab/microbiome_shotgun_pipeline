@@ -1,5 +1,5 @@
 rule all_kraken2:
-    input: expand("kraken2/{sample}.tsv",sample=list(read_naming.keys()))
+    input: expand("kraken2/{sample}/SE_report.txt",sample=list(read_naming.keys()))
 
 rule kraken2_on_paired_reads:
     conda: pipeline_path + "envs/kraken2.yml"
@@ -7,10 +7,32 @@ rule kraken2_on_paired_reads:
     input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",host_acc=config['reference_genome']['filename'] \
                   ,rp=['1','2'],sample=list(read_naming.keys()))
 
-    output: "kraken2/{sample}/cseqs_1.fq","kraken2/{sample}/cseqs_2.fq"
+    output: all="kraken2/{sample}/output.txt",
+            classified="kraken2/{sample}/classified_reads_1.fq",
+            unclassified="kraken2/{sample}/unclassified_reads_1.fq",
+            report="kraken2/{sample}/PE_report.txt"
+    threads: 30
 
-    params: threads=20, db_path=config["kraken2_database"]
+    params: db_path=config["kraken_database"]
 
-    shell: "kraken2  --db {params.db_path} --threads {params.threads} --paired \
-            --classified-out kraken2/{{sample}}/cseqs#.fq {input[0]} {input[1]}"
+    shell: "kraken2  --db {params.db_path} --threads {threads} --paired \
+            --classified-out kraken2/{wildcards.sample}/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/unclassified_reads#.fq \
+             --report {output.report} {input[0]} {input[1]}"
+
+rule kraken2_on_single_reads:
+    conda: pipeline_path + "envs/kraken2.yml"
+
+    input: expand("unmapped/{host_acc}/{sample}_single.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys()))
+
+    output: all="kraken2/{sample}/output.txt",
+            classified="kraken2/{sample}/classified_reads.fq",
+            unclassified="kraken2/{sample}/unclassified_reads.fq",
+            report="kraken2/{sample}/SE_report.txt"
+
+    threads: 30
+
+    params: db_path=config["kraken_database"]
+
+    shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
+            --classified-out {output.classified} --report {output.report} {input[0]}"
 
