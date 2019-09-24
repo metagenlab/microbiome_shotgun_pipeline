@@ -27,7 +27,7 @@ kaiju_database: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_pr
 nodes_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/nodes.dmp
 names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/names.dmp
 ##Kraken2
-kraken2_database: path/to/DB
+kraken_database: /media/data/databases/kraken_DB
 
 ##Pathseq
 pathseq_database: /media/data/databases/PathseqDB
@@ -41,7 +41,8 @@ identity_margin: 0.02
 ezvir_database: /media/data/databases/EZvir/
 virus_family: Hepatitis_E
 ##SURPI
-surpi_database: /media/data/databases/SURPI/
+surpi_database: /media/data/databases/SURPI
+surpi_image: /scratch/master_students/Farid/
 #metagenomic profiling
 
 # virulence factor search
