@@ -110,7 +110,8 @@ rule generate_coverage_histograms:
 
     params: cov_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Coverage_histograms.r",
             csv_dir="../coverage",
-            target_family=config["virus_family"]
+            target_family=config["virus_family"],
+            names_tab="Ezvir/genome_names.csv"
 
     shell:
          """
