@@ -1,0 +1,22 @@
+kraken2_db_path=config["kraken2_database"]
+
+rule all_Kraken2_DB:
+    input: f"{kraken2_db_path}/taxonomy/names.dmp",
+            f"{kraken2_db_path}/taxonomy/nodes.dmp"
+
+
+rule build_kraken_database:
+    conda: pipeline_path + "envs/kraken2.yml"
+
+    output: f"{kraken2_db_path}/taxonomy/names.dmp"
+
+    params: kraken2_db_path
+
+    log: logging_folder + "kraken2_DB/DB_building.log"
+
+    threads: 30
+
+    shell:
+         """
+         kraken2-build --standard --threads {threads} --use-ftp --db {params} 2>> {log}
+         """

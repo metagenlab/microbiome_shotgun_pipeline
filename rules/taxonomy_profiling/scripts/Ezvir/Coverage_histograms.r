@@ -91,6 +91,9 @@ bname = toString(common$GN) #sample name of strongest signal in family
 bval = as.integer(common$DC)
 bcol = toString(common$DCN) # color name for this virus family
 
+
+names_tab=read.csv(snakemake@params[["names_tab"]],sep='\t',header=T)
+
 # make outfile
 pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, width=10, height=5)
 
@@ -114,11 +117,13 @@ for (file in FN) {
   ### make plot title from this file name ###
   pathparts = strsplit(file, "/")
   filename = pathparts[[1]][length(pathparts[[1]])]
-  name = strsplit(filename, ".csv")
+  acc_id = strsplit(filename, ".csv")
+  acc_id=gsub("SE_", "",acc_id)
+  acc_id=gsub("PE_", "",acc_id)
   # get rid of linking characters for nicer titles
+  name=names_tab$genome_names[names$X==acc_id]
   cleanname = gsub("_", " ", name)
-  cleanname=gsub("SE", " ",cleanname)
-  cleanname=gsub("PE", " ",cleanname)
+
 
   plot.title = paste("reads mapped to:", cleanname, sep=" ")
   plot.subtitle = paste("specimen:", opt$ref, ", genome: ",this_genome,",", t1, "at", t2, sep=" ")
