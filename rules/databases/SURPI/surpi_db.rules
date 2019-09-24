@@ -1,26 +1,31 @@
 surpi_db=config["surpi_database"]
-
-import datetime
-import os
-dirname='NCBI'
-NCBI_dir=f"{dirname}_{datetime.datetime.now():%m%d%Y}"
-reference_abs_path=os.path.join(surpi_db,"reference")
-ncbi_abs_path=os.path.join(surpi_db,NCBI_dir)
+singularity_image_path=config["surpi_image"]
 
 rule all_surpi_db:
-    input: directory(reference_abs_path),
-            directory(ncbi_abs_path)
+    input: f"{surpi_db}/ncbi/fasta/taxdump.tar.gz"
 
-rule dl_data:
-    singularity: "docker://unlhcc/surpi"
 
-    params: surpi_db
 
-    output: directory(reference_abs_path),
-            directory(ncbi_abs_path)
+rule clone_surpi_repo:
+    output: f"{surpi_db}/Makefile"
+
+    params: DB_path=surpi_db
 
     shell:
         """
-        cd {params}
-        create_SURPI_data.sh
+        git clone https://github.com/chiulab/SURPI-plus-dist.git
+        cp -r SURPI-plus-dist/etc/reference/* {params}
+        """
+
+rule build_surpi_database:
+    input: f"{surpi_db}/Makefile"
+
+    output: f"{surpi_db}/ncbi/fasta/taxdump.tar.gz"
+
+    params: DB_path=surpi_db,
+            img_path=singularity_image_path
+
+    shell:
+        """
+        singularity exec --app SURPI --bind {params.DB_path} {params.img_path} bash -c "make -C {params.DB_path} all"
         """
