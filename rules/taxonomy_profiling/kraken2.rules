@@ -1,38 +1,51 @@
+
 rule all_kraken2:
-    input: expand("kraken2/{sample}/SE_report.txt",sample=list(read_naming.keys()))
+    input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-rule kraken2_on_paired_reads:
-    conda: pipeline_path + "envs/kraken2.yml"
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
 
-    input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",host_acc=config['reference_genome']['filename'] \
-                  ,rp=['1','2'],sample=list(read_naming.keys()))
 
-    output: all="kraken2/{sample}/output.txt",
-            classified="kraken2/{sample}/classified_reads_1.fq",
-            unclassified="kraken2/{sample}/unclassified_reads_1.fq",
-            report="kraken2/{sample}/PE_report.txt"
-    threads: 30
+if paired:
 
-    params: db_path=config["kraken_database"]
+    rule kraken2_on_reads:
+        conda: pipeline_path + "envs/kraken2.yml"
 
-    shell: "kraken2  --db {params.db_path} --threads {threads} --paired \
-            --classified-out kraken2/{wildcards.sample}/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/unclassified_reads#.fq \
-             --report {output.report} {input[0]} {input[1]}"
+        input: "unmapped/{host_acc}/{sample}_R1.fq",
+               "unmapped/{host_acc}/{sample}_R2.fq"
 
-rule kraken2_on_single_reads:
-    conda: pipeline_path + "envs/kraken2.yml"
+        output: classified="kraken2/{sample}/reads/classified_reads_1.fq",
+                unclassified="kraken2/{sample}/reads/unclassified_reads_1.fq",
+                all="kraken2/{sample}/output.txt",
+                report="kraken2/{sample}/report.txt"
 
-    input: expand("unmapped/{host_acc}/{sample}_single.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys()))
+        threads: 30
 
-    output: all="kraken2/{sample}/output.txt",
-            classified="kraken2/{sample}/classified_reads.fq",
-            unclassified="kraken2/{sample}/unclassified_reads.fq",
-            report="kraken2/{sample}/SE_report.txt"
+        params: db_path=config["kraken_database"],
 
-    threads: 30
+        shell: "kraken2  --db {params.db_path} --threads {threads} --paired --output {output.all} \
+                --classified-out kraken2/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/reads/unclassified_reads#.fq \
+                 --report {output.report} {input[0]} {input[1]}"
+else:
 
-    params: db_path=config["kraken_database"]
+    rule kraken2_on_reads:
+        conda: pipeline_path + "envs/kraken2.yml"
 
-    shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
-            --classified-out {output.classified} --report {output.report} {input[0]}"
+        input: expand("unmapped/{host_acc}/{sample}_single.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys()))
+
+        output: classified="kraken2/{sample}/reads/classified_reads.fq",
+                unclassified="kraken2/{sample}/reads/unclassified_reads.fq",
+                all="kraken2/{sample}/output.txt",
+                report="kraken2/{sample}/report.txt"
+
+        threads: 30
+
+        params: db_path=config["kraken_database"],
+
+        shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
+                --classified-out {output.classified} --report {output.report} {input[0]}"
 
