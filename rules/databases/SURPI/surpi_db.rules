@@ -2,7 +2,7 @@ surpi_db=config["surpi_database"]
 singularity_image_path=config["surpi_image"]
 
 rule all_surpi_db:
-    input: f"{surpi_db}/ncbi/fasta/taxdump.tar.gz"
+    input: f"{surpi_db}/build/nt_curated.fa"
 
 
 
@@ -20,7 +20,7 @@ rule clone_surpi_repo:
 rule build_surpi_database:
     input: f"{surpi_db}/Makefile"
 
-    output: f"{surpi_db}/ncbi/fasta/taxdump.tar.gz"
+    output: f"{surpi_db}/build/nt_curated.fa"
 
     params: DB_path=surpi_db,
             img_path=singularity_image_path
