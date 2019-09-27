@@ -1,0 +1,21 @@
+kraken_db_path=config["kraken_database"]
+kmer_len=config["kraken_kmer_len"]
+rule all_bracken_db:
+    input: f"{kraken_db_path}/database{kmer_len}mers.kmer_distrib"
+
+
+rule build_bracken_file:
+    conda: pipeline_path + "envs/bracken.yml"
+
+    output: f"{kraken_db_path}/database{kmer_len}mers.kmer_distrib"
+
+    params: kraken_db=kraken_db_path,
+            read_len=config["samples_read_length"],
+            kmer=kmer_len
+
+    threads: 30
+
+    shell:
+        """
+        bracken-build -d {params.kraken_db} -t {threads} -k {params.kmer} -l {params.read_len}
+        """
