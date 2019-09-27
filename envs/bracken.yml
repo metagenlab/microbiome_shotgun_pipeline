@@ -1,0 +1,4 @@
+channels:
+ - bioconda
+dependencies:
+- bracken = 2.5
