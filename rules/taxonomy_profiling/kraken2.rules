@@ -27,9 +27,9 @@ if paired:
 
         params: db_path=config["kraken_database"],
 
-        shell: "kraken2  --db {params.db_path} --threads {threads} --paired --output {output.all} \
+        shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
                 --classified-out kraken2/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/reads/unclassified_reads#.fq \
-                 --report {output.report} {input[0]} {input[1]}"
+                --report {output.report} {input[0]} {input[1]}"
 else:
 
     rule kraken2_on_reads:
