@@ -1,0 +1,23 @@
+kraken_db_path=config["kraken_database"]
+read_len=config["samples_read_length"]
+
+rule all_bracken:
+    input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
+
+
+rule run_bracken:
+    conda: pipeline_path + "envs/bracken.yml"
+
+    input: "kraken2/{sample}/report.txt"
+
+    output: "kraken2/{sample}/bracken.txt"
+
+    params: kraken_db=kraken_db_path,
+            read_len=read_len,
+            threshold=config["read_threshold"],
+            class_level=config["taxonomic_level"]
+
+    shell:
+         """
+         bracken -d {params.kraken_db} -i {input} -o {output} -r {params.read_len} -t {params.threshold} -l {params.class_level}
+         """
