@@ -28,7 +28,11 @@ nodes_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progeno
 names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/names.dmp
 ##Kraken2
 kraken_database: /media/data/databases/kraken_DB
-
+samples_read_length: 150
+kraken_kmer_len: 35
+##Bracken
+read_threshold: 10
+taxonomic_level: S
 ##Pathseq
 pathseq_database: /media/data/databases/PathseqDB
 kmer_size: 31
@@ -43,6 +47,10 @@ virus_family: Hepatitis_E
 ##SURPI
 surpi_database: /media/data/databases/SURPI
 surpi_image: /scratch/master_students/Farid/
+adapter_set: Truseq
+quality: Illumina
+num_cores: 55
+xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 #metagenomic profiling
 
 # virulence factor search
