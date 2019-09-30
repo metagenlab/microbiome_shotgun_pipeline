@@ -1,0 +1,124 @@
+surpi_db=config["surpi_database"]
+singularity_image_path=config["surpi_image"]
+
+rule all_surpi:
+    input: expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.snap.matched.d16.fl.all.annotated",sample=list(read_naming.keys()))
+
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
+
+if paired:
+    rule interleve_fastq:
+        conda: pipeline_path + "envs/fastq-join.yml"
+
+        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: temp("SURPI/{sample}/{sample}_join.fastq"),
+                temp("SURPI/{sample}/{sample}_un1.fastq"),
+                temp("SURPI/{sample}/{sample}_un2.fastq")
+
+        log:
+            logging_folder + "SURPI/{sample}.log"
+
+        shell: "fastq-join {input[0]} {input[1]} -o SURPI/{wildcards.sample}/{wildcards.sample}_%.fastq &> {log}"
+
+else:
+    rule rename_fastq:
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+        output: "SURPI/{sample}/{sample}_join.fastq"
+
+        shell: "cp {input} {output}"
+
+
+
+rule rename_fastq_headers:
+    input: "SURPI/{sample}/{sample}_join.fastq"
+
+    output: "SURPI/{sample}/{sample}.fastq"
+
+
+    shell:
+        """
+        awk '{{print (NR%4 == 1) ? "@SRR_" ++i : $0}}' {input} > {output[0]}
+        """
+#"SURPI/{sample}/{sample}.cutadapt.fastq"
+#echo "empty cutadapt file" > {output[1]}
+rule generate_sample_sheet:
+    input: "local_samples_subset.tsv"
+
+    output: "SURPI/SampleSheet.csv"
+
+    script: "scripts/SURPI/SampleSheet.py"
+
+
+rule generate_config_file_surpi:
+        input: "SURPI/SampleSheet.csv"
+
+        output: "SURPI/{sample}/{sample}.config"
+
+        params: surpi_db_path=config["surpi_database"],
+                adapter_set=config["adapter_set"],
+                quality=config["quality"],
+                nb_cores=config["num_cores"],
+                xlsx_template_path=config["xlsx_template_path"]
+
+        script: "scripts/SURPI/surpi_config_file.py"
+
+
+#rule generate_config_file_surpi:
+#    input: "SURPI/{sample}/{sample}.fastq"
+
+#    output: "SURPI/{sample}/{sample}.config"
+
+
+#    params: reference=surpi_db,
+#            img=singularity_image_path
+
+#    shell:
+#        """
+#        (cd SURPI/{wildcards.sample};singularity run --bind "{params.reference},." --app SURPI {params.img} -r {params.reference} -z {wildcards.sample}.fastq)
+#        """
+rule generate_preprocessed_files:
+    input: "SURPI/{sample}/{sample}.fastq"
+
+    output: "SURPI/{sample}/{sample}.cutadapt.fastq",
+            "SURPI/{sample}/{sample}.preprocessed.fastq"
+
+    shell:
+        """
+        cp {input} {output[0]}
+        cp {input} {output[1]}
+        """
+
+
+rule run_surpi:
+    input: "SURPI/{sample}/{sample}.preprocessed.fastq",
+            "SURPI/{sample}/{sample}.config"
+
+    output: "SURPI/{sample}/OUTPUT_{sample}/{sample}.snap.matched.d16.fl.all.annotated",
+            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.1.snap.log",
+            "SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.matched.fulllength.fastq"
+
+    params: reference=surpi_db,
+            img=singularity_image_path
+
+    threads: config["num_cores"]
+
+    resources: mem_mb=1
+
+    log:
+        "../../"+logging_folder+"SURPI/{sample}.log"
+
+    shell:
+        """
+        cd SURPI/{wildcards.sample}
+        cp ../SampleSheet.csv .
+        singularity run --bind "{params.reference},." --app SURPI {params.img} -f {wildcards.sample}.config &> {log}
+        """
+
