@@ -1,31 +1,31 @@
 surpi_db=config["surpi_database"]
-singularity_image_path=config["surpi_image"]
 
 rule all_surpi_db:
     input: f"{surpi_db}/build/nt_curated.fa"
 
 
-
 rule clone_surpi_repo:
+    singularity: "library://fchaaban/default/surpi:1.0.0"
+
     output: f"{surpi_db}/Makefile"
 
     params: DB_path=surpi_db
 
     shell:
         """
-        git clone https://github.com/chiulab/SURPI-plus-dist.git
-        cp -r SURPI-plus-dist/etc/reference/* {params}
+        cp -r /scif/apps/SURPI/SURPI/etc/reference/* {params.DB_path}
         """
 
 rule build_surpi_database:
+    singularity: "library://fchaaban/default/surpi:1.0.0"
+
     input: f"{surpi_db}/Makefile"
 
     output: f"{surpi_db}/build/nt_curated.fa"
 
-    params: DB_path=surpi_db,
-            img_path=singularity_image_path
+    params: DB_path=surpi_db
 
     shell:
         """
-        singularity exec --app SURPI --bind {params.DB_path} {params.img_path} bash -c "make -C {params.DB_path} all"
+        bash -c "make -C {params.DB_path} all"
         """
