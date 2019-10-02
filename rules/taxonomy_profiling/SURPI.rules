@@ -2,7 +2,7 @@ surpi_db=config["surpi_database"]
 singularity_image_path=config["surpi_image"]
 
 rule all_surpi:
-    input: expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.snap.matched.d16.fl.all.annotated",sample=list(read_naming.keys()))
+    input: expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated",sample=list(read_naming.keys()))
 
 def paired(wildcards):
     fastq_list = read_naming[wildcards.sample]
@@ -47,18 +47,28 @@ rule rename_fastq_headers:
         """
         awk '{{print (NR%4 == 1) ? "@SRR_" ++i : $0}}' {input} > {output[0]}
         """
-#"SURPI/{sample}/{sample}.cutadapt.fastq"
-#echo "empty cutadapt file" > {output[1]}
-rule generate_sample_sheet:
-    input: "local_samples_subset.tsv"
 
-    output: "SURPI/SampleSheet.csv"
+#rule generate_sample_sheet:
+#    input: "local_samples_subset.tsv"
 
-    script: "scripts/SURPI/SampleSheet.py"
+#    output: "SURPI/SampleSheet.csv"
 
+#    script: "scripts/SURPI/SampleSheet.py"
+
+rule generate_preprocessed_files:
+    input: "SURPI/{sample}/{sample}.fastq"
+
+    output: "SURPI/{sample}/{sample}.cutadapt.fastq",
+            "SURPI/{sample}/{sample}.preprocessed.fastq"
+
+    shell:
+        """
+        cp {input} {output[0]}
+        cp {input} {output[1]}
+        """
 
 rule generate_config_file_surpi:
-        input: "SURPI/SampleSheet.csv"
+        input: "SURPI/{sample}/{sample}.cutadapt.fastq"
 
         output: "SURPI/{sample}/{sample}.config"
 
@@ -72,7 +82,9 @@ rule generate_config_file_surpi:
 
 
 #rule generate_config_file_surpi:
-#    input: "SURPI/{sample}/{sample}.fastq"
+#    singularity: "library://fchaaban/default/surpi:1.0.0"
+
+#    input: "SURPI/{sample}/{sample}.cutadapt.fastq"
 
 #    output: "SURPI/{sample}/{sample}.config"
 
@@ -82,43 +94,33 @@ rule generate_config_file_surpi:
 
 #    shell:
 #        """
-#        (cd SURPI/{wildcards.sample};singularity run --bind "{params.reference},." --app SURPI {params.img} -r {params.reference} -z {wildcards.sample}.fastq)
+#        bash /scif/apps/SURPI/SURPI/SURPI.sh -z SURPI/{wildcards.sample}/{wildcards.sample}.fastq
 #        """
-rule generate_preprocessed_files:
-    input: "SURPI/{sample}/{sample}.fastq"
 
-    output: "SURPI/{sample}/{sample}.cutadapt.fastq",
-            "SURPI/{sample}/{sample}.preprocessed.fastq"
-
-    shell:
-        """
-        cp {input} {output[0]}
-        cp {input} {output[1]}
-        """
 
 
 rule run_surpi:
-    input: "SURPI/{sample}/{sample}.preprocessed.fastq",
-            "SURPI/{sample}/{sample}.config"
+    singularity: "library://fchaaban/default/surpi:1.0.0"
 
-    output: "SURPI/{sample}/OUTPUT_{sample}/{sample}.snap.matched.d16.fl.all.annotated",
-            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.1.snap.log",
-            "SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.matched.fulllength.fastq"
+    input:  "SURPI/{sample}/{sample}.config"
+
+    output: "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated",
+            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.1.time.log",
+            "SURPI/{sample}/TRASH_{sample}/{sample}.cutadapt.fastq"
 
     params: reference=surpi_db,
-            img=singularity_image_path
+            logging_folder=logging_folder+"SURPI/{sample}.log"
 
     threads: config["num_cores"]
 
     resources: mem_mb=1
 
     log:
-        "../../"+logging_folder+"SURPI/{sample}.log"
+        logging_folder+"SURPI/{sample}.log"
 
     shell:
         """
-        cd SURPI/{wildcards.sample}
-        cp ../SampleSheet.csv .
-        singularity run --bind "{params.reference},." --app SURPI {params.img} -f {wildcards.sample}.config &> {log}
+        (cd SURPI/{wildcards.sample};bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder}) 
         """
-
+#&> ../../{params.logging_folder}
+#singularity run --bind "{params.reference},." --app SURPI -f {wildcards.sample}.config &> ../../{params.logging_folder}
