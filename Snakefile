@@ -51,11 +51,12 @@ include: "rules/assembly_and_binning/binning.rules"
 # database setup
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/mmseqs2.smk"
-include: "rules/databases/Pathseq/Pathseq.rules"
+include: "rules/databases/Pathseq/Pathseq_db.rules"
 include: "rules/databases/Ezvir/Ezvir_db.rules"
 include: "rules/databases/SURPI/surpi_db.rules"
 include: "rules/databases/Bracken/bracken_db.rules"
 include: "rules/databases/Kraken/Kraken_db.rules"
+include: "rules/databases/ganon/ganon_db.rules"
 
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
