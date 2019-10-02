@@ -2,7 +2,7 @@ surpi_db_path=snakemake.params.surpi_db_path
 adapter_set=snakemake.params.adapter_set
 quality=snakemake.params.quality
 nb_cores=snakemake.params.nb_cores
-xlsx_template_path=snakemake.params.xlsx_template_path
+
 
 config_file=open(snakemake.output[0],"w+")
 config_file.write(f'config_file_version="1.0.67"\n\
@@ -35,7 +35,7 @@ bacteria_cleanup_db="{surpi_db_path}/RiboClean_SNAP1.0/snap_bacteria.fa_s16"\n\
 eukaryote_cleanup_db="{surpi_db_path}/RiboClean_SNAP1.0/snap_eukaryote.fa_s16"\n\
 vector_cleanup_db="{surpi_db_path}/Vector_SNAP/snap_UniVec"\n\
 BLAST_folder="{surpi_db_path}/BLASTDB/"\n\
-excel_template="{xlsx_template_path}"\n\
+excel_template="/scif/apps/SURPI/SURPI/etc/SURPI_summary_template.xlsx"\n\
 SSD=0\n\
 cores={nb_cores}\n\
 temporary_files_directory="/tmp/"')
