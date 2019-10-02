@@ -1,0 +1,6 @@
+channels:
+ - bioconda
+dependencies:
+- genome_updater
+- ganon
+- parallel
