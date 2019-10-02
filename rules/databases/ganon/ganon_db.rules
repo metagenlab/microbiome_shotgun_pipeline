@@ -1,0 +1,35 @@
+ganon_db_path=config["ganon_db_path"]
+
+
+rule all_ganon_db:
+    input: f"{ganon_db_path}/refseq/assembly_summary.txt"
+
+
+rule download_refseq_ganon:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    output: f"{ganon_db_path}/refseq/updated_sequence_accession.txt"
+
+    params: DB_path=ganon_db_path
+
+    #log:
+     #   logging_folder + "ganon_db/download.log"
+
+    threads: 12
+
+    shell:
+        """
+        wget_tries=10 wget_timeout=600 genome_updater.sh -d "refseq" -g "archaea,bacteria,viral,human" -o {params.DB_path} -t {threads} -b refseq -f "genomic.fna.gz,assembly_report.txt" -m -u -r -p
+        """
+
+rule generate_len_taxid_bacteria:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    input: f"{ganon_db_path}/refseq/bacteria/assembly_report.txt"
+
+    output: f"{ganon_db_path}/refseq/acc_len_taxid_assembly.txt"
+
+    shell:
+         """
+         awk -F "\t" 'BEGIN {FS="\t";OFS="\t"}{if($4!="na"){ print $4,$5,$6,$2 }}' {inpput} > {output}
+         """
