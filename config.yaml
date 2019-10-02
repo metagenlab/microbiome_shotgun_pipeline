@@ -51,6 +51,8 @@ adapter_set: Truseq
 quality: Illumina
 num_cores: 55
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
+##ganon
+ganon_db_path: /media/data/databases/ganon_db
 #metagenomic profiling
 
 # virulence factor search
