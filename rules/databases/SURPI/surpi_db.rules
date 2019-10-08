@@ -5,7 +5,7 @@ rule all_surpi_db:
 
 
 rule clone_surpi_repo:
-    singularity: "library://fchaaban/default/surpi:1.0.0"
+    singularity: "library://fchaaban/default/surpi:1.0.1"
 
     output: f"{surpi_db}/Makefile"
 

@@ -100,7 +100,7 @@ rule generate_config_file_surpi:
 
 
 rule run_surpi:
-    singularity: "library://fchaaban/default/surpi:1.0.0"
+    singularity: "library://fchaaban/default/surpi:1.0.1"
 
     input:  "SURPI/{sample}/{sample}.config"
 
