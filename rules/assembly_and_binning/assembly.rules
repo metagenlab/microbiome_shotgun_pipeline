@@ -1,11 +1,11 @@
 
 rule correct_error_paired_reads_with_spades:
+    conda:
+        pipeline_path + "envs/spades.yml"
     threads:
         16
     resources:
         mem_gb=120
-    conda:
-        pipeline_path + "envs/spades.yml"
     input:
         R1_trimmed = "samples/{sample}/reads/trimmed/R1_paired.fastq",
         R2_trimmed = "samples/{sample}/reads/trimmed/R2_paired.fastq",
@@ -21,10 +21,10 @@ rule correct_error_paired_reads_with_spades:
          """
 
 rule correct_error_single_reads_with_spades:
-    threads:
-        16
     conda:
         pipeline_path + "envs/spades.yml"
+    threads:
+        16
     input:
         single_trimmed = "samples/{sample}/reads/trimmed/single.fastq",
     output:
@@ -38,12 +38,12 @@ rule correct_error_single_reads_with_spades:
 
 
 rule assemble_metagenome_corrected_paired_reads_with_spades:
+    conda:
+        pipeline_path + "envs/spades.yml"
     threads:
         16
     resources:
         mem_gb=160
-    conda:
-        pipeline_path + "envs/spades.yml"
     input:
         R1_corrected = "samples/{sample}/reads/corrected/R1_paired.00.0_0.cor.fastq.gz",
         R2_corrected = "samples/{sample}/reads/corrected/R2_paired.00.0_0.cor.fastq.gz",
