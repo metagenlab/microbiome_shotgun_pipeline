@@ -15,8 +15,8 @@ if paired:
     rule kraken2_on_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: "unmapped/{host_acc}/{sample}_R1.fq",
-               "unmapped/{host_acc}/{sample}_R2.fq"
+        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="kraken2/{sample}/reads/classified_reads_1.fq",
                 unclassified="kraken2/{sample}/reads/unclassified_reads_1.fq",
@@ -35,7 +35,7 @@ else:
     rule kraken2_on_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: expand("unmapped/{host_acc}/{sample}_single.fq",host_acc=config['reference_genome']['filename'],sample=list(read_naming.keys()))
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="kraken2/{sample}/reads/classified_reads.fq",
                 unclassified="kraken2/{sample}/reads/unclassified_reads.fq",
