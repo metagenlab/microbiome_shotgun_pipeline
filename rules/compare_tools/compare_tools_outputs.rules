@@ -11,6 +11,41 @@ rule merge_Kraken2_outputs:
 
     output: "tool_outputs_comparison/all_kraken2.tsv"
 
-    script: "scripts/kraken2.py"
+    script: "scripts/kraken2-merge.py"
 
+rule merge_Bracken_outputs:
+    input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
+
+    output: "tool_outputs_comparison/all_bracken.tsv"
+
+    script: "scripts/bracken-merge.py"
+
+rule merge_Pathseq_outputs:
+    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
+
+    output: "tool_outputs_comparison/all_pathseq.tsv"
+
+    script: "scripts/pathseq-merge.py"
+
+rule merge_kaiju_outputs:
+    input: expand("kaiju/{sample}/summary.tsv")
+
+    output: "tool_outputs_comparison/all_kaiju.tsv"
+
+    script: "scripts/kaiju-merge.py"
+
+rule merge_SURPI_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: bac=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",sample=list(read_naming.keys())),
+            vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys())),
+            #expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.subspp.clx.counttable",sample=list(read_naming.keys()))
+
+    output: "tool_outputs_comparison/all_surpi.tsv"
+
+    script: "scripts/surpi-merge.py"
+
+
+rule merge_ezvir_outputs:
+    input: ""
 
