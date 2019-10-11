@@ -2,84 +2,144 @@ ganon_db_path=config["ganon_db_path"]
 
 
 rule all_ganon_db:
-    input: f"{ganon_db_path}/refseq/refseq_db.filter"
+    input: f"{ganon_db_path}/viral/refseqDB/viral_db.filter",
+            f"{ganon_db_path}/bacteria/refseqDB/bacteria_db.filter",
+            f"{ganon_db_path}/human/refseqDB/human_db.filter"
 
 
-rule download_refseq_ganon:#Download and check missing files
+rule download_viral_refseq_ganon:
     conda: pipeline_path + "envs/ganon.yml"
 
-    output: f"{ganon_db_path}/refseq/updated_sequence_accession.txt",
+    output: f"{ganon_db_path}/viral/assembly_summary.txt",
 
+
+    params: DB_path=ganon_db_path
+
+    threads: 1
+
+    log: logging_folder + "ganon/database/viral-dl.log"
+
+    shell:
+        """
+        wget_tries=10 wget_timeout=600 
+        genome_updater.sh -d "refseq" -g "viral" -o {params.DB_path}/viral -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
+        """
+
+rule cat_viral_sequences:
+    input: f"{ganon_db_path}/viral/assembly_summary.txt"
+
+    output: f"{ganon_db_path}/viral/refseqDB/viral.fna.gz"
+
+    params: ganon_db_path
+
+    shell:
+        """
+        find {params}/viral/refseqDB/files -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
+        """
+
+
+rule index_viral_refseq_ganon:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    input: f"{ganon_db_path}/viral/refseqDB/viral.fna.gz"
+
+    output: f"{ganon_db_path}/viral/refseqDB/viral_db.filter"
+
+    threads: 20
+
+    params: db_path=ganon_db_path
+
+    log: logging_folder + "ganon/database/viral-index.log"
+
+    shell:
+        """
+        ganon build -d {params.db_path}/viral/refseqDB/viral_db -i {input} -t {threads} --verbose &>> {log}
+        """
+
+
+
+rule download_bacterial_refseq_ganon:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    output: f"{ganon_db_path}/bacteria/assembly_summary.txt"
 
     params: DB_path=ganon_db_path
 
     threads: 12
 
+    log: logging_folder + "ganon/database/bacteria-dl.log"
+
     shell:
         """
-        wget_tries=10 wget_timeout=600 genome_updater.sh -d "refseq" -g "archaea,bacteria,viral,human" -o {params.DB_path} -t {threads} -b refseq -f "genomic.fna.gz,assembly_report.txt" -m -u -r -p
-        genome_updater.sh -d "refseq" -g "archaea,bacteria,viral,human" -o {params.DB_path} -t {threads} -b refseq -f "genomic.fna.gz,assembly_report.txt" -i -m -u -r -p
+        wget_tries=10 wget_timeout=600 
+        genome_updater.sh -d "refseq" -g "bacteria" -o {params.DB_path}/bacteria -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
         """
 
+rule cat_bacteria_sequences:
+    input: f"{ganon_db_path}/bacteria/assembly_summary.txt"
 
-rule generate_ganon_table:
-    input: f"{ganon_db_path}/refseq/updated_sequence_accession.txt"
+    output: f"{ganon_db_path}/bacteria/refseqDB/bacteria.fna.gz"
 
-    output: f"{ganon_db_path}/refseq/acc_len_taxid_assembly.txt"
+    params: ganon_db_path
 
-    params: script_path=pipeline_path+'rules/databases/ganon/generate_tab_ganon.sh'
-
-    shell: "bash {params.script_path} {input} {output}"
-
-
-rule check_for_na_in_table:
-    conda: pipeline_path + "envs/biopython-pandas.yml"
-
-    input: f"{ganon_db_path}/refseq/acc_len_taxid_assembly.txt"
-
-    output: f"{ganon_db_path}/refseq/seq-info.txt"
-
-    script: "check_na.py"
-#import glob
-#def get_fna_list(path):
-#    paths=[f for f in glob.glob(path+"*.fna.gz",recursive=True)]
-
-    #files=[i.split('/')[7] for i in paths]
-
-#    return paths
-rule cat_all_fna:
-    input: f"{ganon_db_path}/refseq/acc_len_taxid_assembly.txt"
-
-    output: f"{ganon_db_path}/refseq/refseq.fna.gz"
-
-    params: db_path=ganon_db_path
     shell:
         """
-        find {params.db_path}/refseq/files/ -type f -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
+        find {params}/bacteria/refseqDB/files -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
         """
 
-rule build_ganon_kmer_file:
+rule index_bacteria_refseq_ganon:
     conda: pipeline_path + "envs/ganon.yml"
 
-    input: fna=f"{ganon_db_path}/refseq/refseq.fna.gz",
-            seq_info=f"{ganon_db_path}/refseq/seq-info.txt"
+    input: f"{ganon_db_path}/bacteria/refseqDB/bacteria.fna.gz"
 
+    output: f"{ganon_db_path}/bacteria/refseqDB/bacteria_db.filter"
 
-    output: f"{ganon_db_path}/refseq/refseq_db.filter"
+    threads: 20
 
-    params: bloom_filter_size=500000,
-            kmer_size=19,
-            hash_functions=3,
-            n_batches=1000,
-            n_refs=400,
-            db_path=ganon_db_path
-            #tab_file=f"{ganon_db_path}/refseq/seq-info.txt"
+    params: db_path=ganon_db_path+"/bacteria/refseqDB"
 
-    threads: 50
+    log: logging_folder + "ganon/database/bacteria-index.log"
 
     shell:
-         """
-         cd {params.db_path}/refseq
-         ganon build -d refseq_db -n {params.hash_functions} -k {params.kmer_size} -m {params.bloom_filter_size} -i {input.fna} -t {threads} --verbose 
-         """
+        """
+        ganon build -d {params.db_path}/bacteria_db -i {input} -t {threads} --verbose &>> {log}
+        """
 
+
+
+rule download_human_refseq_ganon:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    output: f"{ganon_db_path}/human/assembly_summary.txt"
+
+
+    params: DB_path=ganon_db_path
+
+    threads: 1
+
+    log: logging_folder + "ganon/database/human-dl.log"
+
+    shell:
+        """
+        wget_tries=10 wget_timeout=600 
+        genome_updater.sh -d "refseq" -g "human" -o {params.DB_path}/human -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
+        """
+
+
+rule index_human_refseq_ganon:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    input: f"{ganon_db_path}/human/assembly_summary.txt"
+
+    output: f"{ganon_db_path}/human/refseqDB/human_db.filter"
+
+    threads: 20
+
+    params: db_path=ganon_db_path
+
+    log: logging_folder + "ganon/database/human-index.log"
+
+    shell:
+        """
+        ganon build -d {params.db_path}/human/refseqDB/human_db -i {params.db_path}/human/refseqDB/files/*fna.gz -t {threads} --verbose &>> {log}
+        """
