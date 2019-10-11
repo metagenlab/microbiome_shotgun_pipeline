@@ -1,29 +1,59 @@
 rule all_kaiju:
-    input: expand("kaiju/{sample}_summary.tsv",sample=list(read_naming.keys())),
-            expand("kaiju/{sample}.txt",sample=list(read_naming.keys()))
+    input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys())),
+            expand("kaiju/{sample}/kaiju.txt",sample=list(read_naming.keys()))
 
-rule kaiju_on_reads:
-    conda: pipeline_path + "envs/kaiju.yml"
 
-    input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",host_acc=config['reference_genome']['filename'],\
-                  rp=['1','2'],sample=list(read_naming.keys()))
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
 
-    output: temp("kaiju/{sample}.out")
+if paired:
 
-    threads: 20
+    rule kaiju_on_reads:
+        conda: pipeline_path + "envs/kaiju.yml"
 
-    params: nodes=config["nodes_dmp"],db=config["kaiju_database"]
+        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-    shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input[0]} -j {input[1]} -o {output}"
+        output: "kaiju/{sample}/kaiju.out"
+
+        threads: 20
+
+        params: nodes=config["nodes_dmp"],
+                db=config["kaiju_database"]
+
+        log: logging_folder + "kaiju/{sample}.log"
+
+        shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input[0]} -j {input[1]} -o {output} -v &> {log}"
+else:
+    rule kaiju_on_reads:
+        conda: pipeline_path + "envs/kaiju.yml"
+
+        input: "unmapped/{host_acc}/{sample}_single.fq"
+
+        output: "kaiju/{sample}/kaiju.out"
+
+        threads: 20
+
+        params: nodes=config["nodes_dmp"],
+                db=config["kaiju_database"]
+
+        log: logging_folder + "kaiju/{sample}.log"
+
+        shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input} -o {output} -v &> {log}"
 
 rule add_taxa_names_to_output:
     conda: pipeline_path + "envs/kaiju.yml"
 
-    input: "kaiju/{sample}.out"
+    input: "kaiju/{sample}/kaiju.out"
 
-    output: "kaiju/{sample}.txt"
+    output: "kaiju/{sample}/kaiju.txt"
 
-    params: nodes=config["nodes_dmp"],names=config["names_dmp"]
+    params: nodes=config["nodes_dmp"],
+            names=config["names_dmp"]
 
     shell: "kaiju-addTaxonNames -t {params.nodes} -n {params.names} -r superkingdom,phylum,class,order,family,genus,species -i {input} -o {output}"
 
@@ -31,12 +61,13 @@ rule add_taxa_names_to_output:
 rule classification_summary:
     conda: pipeline_path + "envs/kaiju.yml"
 
-    input: "kaiju/{sample}.out"
+    input: "kaiju/{sample}/kaiju.out"
 
-    output: "kaiju/{sample}_summary.tsv"
+    output: "kaiju/{sample}/summary.tsv"
 
-    params: nodes=config["nodes_dmp"],names=config["names_dmp"]
+    params: nodes=config["nodes_dmp"],
+            names=config["names_dmp"]
 
-    shell: "kaiju2table -t {params.nodes} -n {params.names} -r species -l superkingdom,phylum,class,order,family,genus,species -o {output} {input}"
+    shell: "kaiju2table -t {params.nodes} -n {params.names} -r species -e -l superkingdom,phylum,class,order,family,genus,species -o {output} {input}"
 
 
