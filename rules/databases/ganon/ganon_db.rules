@@ -3,7 +3,7 @@ ganon_db_path=config["ganon_db_path"]
 
 rule all_ganon_db:
     input: f"{ganon_db_path}/viral/refseqDB/viral_db.filter",
-            f"{ganon_db_path}/bacteria/refseqDB/bacteria_db.filter",
+            f"{ganon_db_path}/bacteria/bacteria_db.filter",
             f"{ganon_db_path}/human/refseqDB/human_db.filter"
 
 
@@ -58,45 +58,65 @@ rule index_viral_refseq_ganon:
 
 
 
-rule download_bacterial_refseq_ganon:
+rule download_reference_bacterial_genomes_refseq:
     conda: pipeline_path + "envs/ganon.yml"
 
-    output: f"{ganon_db_path}/bacteria/assembly_summary.txt"
+    output: f"{ganon_db_path}/bacteria/reference/assembly_summary.txt"
 
     params: DB_path=ganon_db_path
 
     threads: 12
 
-    log: logging_folder + "ganon/database/bacteria-dl.log"
+    log: logging_folder + "ganon/database/reference-bacteria-dl.log"
 
     shell:
         """
-        wget_tries=10 wget_timeout=600 
-        genome_updater.sh -d "refseq" -g "bacteria" -c "reference genome, representative genome" -o {params.DB_path}/bacteria -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
+        wget_tries=10 wget_timeout=300 
+        genome_updater.sh -d "refseq" -g "bacteria" -c "reference genome" -o {params.DB_path}/bacteria/reference -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
+        """
+rule download_representative_bacterial_genomes_refseq:
+    conda: pipeline_path + "envs/ganon.yml"
+
+    output: f"{ganon_db_path}/bacteria/representative/assembly_summary.txt"
+
+    params: DB_path=ganon_db_path
+
+    threads: 12
+
+    log: logging_folder + "ganon/database/representative-bacteria-dl.log"
+
+    shell:
+        """
+        wget_tries=10 wget_timeout=300 
+        genome_updater.sh -d "refseq" -g "bacteria" -c "representative genome" -o {params.DB_path}/bacteria/representative -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
         """
 
-rule cat_bacteria_sequences:
-    input: f"{ganon_db_path}/bacteria/assembly_summary.txt"
 
-    output: f"{ganon_db_path}/bacteria/refseqDB/bacteria.fna.gz"
+
+rule cat_bacteria_sequences:
+    input: f"{ganon_db_path}/bacteria/reference/assembly_summary.txt",
+            f"{ganon_db_path}/bacteria/representative/assembly_summary.txt"
+
+    output: f"{ganon_db_path}/bacteria/bacteria.fna.gz"
 
     params: ganon_db_path
 
     shell:
         """
-        find {params}/bacteria/refseqDB/files -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
+        find {params}/bacteria/reference/refseqDB/files -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
+        find {params}/bacteria/representative/refseqDB/files -name "*.fna.gz" -print0 | xargs -0 cat >> {output}
         """
 
 rule index_bacteria_refseq_ganon:
     conda: pipeline_path + "envs/ganon.yml"
 
-    input: f"{ganon_db_path}/bacteria/refseqDB/bacteria.fna.gz"
+    input: f"{ganon_db_path}/bacteria/bacteria.fna.gz"
 
-    output: f"{ganon_db_path}/bacteria/refseqDB/bacteria_db.filter"
+    output: f"{ganon_db_path}/bacteria/bacteria_db.filter"
 
     threads: 20
 
-    params: db_path=ganon_db_path+"/bacteria/refseqDB",
+    params: db_path=ganon_db_path+"/bacteria",
             max_bloom_filter_size=596666
 
     log: logging_folder + "ganon/database/bacteria-index.log"
