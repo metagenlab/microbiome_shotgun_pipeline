@@ -95,6 +95,7 @@ rule phase_1_report:
 
     params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Report.r",
             csv_dir="../coverage",
+            read_len=config["samples_read_length"]
 
     shell:
         """
