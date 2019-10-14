@@ -1,0 +1,60 @@
+
+
+rule anvio_contig_database:
+    conda:
+        pipeline_path + "envs/anvio.yml"
+    input:
+        scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    output:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-gen-contigs-database -f {input.scaffolds} -o {output[0]} -n 'contigs datbase'
+        """
+
+
+rule anvio_run_hmms:
+    conda:
+        pipeline_path + "envs/anvio.yml"
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    output:
+        "samples/{sample}/anvio/hmm.log"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-run-hmms -c {input[0]} > {output[0]}
+        """
+
+rule anvio_contig_stats:
+    conda:
+        pipeline_path + "envs/anvio.yml"
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+        "samples/{sample}/anvio/hmm.log"
+    output:
+        "samples/{sample}/anvio/contigs_db/statistics.tab"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-display-contigs-stats {input[0]} > {output[0]}
+        """
+
+
+rule anvio_run_cog:
+    conda:
+        pipeline_path + "envs/anvio.yml"
+    input:
+        "samples/{sample}/anvio/contigs_db/contigs.db"
+    output:
+        "samples/{sample}/anvio/cog.log"
+    log:
+        "samples/{sample}/anvio/anvi-gen-contigs-database/{sample}.log"
+    shell:
+        """
+        anvi-run-ncbi-cogs -c {input[0]} > {output[0]}
+        """

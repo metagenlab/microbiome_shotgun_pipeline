@@ -21,7 +21,30 @@ rule calculate_RPKM:
         R1_counts = expand("samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/R1_reads_count.txt", sample=read_naming.keys()),
         R2_counts = expand("samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc/R2_reads_count.txt", sample=read_naming.keys()),
         reference_fasta = "reference_databases/{data_type}/{db_name}.faa",
-        virulence_database = "databases/virulence/sqlite_db/virulence.db"
     output:
         "report/mmseq_search/{data_type}/{db_name}/RPKM.db"
     script: "scripts/calculate_RPKM.py"
+
+
+rule add_annotation_virulence:
+    conda:
+        '../../envs/biopython-pandas.yml'
+    input:
+        virulence_database = "databases/virulence/sqlite_db/virulence.db",
+        RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db",
+    output:
+        "report/mmseq_search/virulence/VF_db/annotation.log"
+    script: "scripts/virulence_annotation.py"
+
+
+rule add_annotation_resistance:
+    conda:
+        '../../envs/biopython-pandas.yml'
+    input:
+        aro_index = "reference_databases/resistance/aro_index.tsv",
+        aro = "reference_databases/resistance/aro.tsv",
+        aro_categories_index = "reference_databases/resistance/aro_categories_index.tsv",
+        RPKM_database = "report/mmseq_search/resistance/CARD_protein_homolog_model/RPKM.db",
+    output:
+        "report/mmseq_search/resistance/CARD_protein_homolog_model/annotation.log"
+    script: "scripts/resistance_annotation.py"

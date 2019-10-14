@@ -7,7 +7,8 @@
 
 - [ ] read http://merenlab.org/2016/06/22/anvio-tutorial-v2/
 - [ ] see http://merenlab.org/2018/07/09/anvio-snakemake-workflows/
-
+- [ ] gene call: import prodigal gene call
+- [ ] kaiju annotation for gene call
 
 ### metagenome assembly and binning
 

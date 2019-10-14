@@ -19,7 +19,16 @@ rule databases_setup:
 rule homology_search:
    input:
        expand("samples/{sample}/mmseq_search/virulence/VF_db/best_hits.m8", sample = list(read_naming.keys())),
-       "report/mmseq_search/virulence/VF_db/RPKM.db"
+       "report/mmseq_search/virulence/VF_db/annotation.log",
+       expand("samples/{sample}/mmseq_search/resistance/CARD_protein_homolog_model/best_hits.m8", sample = list(read_naming.keys())),
+       "report/mmseq_search/resistance/CARD_protein_homolog_model/annotation.log",
+
+
+rule anvio:
+    input:
+        expand("samples/{sample}/assembly/spades/large_contigs_edit.fasta", sample = list(read_naming.keys()))
+        #expand("samples/{sample}/anvio/contigs_db/contigs.db", sample = list(read_naming.keys())),
+
 
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
@@ -50,6 +59,7 @@ include: "rules/assembly_and_binning/binning.rules"
 
 # database setup
 include: "rules/databases/virulence/virulence.smk"
+include: "rules/databases/resistance/CARD.smk"
 include: "rules/databases/mmseqs2.smk"
 include: "rules/databases/Pathseq/Pathseq_db.rules"
 include: "rules/databases/Ezvir/Ezvir_db.rules"
@@ -69,3 +79,4 @@ include: "rules/taxonomy_profiling/bracken.rules"
 include: "rules/taxonomy_profiling/Pathseq.rules"
 include: "rules/taxonomy_profiling/Ezvir.rules"
 include: "rules/taxonomy_profiling/SURPI.rules"
+
