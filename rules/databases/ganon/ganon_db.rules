@@ -72,7 +72,7 @@ rule download_bacterial_refseq_ganon:
     shell:
         """
         wget_tries=10 wget_timeout=600 
-        genome_updater.sh -d "refseq" -g "bacteria" -o {params.DB_path}/bacteria -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
+        genome_updater.sh -d "refseq" -g "bacteria" -c "reference genome, representative genome" -o {params.DB_path}/bacteria -t {threads} -b refseqDB -f "genomic.fna.gz" -m &>> {log}
         """
 
 rule cat_bacteria_sequences:
@@ -96,13 +96,14 @@ rule index_bacteria_refseq_ganon:
 
     threads: 20
 
-    params: db_path=ganon_db_path+"/bacteria/refseqDB"
+    params: db_path=ganon_db_path+"/bacteria/refseqDB",
+            max_bloom_filter_size=596666
 
     log: logging_folder + "ganon/database/bacteria-index.log"
 
     shell:
         """
-        ganon build -d {params.db_path}/bacteria_db -i {input} -t {threads} --verbose &>> {log}
+        ganon build -d {params.db_path}/bacteria_db -i {input} -t {threads} -m {params.max_bloom_filter_size} --verbose &>> {log}
         """
 
 
