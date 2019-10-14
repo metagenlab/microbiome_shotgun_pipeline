@@ -79,4 +79,4 @@ include: "rules/taxonomy_profiling/bracken.rules"
 include: "rules/taxonomy_profiling/Pathseq.rules"
 include: "rules/taxonomy_profiling/Ezvir.rules"
 include: "rules/taxonomy_profiling/SURPI.rules"
-
+include: "rules/taxonomy_profiling/ganon.rules"
