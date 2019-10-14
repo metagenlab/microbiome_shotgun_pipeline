@@ -39,7 +39,7 @@ library('TeachingDemos')
 suppressMessages(library('zoo'))
 
 ### Global ###
-RL  = 100         # read length (used to calculate total mapped reads)
+RL  = snakemake@params[["read_len"]]         # read length (used to calculate total mapped reads)
 RWK = 50          # size of rolling window for depth maximum value
 MCL = 400         # minimum covered length (bp), below this, virus not plotted
 DBA = 4000        # dot bin size cutoff "A"
