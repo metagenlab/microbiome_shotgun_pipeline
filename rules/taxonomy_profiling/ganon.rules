@@ -1,0 +1,57 @@
+rule all_ganon:
+    input: expand("ganon/{sample}/{sample}.out",sample=list(read_naming.keys()))
+
+ganon_db_path=config["ganon_db_path"]
+
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
+
+if paired:
+    rule classify_reads_ganon:
+        conda: pipeline_path + "envs/ganon.yml"
+
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified="ganon/{sample}/{sample}.out",
+                unclassified="ganon/{sample}/unclassified_{sample}.txt"
+
+        params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db",
+                human_db=f"{ganon_db_path}/human/refseqDB/human_db",
+                viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
+
+        threads: 20
+
+        log: logging_folder + "ganon/classify/{sample}.log"
+
+        shell:
+             """
+             ganon classify -d {params.bacteria_db} {params.viral_db} {params.human_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/{wildcards.sample} \
+             -n {output.unclassified} --verbose &>> {log}
+             """
+else:
+    rule classify_reads_ganon:
+        conda: pipeline_path + "envs/ganon.yml"
+
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified="ganon/{sample}/{sample}.out",
+                unclassified="ganon/{sample}/unclassified_{sample}.txt"
+
+        params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db",
+                human_db=f"{ganon_db_path}/human/refseqDB/human_db",
+                viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
+
+        threads: 20
+
+        log: logging_folder + "ganon/classify/{sample}.log"
+
+        shell:
+             """
+             ganon classify -d {params.bacteria_db} {params.viral_db} {params.human_db} -r {input.r1} -t {threads} -o ganon/{wildcards.sample}/{wildcards.sample} \
+             -n {output.unclassified} --verbose &>> {log}
+             """
