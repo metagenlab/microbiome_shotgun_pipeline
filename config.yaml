@@ -53,6 +53,11 @@ num_cores: 55
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 ##ganon
 ganon_db_path: /media/data/databases/ganon_db
+
+
+###NCBI Entrez
+email: 'farid.chaabane@unil.ch'
+api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
 #metagenomic profiling
 
 # virulence factor search
