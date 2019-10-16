@@ -1,7 +1,9 @@
 
 rule plot_virulence:
     conda:
-        '../../envs/r-plots.yml'
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     params:
         sample_table = config["local_samples"]
     input:
@@ -19,7 +21,9 @@ rule plot_virulence:
 
 rule plot_resistance:
     conda:
-        '../../envs/r-plots.yml'
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     params:
         sample_table = config["local_samples"]
     input:

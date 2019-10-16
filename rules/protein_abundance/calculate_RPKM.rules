@@ -13,7 +13,9 @@ rule extract_read_counts:
 
 rule calculate_RPKM:
     conda:
-        '../../envs/biopython-pandas.yml'
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     params:
         config["local_samples"]
     input:
@@ -28,7 +30,9 @@ rule calculate_RPKM:
 
 rule add_annotation_virulence:
     conda:
-        '../../envs/biopython-pandas.yml'
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         virulence_database = "databases/virulence/sqlite_db/virulence.db",
         RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db",
@@ -39,7 +43,9 @@ rule add_annotation_virulence:
 
 rule add_annotation_resistance:
     conda:
-        '../../envs/biopython-pandas.yml'
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         aro_index = "reference_databases/resistance/aro_index.tsv",
         aro = "reference_databases/resistance/aro.tsv",

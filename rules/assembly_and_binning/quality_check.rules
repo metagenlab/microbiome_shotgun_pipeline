@@ -1,6 +1,8 @@
 rule prepare_contig_bins_table:
     conda:
-        pipeline_path + "envs/biopython.yml"
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         fasta_files = dynamic("samples/{sample}/binning/maxbin/{bin_id}.fasta"),
     output:
@@ -13,7 +15,9 @@ rule prepare_contig_bins_table:
 
 rule plot_gc_cov_maxbin_bins:
     conda:
-        pipeline_path + "envs/rpy2-emboss.yaml",
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         "samples/{sample}/binning/maxbin/maxbin_table.tab",
         "samples/{sample}/binning/maxbin/contig_abundance.txt",
@@ -49,7 +53,9 @@ rule kaiju_phylum_contig_consensus:
 
 rule execute_kaiju_proteins:
     conda:
-        pipeline_path + "envs/kaiju.yml"
+        "../../envs/kaiju.yml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
     params:
         database_dir = config["kaju_database"],
     input:
@@ -63,7 +69,9 @@ rule execute_kaiju_proteins:
 
 rule kaiju_add_phylum_names:
     conda:
-        pipeline_path + "envs/kaiju.yaml"
+        "../../envs/kaiju.yaml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
     input:
         "samples/{sample}/binning/kaiju/kaiju_output.txt",
     output:
@@ -76,7 +84,9 @@ rule kaiju_add_phylum_names:
 # if config['meta'] != True:
 rule kaiju_report_phylum:
     conda:
-        pipeline_path + "envs/kaiju.yml"
+        "../../envs/kaiju.yml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
     input:
         "samples/{sample}/binning/kaiju/kaiju_output.txt",
     output:
@@ -88,6 +98,10 @@ rule kaiju_report_phylum:
 
 
 rule chekm_maxbin:
+    conda:
+        "../../checkm.yml"
+    singularity:
+        "docker://quay.io/biocontainers/checkm-genome:1.0.18--py_0"
     input:
         fasta_dir = "samples/{sample}/binning/maxbin/",
         fasta_files = dynamic("samples/{sample}/binning/maxbin/{bin_id}.fasta"),

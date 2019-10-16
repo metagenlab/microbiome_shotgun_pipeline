@@ -2,7 +2,9 @@
 
 rule prepare_virulence_fasta:
     conda:
-        "../../../envs/biopython.yml"
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         config["virulence_database"],
         config["virulence_fasta"]

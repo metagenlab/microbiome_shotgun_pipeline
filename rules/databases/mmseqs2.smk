@@ -1,7 +1,9 @@
 
 rule index_mmseqs2_database:
     conda:
-        "../../envs/mmseqs.smk"
+        "../../envs/mmseqs.yml"
+    singularity:
+        "docker://quay.io/biocontainers/mmseqs2:10.6d92c--h2d02072_0"
     input:
         "reference_databases/{data_type}/{db_name}.faa"
     output:
@@ -14,7 +16,9 @@ rule index_mmseqs2_database:
 
 rule execute_mmseqs2:
     conda:
-        "../../envs/mmseqs.smk"
+        "../../envs/mmseqs.yml"
+    singularity:
+        "docker://quay.io/biocontainers/mmseqs2:10.6d92c--h2d02072_0"
     input:
         "reference_databases/{data_type}/{db_name}_mmseqsDB",
         "samples/{sample}/reads/trimmed/{pair}_paired.fastq"

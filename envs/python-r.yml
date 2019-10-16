@@ -1,0 +1,25 @@
+name: microbiome-shotgun-pipeline
+channels:
+ - bioconda
+ - conda-forge
+ - r
+dependencies:
+ - biopython = 1.72
+ - r-base = 3.6
+ - pandas
+ - r-ggplot2
+ - r-reshape2
+ - r-rsqlite
+ - r-gplots
+ - r-svglite
+ - r-dplyr
+ - r-tibble
+ - icu
+ - lxml
+ - r-gridextra
+ - cairo
+ - rpy2
+ - pandas
+ - r-r.utils
+ - r-ggplot2
+ - emboss

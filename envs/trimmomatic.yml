@@ -2,4 +2,4 @@ channels:
  - bioconda
  - conda-forge
 dependencies:
-- trimmomatic = 0.36=5
+- trimmomatic = 0.39

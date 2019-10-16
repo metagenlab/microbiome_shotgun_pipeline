@@ -1,6 +1,8 @@
 rule calculate_assembly_statistics_with_quast:
     conda:
-        pipeline_path + "envs/quast.yml"
+        "../../envs/quast.yml"
+    singularity:
+        "docker://metagenlab/quast:5.0.2"
     input:
         "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:

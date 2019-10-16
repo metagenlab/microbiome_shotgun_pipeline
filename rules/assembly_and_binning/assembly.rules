@@ -1,7 +1,9 @@
 
 rule correct_error_paired_reads_with_spades:
     conda:
-        pipeline_path + "envs/spades.yml"
+        "../../envs/spades.yml"
+    singularity:
+        "docker://quay.io/biocontainers/spades:3.13.1--h2d02072_2"
     threads:
         16
     resources:
@@ -22,7 +24,9 @@ rule correct_error_paired_reads_with_spades:
 
 rule correct_error_single_reads_with_spades:
     conda:
-        pipeline_path + "envs/spades.yml"
+        "../../envs/spades.yml"
+    singularity:
+        "docker://quay.io/biocontainers/spades:3.13.1--h2d02072_2"
     threads:
         16
     input:
@@ -39,7 +43,9 @@ rule correct_error_single_reads_with_spades:
 
 rule assemble_metagenome_corrected_paired_reads_with_spades:
     conda:
-        pipeline_path + "envs/spades.yml"
+        "../../envs/spades.yml"
+    singularity:
+        "docker://quay.io/biocontainers/spades:3.13.1--h2d02072_2"
     threads:
         16
     resources:
@@ -63,7 +69,9 @@ rule assemble_metagenome_corrected_paired_reads_with_spades:
 
 rule fasta_filter_size:
     conda:
-        pipeline_path + "envs/biopython.yml"
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         contigs = "samples/{sample}/assembly/spades/contigs.fasta"
     output:
@@ -77,7 +85,9 @@ rule fasta_filter_size:
 
 rule fasta_edit_header:
     conda:
-        pipeline_path + "envs/biopython.yml"
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         contigs = "samples/{sample}/assembly/spades/large_contigs.fasta"
     output:

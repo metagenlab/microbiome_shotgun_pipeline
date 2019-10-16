@@ -43,7 +43,7 @@ rule annotation:
         expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys()))
 
 pipeline_path = workflow.basedir + '/'
-multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
+multiqc_configfile = "../../data/configuration_files/multiqc/config.yaml"
 
 # general
 include: "rules/logging.rules"

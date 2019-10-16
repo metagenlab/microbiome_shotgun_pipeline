@@ -1,6 +1,8 @@
 rule orfing_with_prodigal:
     conda:
-        pipeline_path + "envs/prodigal.yml"
+        "../../envs/prodigal.yml"
+    singularity:
+        "docker://quay.io/biocontainers/prodigal:2.6.3--1"
     input:
         contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:

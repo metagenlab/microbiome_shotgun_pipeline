@@ -12,7 +12,9 @@ rule prepare_maxbin_abundance_file:
 
 rule maxbin_binning:
     conda:
-        pipeline_path + "envs/maxbin.yml"
+        "../../envs/maxbin.yml"
+    singularity:
+        "docker://quay.io/biocontainers/maxbin2:2.2.6--h14c3975_0"
     input:
         contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
         abundance = "samples/{sample}/binning/maxbin/contig_abundance.txt"
@@ -21,4 +23,21 @@ rule maxbin_binning:
     shell:
         """
         run_MaxBin.pl -contig {input[contigs]} -abund {input[abundance]} -out $( dirname {output[0]})/bin -plotmarker
+        """
+
+
+rule metabat2_binning:
+    conda:
+        "../../envs/metabat2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/metabat2:2.14--h137b6e9_0"
+    input:
+        contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+        abundance = "samples/{sample}/bwa/{sample}_assembled/metabat2_coverage.txt"
+    output:
+        directory("samples/{sample}/binning/metabat2/"),
+        "samples/{sample}/binning/metabat2_log.txt"
+    shell:
+        """
+        metabat2 -i {input[contigs]} -a {input[abundance]} -o samples/{wildcards.sample}/binning/metabat2/ >> "samples/{wildcards.sample}/binning/metabat2/log.txt"
         """

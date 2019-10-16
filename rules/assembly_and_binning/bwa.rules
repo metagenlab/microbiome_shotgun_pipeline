@@ -1,6 +1,8 @@
 rule map_paired_reads_with_bwa:
     conda:
-        pipeline_path + "envs/bwa-samtools.yml"
+        "../../envs/bwa-samtools.yml"
+    singularity:
+        "docker://metagenlab/bwa-samtools:1.0"
     params:
         platform = "ILLUMINA"
     input:
@@ -23,7 +25,9 @@ rule map_paired_reads_with_bwa:
 
 rule map_single_reads_with_bwa:
     conda:
-        pipeline_path + "envs/bwa-samtools.yml"
+        "../../envs/bwa-samtools.yml"
+    singularity:
+        "docker://metagenlab/bwa-samtools:1.0"
     params:
         platform = "ILLUMINA"
     input:
@@ -54,9 +58,25 @@ rule extract_contig_coverage:
         sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep NODE_ | sed "s/^[ \\t]*//" > {output[extract]}
         """
 
+rule compute_all_samples_depth:
+    conda:
+        "../../envs/metabat2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/metabat2:2.14--h137b6e9_0"
+    input:
+        bam_files = expand("samples/{sample}/mapping/{{mapping_method}}/{sample}.bam", sample=list(read_naming.keys())),
+    output:
+        extract = "samples/{sample}/{mapping_method}/{sample}_assembled/metabat2_coverage.txt"
+    shell:
+        """
+        jgi_summarize_bam_contig_depths --outputDepth metabat2_coverage.txt {input}
+        """
+    
 rule index_reference_fasta:
     conda:
-        pipeline_path + "envs/bwa-samtools.yml"
+        "../../envs/bwa-samtools.yml"
+    singularity:
+        "docker://metagenlab/bwa-samtools:1.0"
     input:
         "{any_genome}.fasta"
     output:
@@ -71,6 +91,8 @@ rule index_reference_fasta:
 rule index_bam_file:
     conda:
         pipeline_path +  "envs/bwa-samtools.yml"
+    singularity:
+        "docker://metagenlab/bwa-samtools:1.0"
     input:
         "{any_bam}.bam"
     output:

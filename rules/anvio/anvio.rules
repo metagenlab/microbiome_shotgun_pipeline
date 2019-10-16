@@ -2,7 +2,7 @@
 
 rule anvio_contig_database:
     conda:
-        pipeline_path + "envs/anvio.yml"
+        "../../envs/anvio.yml"
     singularity:
         "docker://quay.io/biocontainers/anvio:5.5.0--0"
     input:
@@ -19,7 +19,9 @@ rule anvio_contig_database:
 
 rule anvio_run_hmms:
     conda:
-        pipeline_path + "envs/anvio.yml"
+        "../../envs/anvio.yml"
+    singularity:
+        "docker://quay.io/biocontainers/anvio:5.5.0--0"
     input:
         "samples/{sample}/anvio/contigs_db/contigs.db"
     output:
@@ -34,7 +36,7 @@ rule anvio_run_hmms:
 
 rule anvio_contig_stats:
     conda:
-        pipeline_path + "envs/anvio.yml"
+        "../../envs/anvio.yml"
     singularity:
         "docker://quay.io/biocontainers/anvio:5.5.0--0"
     input:
@@ -52,7 +54,7 @@ rule anvio_contig_stats:
 
 rule anvio_run_cog:
     conda:
-        pipeline_path + "envs/anvio.yml"
+        "../../envs/anvio.yml"
     singularity:
         "docker://quay.io/biocontainers/anvio:5.5.0--0"
     input:
