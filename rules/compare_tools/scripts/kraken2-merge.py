@@ -1,15 +1,46 @@
 import pandas as pd
+from ete3 import NCBITaxa
+ncbi = NCBITaxa()
+
+
 input_file_list=snakemake.input
-sample_names=[name.split("/")[1] for name in input_file_list]
-dic=dict(zip(sample_names,input_file_list))
+dic={}
+for path in input_file_list:
+    sample=path.split('/')[1]
+    dic[sample]=path
 
-tables_list=[]
-for i in sample_names:
-    tb=pd.read_csv(dic[i],sep='\t',header=None)
-    tb.columns=["percent_covered","rooted_frag_num",f"{i}","rank_code","taxid","scientific_names"]
-    sample_df=tb[[f"{i}","taxid"]]
-    sample_df.set_index('taxid',drop=True,inplace=True)
-    tables_list.append(sample_df)
 
-concatDf=pd.concat(tables_list,axis=1)
+def get_linear_tax(ncbi, target_ranks, table):
+    taxid_read_counts_dic = dict(zip(table['taxid'], table['reads_assigned']))
+    taxid_names_dic = dict(zip(table['taxid'], table['name']))
+    taxid_list = list(taxid_read_counts_dic.keys())
+    tax = {}
+    for taxid in taxid_list:
+        tax[taxid] = {'taxid': taxid, 'name': taxid_names_dic[taxid], 'read_counts': taxid_read_counts_dic[taxid]}
+        try:
+            int(taxid)
+            lin_txid = ncbi.get_lineage(taxid)
+            lin_translation = ncbi.get_taxid_translator(lin_txid)
+            taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
+            for k in taxid2rank.keys():
+                if taxid2rank[k] in target_ranks:
+                    tax[taxid][taxid2rank[k]] = lin_translation[k]
+        except ValueError:  # If the taxid is not an integer
+            for j in target_ranks:
+                tax[taxid][j] = 'NA'
+    linear_tax_tab = pd.DataFrame.from_dict(tax, orient='index')
+    return linear_tax_tab
+
+
+target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+
+tables_list = []
+
+for sample in dic.keys():
+    sample_tb=pd.read_csv(dic[sample],sep='\t',names=["percent_covered","rooted_frag_num","reads_assigned","rank_code","taxid","scientific_names"])
+    lin_tax_tb=get_linear_tax(ncbi,target_ranks,sample_tb)
+    lin_tax_tb.rename(columns={'read_counts': f'{sample}'})
+    tables_list.append(sample_tb)
+
+concatDf=pd.concat(tables_list,sort=False,axis=0,join='outer')
 concatDf.to_csv(snakemake.output[0],sep='\t')

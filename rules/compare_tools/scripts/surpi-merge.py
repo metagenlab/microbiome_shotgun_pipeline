@@ -1,11 +1,24 @@
 import pandas as pd
 import numpy as np
+import logging
 from ete3 import NCBITaxa
 ncbi = NCBITaxa()
 
+logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',datefmt='%d %b %Y %H:%M:%S',
+                    filename=snakemake.log[0], level=logging.DEBUG)
+
 virus_input=snakemake.input['vir']
 bacteria_input=snakemake.input['bac']
-sample_names=[name.split("/")[1] for name in virus_input]
+
+vir_dic={}
+for path in virus_input:
+    sample=path.split('/')[1]
+    vir_dic[sample]=path
+
+bac_dic={}
+for path in bacteria_input:
+    sample=path.split('/')[1]
+    bac_dic[sample]=path
 
 
 def filter_columns_low_read_counts(table, threshold):
@@ -27,7 +40,7 @@ def filter_columns_low_read_counts(table, threshold):
 
 def get_filtered_row_counts(filtered_col_tab, threshold):
     dic = dict(filtered_col_tab.sum(axis=1))
-    filter_counts = {k: v for k, v in dic.items() if v >= threshold}
+    filter_counts = {k: v for k, v in dic.items() if v > threshold}
     return filter_counts
 
 
@@ -46,7 +59,7 @@ def get_taxonomy(filtered_col_tab, non_null_counts_rows):
     return taxonomy
 
 
-def names_to_taxid(taxonomy, counts_dict):
+def names_to_taxid(ncbi,taxonomy, counts_dict):
     names2taxid = {}
     target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
     for i in taxonomy.keys():
@@ -62,35 +75,34 @@ def names_to_taxid(taxonomy, counts_dict):
                 if taxid2rank[k] in target_ranks:
                     names2taxid[i][taxid2rank[k]] = lin_translation[k]
         if len(txid) > 1:
-            print(f'More than one taxid matching input name: {taxonomy[i]} (row index: {i})')
+            print(f'More than one taxid matching input name: {taxonomy[i]} (at row number: {i})')
             names2taxid = None
         if len(txid) == 0:
-            print(f'No taxid matching for input name: {taxonomy[i]} (row index: {i})')
+            print(f'No taxid matching for input name: {taxonomy[i]} (at row number: {i})')
             names2taxid[i] = {'name': taxonomy[i], 'taxid': 'NA', 'read_counts': counts_dict[i]}
 
     return names2taxid
 
 
-def parse_surpi_table(table, col_threshold, row_threshold):
+def parse_surpi_table(table, ncbi, col_threshold, row_threshold):
     col_filtered_tb = filter_columns_low_read_counts(table, col_threshold)
     row_filtered_counts = get_filtered_row_counts(col_filtered_tb, row_threshold)
     filtered_row_taxonomy = get_taxonomy(col_filtered_tb, row_filtered_counts)
-    dic = names_to_taxid(filtered_row_taxonomy, row_filtered_counts)
+    dic = names_to_taxid(ncbi,filtered_row_taxonomy, row_filtered_counts)
     tb = pd.DataFrame.from_dict(dic, orient='index')
     tb = tb.replace(np.nan, 'NA')
     return tb
 
-vir_dic=zip(dict(sample_names,virus_input))
-bac_dic=zip(dict(sample_names,bacteria_input))
+
 list_tables=[]
-for i in sample_names:
-   v_tab=pd.read_csv(vir_dic[i],sep='\t')
-   vir_f=parse_surpi_table(v_tab,100,10)
-   b_tab=pd.read_csv(bac_dic[i],sep='\t')
-   bac_f=parse_surpi_table(b_tab,100,10)
+for sample in vir_dic.keys():
+   v_tab=pd.read_csv(vir_dic[sample],sep='\t')
+   vir_f=parse_surpi_table(v_tab, ncbi, 5, 0)
+   b_tab=pd.read_csv(bac_dic[sample],sep='\t')
+   bac_f=parse_surpi_table(b_tab, ncbi, 5, 0)
    full_tab = pd.concat([vir_f, bac_f], sort=False)
    full_tab=full_tab.groupby(['taxid', 'name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom']).sum()
-   full_tab=full_tab.rename(columns={'read_counts':f'{i}'})
+   full_tab=full_tab.rename(columns={'read_counts':f'{sample}'})
    list_tables.append(full_tab)
 
 all_surpi_tab=pd.concat(list_tables,sort=False,axis=0,join='outer')

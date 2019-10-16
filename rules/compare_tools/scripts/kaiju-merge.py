@@ -1,11 +1,47 @@
+import pandas as pd
+from ete3 import NCBITaxa
+ncbi = NCBITaxa()
+
+
 input_file_list=snakemake.input
-sample_names=[name.split("/")[1] for name in input_file_list]
-dic=dict(zip(sample_names,input_file_list))
+dic={}
+for path in input_file_list:
+    sample=path.split('/')[1]
+    dic[sample]=path
+
+
+def get_linear_tax(ncbi,target_ranks,table):
+    taxid_read_counts_dic = dict(zip(table['taxid'], table['reads_assigned']))
+
+    taxid_list=list(taxid_read_counts_dic.keys())
+    tax = {}
+    for taxid in taxid_list:
+        tax[taxid] = {'taxid': taxid,'read_counts': taxid_read_counts_dic[taxid]}
+        try:
+            int(taxid)
+            lin_txid = ncbi.get_lineage(taxid)
+            lin_translation = ncbi.get_taxid_translator(lin_txid)
+            taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
+            for k in taxid2rank.keys():
+                if taxid2rank[k] in target_ranks:
+                    tax[taxid][taxid2rank[k]] = lin_translation[k]
+        except ValueError:#If the taxid is not an integer
+            for j in target_ranks:
+                tax[taxid][j] = 'NA'
+    linear_tax_tab=pd.DataFrame.from_dict(tax,orient='index')
+    return linear_tax_tab
+
+
+target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+
+
 tables_list=[]
-for i in sample_names:
-    tb=pd.read_csv(dic[i],sep='\t',index_col='taxon_id')
-    tb=tb[["reads"]]
-    tb.columns=[f'{i}']
-    tables_list.append(tb)
-concatDf=pd.concat(tables_list,axis=1)
+for sample in dic.keys():
+    sample_tb=pd.read_csv(dic[sample],sep='\t')
+    sample_tb.columns=["file", "read_percent", "reads_assigned", "taxid", "lineage"]
+    lin_tax_tb=get_linear_tax(ncbi,target_ranks,sample_tb)
+    lin_tax_tb.rename(columns={'read_counts': f'{sample}'})
+    tables_list.append(sample_tb)
+
+concatDf=pd.concat(tables_list,sort=False,axis=0,join='outer')
 concatDf.to_csv(snakemake.output[0],sep='\t')

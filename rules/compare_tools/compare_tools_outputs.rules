@@ -7,6 +7,8 @@ def paired(wildcards):
         return False
 
 rule merge_Kraken2_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_kraken2.tsv"
@@ -14,6 +16,8 @@ rule merge_Kraken2_outputs:
     script: "scripts/kraken2-merge.py"
 
 rule merge_Bracken_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_bracken.tsv"
@@ -21,6 +25,8 @@ rule merge_Bracken_outputs:
     script: "scripts/bracken-merge.py"
 
 rule merge_Pathseq_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_pathseq.tsv"
@@ -28,6 +34,8 @@ rule merge_Pathseq_outputs:
     script: "scripts/pathseq-merge.py"
 
 rule merge_kaiju_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
     input: expand("kaiju/{sample}/summary.tsv")
 
     output: "tool_outputs_comparison/all_kaiju.tsv"
@@ -38,14 +46,42 @@ rule merge_SURPI_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: bac=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",sample=list(read_naming.keys())),
-            vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys())),
-            #expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.subspp.clx.counttable",sample=list(read_naming.keys()))
+           vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
+            #dust.annotated file because low complexity regions are substracted
 
     output: "tool_outputs_comparison/all_surpi.tsv"
+
+    log: logging_folder + "tool_outputs_comparison/surpi.log"
 
     script: "scripts/surpi-merge.py"
 
 
 rule merge_ezvir_outputs:
-    input: ""
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+
+    output: "tool_outputs_comparison/all_ezvir.tsv"
+
+    params: read_len=config["samples_read_length"]
+
+    script: "scripts/ezvir-merge.py"
+
+
+rule merge_ganon_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: vir=expand("ganon/{sample}/viruses/classified.rep",sample=list(read_naming.keys())),
+           human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
+           bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
+
+    output: all="tool_outputs_comparison/all_ganon.tsv"
+
+    script: "scripts/ganon-merge.py"
+
+
+rule get_heatmaps:
+    input: 
+
+
 

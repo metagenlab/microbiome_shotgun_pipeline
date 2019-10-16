@@ -156,11 +156,13 @@ rule index_human_refseq_ganon:
 
     threads: 20
 
-    params: db_path=ganon_db_path
+    params: db_path=ganon_db_path,
+            max_bloom_filter_size=160000,
+            hash=5
 
     log: logging_folder + "ganon/database/human-index.log"
 
     shell:
         """
-        ganon build -d {params.db_path}/human/refseqDB/human_db -i {params.db_path}/human/refseqDB/files/*fna.gz -t {threads} --verbose &>> {log}
+        ganon build -d {params.db_path}/human/refseqDB/human_db -i {params.db_path}/human/refseqDB/files/*fna.gz -t {threads} -n {params.hash} -m {params.max_bloom_filter_size} --verbose &>> {log}
         """

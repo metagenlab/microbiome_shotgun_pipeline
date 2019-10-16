@@ -1,5 +1,7 @@
 rule all_ganon:
-    input: expand("ganon/{sample}/{sample}.out",sample=list(read_naming.keys()))
+    input: expand("ganon/{sample}/viruses/classified.out",sample=list(read_naming.keys())),
+            expand("ganon/{sample}/human/classified.out",sample=list(read_naming.keys())),
+            expand("ganon/{sample}/bacteria/classified.out",sample=list(read_naming.keys())),
 
 ganon_db_path=config["ganon_db_path"]
 
@@ -11,30 +13,75 @@ def paired(wildcards):
         return False
 
 if paired:
-    rule classify_reads_ganon:
+    rule classify_reads_ganon_bacteriea:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-        output: classified="ganon/{sample}/{sample}.out",
-                unclassified="ganon/{sample}/unclassified_{sample}.txt"
+        output: classified="ganon/{sample}/bacteria/classified.out",
+                unclassified="ganon/{sample}/bacteria/unclassified.txt"
 
-        params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db",
-                human_db=f"{ganon_db_path}/human/refseqDB/human_db",
-                viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
+        params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db"
 
-        threads: 20
+        threads: 40
 
-        log: logging_folder + "ganon/classify/{sample}.log"
+        resources: parallel_class=1
+
+        log: logging_folder + "ganon/classify/{sample}-bacteria.log"
 
         shell:
              """
-             ganon classify -d {params.bacteria_db} {params.viral_db} {params.human_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/{wildcards.sample} \
+             ganon classify -d {params.bacteria_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/bacteria/classified \
              -n {output.unclassified} --verbose &>> {log}
              """
+    rule classify_reads_ganon_viruses:
+        conda: pipeline_path + "envs/ganon.yml"
+
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified="ganon/{sample}/viruses/classified.out",
+                unclassified="ganon/{sample}/viruses/unclassified.txt"
+
+        params: viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
+
+        threads: 40
+
+        resources: parallel_class=1
+
+        log: logging_folder + "ganon/classify/{sample}-viruses.log"
+
+        shell:
+             """
+             ganon classify -d {params.viral_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/viruses/classified \
+             -n {output.unclassified} --verbose &>> {log}
+             """
+    rule classify_reads_ganon_human:
+        conda: pipeline_path + "envs/ganon.yml"
+
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified="ganon/{sample}/human/classified.out",
+                unclassified="ganon/{sample}/human/unclassified.txt"
+
+        params: human_db=f"{ganon_db_path}/human/refseqDB/human_db"
+
+        threads: 40
+
+        resources: parallel_class=1
+
+        log: logging_folder + "ganon/classify/{sample}-human.log"
+
+        shell:
+             """
+             ganon classify -d {params.human_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/human/classified \
+             -n {output.unclassified} --verbose &>> {log}
+             """
+
 else:
-    rule classify_reads_ganon:
+    rule classify_reads_ganon_bacteria:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
@@ -47,6 +94,8 @@ else:
                 viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
         threads: 20
+
+        resources: parallel_sample_class=1
 
         log: logging_folder + "ganon/classify/{sample}.log"
 
