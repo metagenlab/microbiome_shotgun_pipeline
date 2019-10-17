@@ -1,6 +1,6 @@
 rule all_ganon:
     input: expand("ganon/{sample}/viruses/classified.out",sample=list(read_naming.keys())),
-            expand("ganon/{sample}/human/classified.out",sample=list(read_naming.keys())),
+            #expand("ganon/{sample}/human/classified.out",sample=list(read_naming.keys())),
             expand("ganon/{sample}/bacteria/classified.out",sample=list(read_naming.keys())),
 
 ganon_db_path=config["ganon_db_path"]
@@ -26,7 +26,7 @@ if paired:
 
         threads: 40
 
-        resources: parallel_class=1
+        resources: parallel_class_bac=1
 
         log: logging_folder + "ganon/classify/{sample}-bacteria.log"
 
@@ -48,7 +48,7 @@ if paired:
 
         threads: 40
 
-        resources: parallel_class=1
+        resources: parallel_class_vir=1
 
         log: logging_folder + "ganon/classify/{sample}-viruses.log"
 
@@ -70,7 +70,7 @@ if paired:
 
         threads: 40
 
-        resources: parallel_class=1
+        resources: parallel_class_human=1
 
         log: logging_folder + "ganon/classify/{sample}-human.log"
 
