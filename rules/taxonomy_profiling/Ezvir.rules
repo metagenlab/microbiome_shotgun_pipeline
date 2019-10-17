@@ -1,7 +1,13 @@
 db_path_ezvir=config["ezvir_database"]
 
-rule all_ezvir:
-    input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
+if config["virus_family"]=='NA':
+    rule all_ezvir:
+        input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+else:
+
+    rule all_ezvir:
+        input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
+
 
 rule map_decontaminated_PE_reads:
     conda: pipeline_path + "envs/ezvir.yml"
