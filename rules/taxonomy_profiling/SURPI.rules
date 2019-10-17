@@ -75,8 +75,7 @@ rule generate_config_file_surpi:
         params: surpi_db_path=config["surpi_database"],
                 adapter_set=config["adapter_set"],
                 quality=config["quality"],
-                nb_cores=config["num_cores"],
-                xlsx_template_path=config["xlsx_template_path"]
+                nb_cores=config["num_cores"]
 
         script: "scripts/SURPI/surpi_config_file.py"
 
