@@ -37,9 +37,11 @@ rule align_PE_reads_to_host_genome:
 
     threads: 30
 
+    log: logging_folder + "host-filtering/{host_acc}/alignment-{sample}.log"
+
     shell:
         """
-            bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} | samtools sort -n -O BAM -o {output}
+        bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} 2>> {log} | samtools sort -@ {threads} -n -O BAM -o {output} 2>> {log}
         """
 
 rule align_SE_reads_to_host_genome:
@@ -52,9 +54,11 @@ rule align_SE_reads_to_host_genome:
 
     threads: 30
 
+    log: logging_folder + "host-filtering/{host_acc}/alignment-{sample}.log"
+
     shell:
         """
-            bwa mem -M -t {threads} {input.host_fa} {input.r1} | samtools sort -n -O BAM -o {output}
+        bwa mem -M -t {threads} {input.host_fa} {input.r1} 2>> {log} | samtools sort -@ {threads} -n -O BAM -o {output} 2>> {log}
         """
 
 
@@ -73,7 +77,9 @@ rule get_unmapped_reads:
 
     output: "unmapped/{host_acc}/{sample}.bam"
 
-    shell: "samtools view -b -f 4 {input} > {output}"
+    threads: 30
+
+    shell: "samtools view -@ {threads} -b -f 4 {input} > {output}"
 
 
 rule PE_bam_to_fastq:
@@ -84,7 +90,9 @@ rule PE_bam_to_fastq:
     output: "unmapped/{host_acc}/{sample}_R1.fq",
             "unmapped/{host_acc}/{sample}_R2.fq"
 
-    shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]}"
+    log: logging_folder + "host-filtering/{host_acc}/bam-to-fq-{sample}.log"
+
+    shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]} &>> {log}"
 
 rule SE_bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
@@ -93,7 +101,9 @@ rule SE_bam_to_fastq:
 
     output: "unmapped/{host_acc}/{sample}_single.fq"
 
-    shell: "bedtools bamtofastq -i {input} -fq {output}"
+    log: logging_folder + "host-filtering/{host_acc}/bam-to-fq-{sample}.log"
+
+    shell: "bedtools bamtofastq -i {input} -fq {output} &>> {log}"
 
 
 
