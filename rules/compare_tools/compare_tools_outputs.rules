@@ -1,4 +1,14 @@
 
+rule all_tools_output:
+    input: kraken2="tool_outputs_comparison/all_kraken2.tsv",
+            bracken="tool_outputs_comparison/all_bracken.tsv",
+            pathseq="tool_outputs_comparison/all_pathseq.tsv",
+            kaiju="tool_outputs_comparison/all_kaiju.tsv",
+            surpi="tool_outputs_comparison/all_surpi.tsv",
+            ezvir="tool_outputs_comparison/all_ezvir.tsv",
+            ganon="tool_outputs_comparison/all_ganon.tsv"
+
+
 def paired(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
@@ -75,7 +85,7 @@ rule merge_ganon_outputs:
            human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
            bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
 
-    output: all="tool_outputs_comparison/all_ganon.tsv"
+    output: "tool_outputs_comparison/all_ganon.tsv"
 
     script: "scripts/ganon-merge.py"
 
