@@ -32,7 +32,7 @@ else:
     rule kaiju_on_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
-        input: "unmapped/{host_acc}/{sample}_single.fq"
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
         output: "kaiju/{sample}/kaiju.out"
 
