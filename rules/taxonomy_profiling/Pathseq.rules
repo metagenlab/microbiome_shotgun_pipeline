@@ -1,39 +1,30 @@
-rule all_Pathseq:
+rule all_pathseq:
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
            expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
 
-#def get_path_list(wildcards):
-#    fastq_list = read_naming[wildcards.sample]
-#    if len(fastq_list) == 2:
-#        return expand("samples/%s/reads/raw/%s_R{n}.fastq.gz" % (original_names[wildcards.sample], original_names[wildcards.sample]), n=range(1,3))
-#    else:
-#        return "samples/%s/reads/raw/%s_single.fastq.gz" % (original_names[wildcards.sample], original_names[wildcards.sample])
 
-
-rule untrimmed_paired_fastq_to_bam:
+rule fastq_to_bam_paired_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: "samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
-           "samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
+    input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-    log:
-        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     output: "Pathseq/{sample}/PE_input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input[0]} -F2 {input[1]} -O {output} -SM {wildcards.sample} 2> {log}"
+    shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} 2> {log}"
 
-rule untrimmed_single_fastq_to_bam:
+rule fastq_to_bam_unpaired_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: "samples/{sample}/reads/raw/single_{sample}.fastq.gz"
+    input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
-    log:
-        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     output: "Pathseq/{sample}/SE_input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input[0]} -O {output} -SM {wildcards.sample} 2> {log}"
+    shell: "gatk FastqToSam -F1 {input.r1} -O {output} -SM {wildcards.sample} 2> {log}"
 
 db_path=config["pathseq_database"]
 
@@ -50,10 +41,14 @@ rule build_host_kmer:
 
 def get_bam_input(wildcards):
     fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
+    decontaminated=config["filter_with_Pathseq"]
+    if len(fastq_list) == 2 and not decontaminated :
         return "Pathseq/{sample}/PE_input_reads.bam"
-    else:
+    if len(fastq_list) == 1 and not decontaminated:
         return "Pathseq/{sample}/SE_input_reads.bam"
+    if decontaminated:
+        return "Pathseq/{sample}/filtered_reads/Paired_reads.bam"
+
 
 
 rule classify_reads:
@@ -74,14 +69,14 @@ rule classify_reads:
 
     params: min_clip_len=config["min_clip_len"],
             min_score=config["min_score_identity"],
-            margin=config["identity_margin"]
+            margin=config["identity_margin"],
+            skip_host_filter=config["skip_host_align"],
+            divide_by_gen_len=config["divide_by_gen_len"],
+            mem_limit="32G"
 
-    threads: 32
+    threads: 30
 
-    resources: mem_mb=32000
-
-    log:
-        logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
+    log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
     shell:
         """
@@ -98,7 +93,9 @@ rule classify_reads:
                                   --output {output.bam_out} \
                                   --filter-metrics {output.filter_met} \
                                   --score-metrics {output.score_met} \
-                                  --executor-cores {threads} 2> {log}
+                                  --is-host-aligned {params.skip_host_filter} \
+                                  --divide-by-genome-length {params.divide_by_gen_len} \
+                                  --conf 'spark.executor.cores={threads}' 2> {log} 
         """
 
 rule Pathseq_to_krona:
