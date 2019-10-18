@@ -117,10 +117,9 @@ rule raw_paired_fastq_to_bam:
     input: "samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
            "samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
 
-    log:
-        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+    log: logging_folder+"Pathseq/filtered/{sample}/FastqToSam.log"
 
-    output: "Pathseq/{sample}/PE_input_reads.bam"
+    output: "Pathseq/filtered/{sample}/PE_input_reads.bam"
 
     shell: "gatk FastqToSam -F1 {input[0]} -F2 {input[1]} -O {output} -SM {wildcards.sample} 2> {log}"
 
@@ -129,19 +128,18 @@ rule raw_single_fastq_to_bam:
 
     input: "samples/{sample}/reads/raw/single_{sample}.fastq.gz"
 
-    log:
-        logging_folder+"Pathseq/{sample}/FastqToSam.log"
+    log: logging_folder+"Pathseq/filtered/{sample}/FastqToSam.log"
 
-    output: "Pathseq/{sample}/SE_input_reads.bam"
+    output: "Pathseq/filtered/{sample}/SE_input_reads.bam"
 
     shell: "gatk FastqToSam -F1 {input[0]} -O {output} -SM {wildcards.sample} 2> {log}"
 
 def get_bam_input_pathseq(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
-        return "Pathseq/{sample}/PE_input_reads.bam"
+        return "Pathseq/filtered/{sample}/PE_input_reads.bam"
     else:
-        return "Pathseq/{sample}/SE_input_reads.bam"
+        return "Pathseq/filtered/{sample}/SE_input_reads.bam"
 
 db_path=config["pathseq_database"]
 
@@ -158,6 +156,9 @@ rule filter_reads:
             host_kmer=f"{db_path}/pathseq_host.bfi",
             host_bwa=f"{db_path}/pathseq_host.fa.img"
 
+    threads: 15
+
+    log: logging_folder + "Pathseq/filtered/{sample}.log"
     shell:
         """     
          gatk PathSeqFilterSpark  \
@@ -168,6 +169,6 @@ rule filter_reads:
            --kmer-file {params.host_kmer} \
            --filter-bwa-image {params.host_bwa} \
            --filter-metrics {output.filter_met} \
-           --bam-partition-size 4000000
+           --bam-partition-size 4000000 2> {log} \
         """
 
