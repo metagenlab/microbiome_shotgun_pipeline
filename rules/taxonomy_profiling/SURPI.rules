@@ -1,5 +1,5 @@
 surpi_db=config["surpi_database"]
-singularity_image_path=config["surpi_image"]
+
 
 rule all_surpi:
     input: expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated",sample=list(read_naming.keys()))
@@ -119,7 +119,8 @@ rule run_surpi:
 
     shell:
         """
-        (cd SURPI/{wildcards.sample};bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder}) 
+        cd SURPI/{wildcards.sample}
+        bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder} 
         """
 #&> ../../{params.logging_folder}
 #singularity run --bind "{params.reference},." --app SURPI -f {wildcards.sample}.config &> ../../{params.logging_folder}
