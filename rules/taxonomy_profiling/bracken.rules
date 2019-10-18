@@ -17,7 +17,9 @@ rule run_bracken:
             threshold=config["read_threshold"],
             class_level=config["taxonomic_level"]
 
+    log: logging_folder + "braken/{sample}.log"
+
     shell:
          """
-         bracken -d {params.kraken_db} -i {input} -o {output} -r {params.read_len} -t {params.threshold} -l {params.class_level}
+         bracken -d {params.kraken_db} -i {input} -o {output} -r {params.read_len} -t {params.threshold} -l {params.class_level} &> {log}
          """
