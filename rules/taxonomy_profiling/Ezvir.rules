@@ -8,92 +8,91 @@ else:
     rule all_ezvir:
         input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
-
-rule map_decontaminated_PE_reads:
-    conda: pipeline_path + "envs/ezvir.yml"
-
-    input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-            r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
-
-    params: genome_path=db_path_ezvir + "index/{genome_id}"
-
-    threads: 1
-
-    output: "Ezvir/{sample}/bam/PE_{genome_id}.bam"
-
-    shell:
-        """
-        bowtie2 -p {threads} -q1 {input.r1} -q2 {input.r2} \
-        -x {params.genome_path} | samtools view -bS -F 12 | samtools sort -n -O BAM -o {output} 
-        """
-rule map_decontaminated_SE_reads:
-    conda: pipeline_path + "envs/ezvir.yml"
-
-    input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
-
-    params: genome_path=db_path_ezvir + "index/{genome_id}"
-
-    threads: 1
-
-    output: "Ezvir/{sample}/bam/SE_{genome_id}.bam"
-
-    shell:
-        """
-        bowtie2 -p {threads} -q {input} \
-        -x {params.genome_path} | samtools view -bS -F 4 | samtools sort -n -O BAM -o {output} 
-        """
-import pandas as pd
-def get_bam_list(wildcards):
-    checkpoint_genome_nam=checkpoints.genrate_required_files.get(**wildcards).output[1]
-    table=pd.read_csv(checkpoint_genome_nam,delimiter='\t',index_col=0)
-    fasta_ids=list(table.index)
+def paired(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
-        bam_list=expand("Ezvir/{{sample}}/bam/PE_{genome_id}.bam",genome_id=fasta_ids)
+        return True
     else:
-        bam_list=expand("Ezvir/{{sample}}/bam/SE_{genome_id}.bam",genome_id=fasta_ids)
-    return bam_list
+        return False
 
-checkpoint copy_non_empty_bam:
-    input: get_bam_list
+if paired:
+    rule map_paired_decontaminated_reads:
+        conda: pipeline_path + "envs/ezvir.yml"
 
-    output: directory("Ezvir/{sample}/non-empty-bams")
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-    shell:
-        """
-        mkdir {output}
-        find Ezvir/{wildcards.sample}/bam -type f -size +400c -exec cp {{}} {output} \;
-        """
+        params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
+
+        threads: 10
+
+        output: "Ezvir/{sample}/{sample}.bam"
+
+        log: logging_folder + "Ezvir/mapping/{sample}.log"
+
+        shell:
+            """
+            bowtie2 -p {threads} -q1 {input.r1} -q2 {input.r2} -x {params.genome_path} 2> {log} | samtools view -bS -F 12 2> {log} | samtools sort -n -O BAM -o {output} 2> {log}
+            """
+else:
+
+    rule map_single_decontaminated_reads:
+        conda: pipeline_path + "envs/ezvir.yml"
+
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+        params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
+
+        threads: 10
+
+        output: "Ezvir/{sample}/{sample}.bam"
+
+        log:  logging_folder + "Ezvir/mapping/{sample}.log"
+
+        shell:
+            """
+            bowtie2 -p {threads} -q {input} -x {params.genome_path} | samtools view -bS -F 4 | samtools sort -n -O BAM -o {output} 2> {log}
+            """
+
+
 
 
 rule calculate_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/non-empty-bams/{i}.bam"
+    input: "Ezvir/{sample}/{sample}.bam"
 
-    output: "Ezvir/{sample}/coverage/{i}.csv"
+    output: temp("Ezvir/{sample}/{sample}.csv")
+
+    log: logging_folder + "Ezvir/coverage/{sample}.log"
 
     shell:
         """
-        bedtools genomecov -d -ibam {input} > {output}
+        bedtools genomecov -dz -ibam {input} > {output} 2> {log}
         """
-def get_csv_list(wildcards):
-    checkpoint_output = checkpoints.copy_non_empty_bam.get(**wildcards).output[0]
-    return expand("Ezvir/{{sample}}/coverage/{i}.csv",i=glob_wildcards(os.path.join(checkpoint_output,"{i}.bam")).i)
 
-rule cat_coverage_tables:
-    input: get_csv_list
 
-    output: "Ezvir/{sample}/all.csv"
+checkpoint split_coverage_file:
+    conda: pipeline_path + "envs/ezvir.yml"
 
-    shell: "cat {input} >> {output}"
+    input: "Ezvir/{sample}/{sample}.csv"
 
+    output: directory("Ezvir/{sample}/coverage")
+
+    params: "Ezvir/{sample}/coverage"
+
+    script: "scripts/Ezvir/coverage-parse.py"
+
+import os
+def get_csv(wildcards):
+    checkpoint_output = checkpoints.split_coverage_file.get(**wildcards).output[0]
+    return expand("Ezvir/{sample}/coverage/{i}.csv",sample=wildcards.sample,i=glob_wildcards(os.path.join(checkpoint_output, "{i}.csv")).i)
 
 
 rule phase_1_report:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/all.csv"
+    input: get_csv
 
     output: "Ezvir/{sample}/report/{sample}_p1-plot.pdf",
             "Ezvir/{sample}/report/ALL-RESULTS.ezv",
@@ -101,12 +100,13 @@ rule phase_1_report:
 
     params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Report.r",
             csv_dir="../coverage",
-            read_len=config["samples_read_length"]
+            read_len=config["samples_read_length"],
+            genome_len="../../genome_lengths.csv"
 
     shell:
         """
         cd Ezvir/{wildcards.sample}/report
-        Rscript {params.report_script_path} -c ../../COLORS.ezv -j ../../Ezvir_names_db.ezv -i {params.csv_dir} -o {wildcards.sample}
+        Rscript {params.report_script_path} -c ../../COLORS.ezv -r {params.read_len} -g {params.genome_len} -j ../../Ezvir_names_db.ezv -i {params.csv_dir} -o {wildcards.sample}
         """
 rule generate_coverage_histograms:
     conda: pipeline_path + "envs/ezvir.yml"
