@@ -45,7 +45,7 @@ identity_margin: 0.02
 skip_host_align: true
 divide_by_gen_len: true
 ##EZvir
-ezvir_database: /media/data/databases/EZvir/
+ezvir_database: /media/data/databases/EZvir
 virus_family: Hepatitis_E
 ##SURPI
 surpi_database: /media/data/databases/SURPI
@@ -61,7 +61,10 @@ ganon_db_path: /media/data/databases/ganon_db
 ###NCBI Entrez
 email: 'farid.chaabane@unil.ch'
 api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
-#metagenomic profiling
+
+
+###Tool_comparison
+target_rank: species
 
 # virulence factor search
 virulence_database: databases/virulence/sqlite_db/virulence.db
