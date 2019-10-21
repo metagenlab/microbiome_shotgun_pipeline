@@ -16,3 +16,4 @@ dependencies:
   - r-plyr
   - r-teachingdemos
   - r-zoo
+  - dask
