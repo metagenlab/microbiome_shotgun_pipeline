@@ -1,12 +1,7 @@
 
 rule all_tools_output:
-    input: kraken2="tool_outputs_comparison/all_kraken2.tsv",
-            bracken="tool_outputs_comparison/all_bracken.tsv",
-            pathseq="tool_outputs_comparison/all_pathseq.tsv",
-            kaiju="tool_outputs_comparison/all_kaiju.tsv",
-            surpi="tool_outputs_comparison/all_surpi.tsv",
-            ezvir="tool_outputs_comparison/all_ezvir.tsv",
-            ganon="tool_outputs_comparison/all_ganon.tsv"
+    input: all_tsv=expand("tool_outputs_comparison/{tool}.tsv",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon']),
+            all_hetmaps=expand("tool_outputs_comparison/{tool}.png",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
 
 
 def paired(wildcards):
@@ -90,8 +85,21 @@ rule merge_ganon_outputs:
     script: "scripts/ganon-merge.py"
 
 
-rule get_heatmaps:
-    input: 
+
+rule generate_heatmaps:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: "tool_outputs_comparison/{tool}.tsv"
+
+    output: "tool_outputs_comparison/heatmaps/{tool}.png"
+
+    params: rank=config["target_rank"]
+
+    script: "scripts/heatmap.py"
+
+
+
+
 
 
 
