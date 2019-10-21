@@ -38,27 +38,7 @@ library('plyr')
 library('TeachingDemos')
 suppressMessages(library('zoo'))
 
-### Global ###
-RL  = snakemake@params[["read_len"]]         # read length (used to calculate total mapped reads)
-RWK = 50          # size of rolling window for depth maximum value
-MCL = 400         # minimum covered length (bp), below this, virus not plotted
-DBA = 4000        # dot bin size cutoff "A"
-DBB = 20000       # dot bin size cutoff "B"
-DBC = 40000       # dot bin size cutoff "C"
-CTR = 190         # dot color transparency (0 to 255)
 
-PC  = numeric()   # percent covered
-DC  = numeric()   # depth of coverage
-TNT = numeric()   # total nucleotides covered
-TMR = numeric()   # total mapped reads (pileup / read len)
-DSC = numeric()   # dot scale factor
-DGL = numeric()   # dot genome length ring
-GL  = numeric()   # genome lengths of each virus
-DCN = character() # dot color name
-FN  = character() # file names
-LN  = character() # label names (split from file names - short phase-1)
-GN  = character() # label names (long genome names for phase-2)
-ID  = character() # genome ID
 
 cat('---------------------------------------\n')
 cat('ezVIR  Copyright (C) 2014  Tom J. Petty\n')
@@ -97,6 +77,10 @@ addTrans <- function(color,trans)
 option_list <- list(
    make_option(c("-c", "--color_list"),
        help="[required] list of colors per virus group"),
+    make_option(c("-r", "--read_len"),type="integer",default=150,
+       help="[required] sample reads length"),
+    make_option(c("-g", "--genome_length"),
+       help="[required] genome lengths"),
    make_option(c("-j", "--genome_list"),
        help="[required] list of virus genomes"),
    make_option(c("-i", "--csvdir"),
@@ -124,6 +108,29 @@ option_list <- list(
 # load options from command line
 opt <- parse_args(OptionParser(option_list = option_list))
 
+
+
+### Global ###
+RL  = opt$read_len  # read length (used to calculate total mapped reads)
+RWK = 50          # size of rolling window for depth maximum value
+MCL = 400         # minimum covered length (bp), below this, virus not plotted
+DBA = 4000        # dot bin size cutoff "A"
+DBB = 20000       # dot bin size cutoff "B"
+DBC = 40000       # dot bin size cutoff "C"
+CTR = 190         # dot color transparency (0 to 255)
+
+PC  = numeric()   # percent covered
+DC  = numeric()   # depth of coverage
+TNT = numeric()   # total nucleotides covered
+TMR = numeric()   # total mapped reads (pileup / read len)
+DSC = numeric()   # dot scale factor
+DGL = numeric()   # dot genome length ring
+GL  = numeric()   # genome lengths of each virus
+DCN = character() # dot color name
+FN  = character() # file names
+LN  = character() # label names (split from file names - short phase-1)
+GN  = character() # label names (long genome names for phase-2)
+ID  = character() # genome ID
 # check that color list exists
 if (is.null(opt$color_list)) {
     warning('missing color list [flag: -c]')
@@ -154,7 +161,7 @@ if (opt$min_coverage > 100) {
 ### load virus GROUP names and COLORS ###
 colors <- read.csv(opt$color_list, header=TRUE, sep=",")
 genomes <- read.csv(opt$genome_list, header=TRUE, sep=",")
-
+genome_lengths=read.csv(opt$genome_length,header=TRUE, sep="\t")
 ### load blacklist if supplied ###
 blacklist = data.frame()
 if (!is.null(opt$blacklist)) {
@@ -172,6 +179,7 @@ genomes$gcolor <- colors$colorname[match(genomes$vgroup,colors$v_grp)]
 ### read the directory of .csv, calculate metrics, make plot ###
 FN = list.files(normalizePath(opt$csvdir), full.names=T, pattern="*.csv")
 
+
 # don't use empty files
 for (file in FN) {
   FN = FN[file.info(FN)$size > 1]
@@ -182,13 +190,14 @@ for (i in 1:length(FN)) assign(FN[i], read.csv(FN[i],header=F, sep="\t"))
 
 # gather and make data for plots
 for (file in FN) {
-  data = get(file)
+  data = read.csv(file,header=FALSE, sep="\t")
   colnames(data) <- c("genome","pos","coverage")
-
+  bn=basename(file)
+  genname=gsub(".csv","",bn)
   ### get how much of genome is covered ###
-  genome_len = max(data$pos) # get length of the genome
-  naked = sum(data$coverage == 0) # get genome regions with no reads mapped
-  covered = genome_len - naked # bases that are covered
+  genome_len = genome_lengths[genome_lengths$X==genname,"genome_length"]# get length of the genome
+
+  covered = length(data$coverage) # bases that are covered
   percent_covered = (covered / genome_len) * 100   # % of genome covered at least once
   mapped_reads = floor(sum(data$coverage) / RL)
 
@@ -203,8 +212,7 @@ for (file in FN) {
     # remove extension (.csv) from genome name
     bn = basename(file)
     gen_name = gsub(".csv","",bn)
-    gen_name=gsub("SE_","",gen_name)
-    gen_name=gsub("PE_","",gen_name)
+
     # get row in "genomes" with corresponding short name
     intersect <- match(gen_name, genomes$gid)
 

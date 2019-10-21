@@ -118,8 +118,6 @@ for (file in FN) {
   pathparts = strsplit(file, "/")
   filename = pathparts[[1]][length(pathparts[[1]])]
   acc_id = strsplit(filename, ".csv")
-  acc_id=gsub("SE_", "",acc_id)
-  acc_id=gsub("PE_", "",acc_id)
   # get rid of linking characters for nicer titles
   name=names_tab$genome_names[names$X==acc_id]
   cleanname = gsub("_", " ", name)
