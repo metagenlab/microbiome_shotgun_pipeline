@@ -1,41 +1,29 @@
 db_path_ezvir=config["ezvir_database"]
 
-def aggregate_input(wildcards):
-    checkpoint_output = checkpoints.write_all_fasta.get(**wildcards).output[0]
-    return expand(db_path_ezvir + "index/{i}.1.bt2",
-           i=glob_wildcards(os.path.join(checkpoint_output, "{i}.fa")).i)
-
-
 rule all_ezvir_db:
-        input:  aggregate_input,
+        input:  f"{db_path_ezvir}/EZV0.1-database.1.bt2",
+                f"{db_path_ezvir}/EZV0.1-database.2.bt2",
+                f"{db_path_ezvir}/EZV0.1-database.3.bt2",
+                f"{db_path_ezvir}/EZV0.1-database.4.bt2",
+                f"{db_path_ezvir}/EZV0.1-database.rev.1.bt2",
+                f"{db_path_ezvir}/EZV0.1-database.rev.2.bt2",
                 "Ezvir/genome_lengths.csv",
                 "Ezvir/genome_names.csv"
 
 
 rule decompress_database:
-    input: db_path_ezvir + "EZV0.1-database.fasta.gz"
+    input: f"{db_path_ezvir}/EZV0.1-database.fasta.gz"
 
-    output: db_path_ezvir + "EZV0.1-database.fa"
+    output: f"{db_path_ezvir}/EZV0.1-database.fa"
 
     shell: "zcat {input} > {output}"
-
-
-import os
-checkpoint write_all_fasta:
-    conda: pipeline_path + "envs/biopython-pandas.yml"
-
-    input: db_path_ezvir + "EZV0.1-database.fa"
-
-    output: directory(os.path.join(db_path_ezvir,"index"))
-
-    script: "write_all_fasta.py"
 
 
 
 checkpoint genrate_required_files:
     conda: pipeline_path + "envs/biopython-pandas.yml"
 
-    input: db_path_ezvir + "EZV0.1-database.fa"
+    input: f"{db_path_ezvir}/EZV0.1-database.fa"
 
     output: "Ezvir/genome_lengths.csv",
             "Ezvir/genome_names.csv"
@@ -47,20 +35,19 @@ checkpoint genrate_required_files:
 rule index_database:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input:  db_path_ezvir + "index/{genome_id}.fa"
+    input:  f"{db_path_ezvir}/EZV0.1-database.fa"
 
-    output: db_path_ezvir + "index/{genome_id}.1.bt2",
-            db_path_ezvir + "index/{genome_id}.2.bt2",
-            db_path_ezvir + "index/{genome_id}.3.bt2",
-            db_path_ezvir + "index/{genome_id}.4.bt2",
-            db_path_ezvir + "index/{genome_id}.rev.1.bt2",
-            db_path_ezvir + "index/{genome_id}.rev.2.bt2"
+    output: f"{db_path_ezvir}/EZV0.1-database.1.bt2",
+            f"{db_path_ezvir}/EZV0.1-database.2.bt2",
+            f"{db_path_ezvir}/EZV0.1-database.3.bt2",
+            f"{db_path_ezvir}/EZV0.1-database.4.bt2",
+            f"{db_path_ezvir}/EZV0.1-database.rev.1.bt2",
+            f"{db_path_ezvir}/EZV0.1-database.rev.2.bt2"
 
-    params: db_path_ezvir + "index/{genome_id}"
+    params: f"{db_path_ezvir}/EZV0.1-database"
 
-    log:
-        logging_folder + "Ezvir/{genome_id}/indexing.log"
+    log: logging_folder + "Ezvir/indexing.log"
 
-    threads: 1
+    threads: 25
 
     shell: "bowtie2-build --threads {threads} -f {input} {params} &> {log}"
