@@ -46,7 +46,11 @@ option_list <- list(
    make_option(c("-b", "--best_genomes"),
        help="[required ] BEST-GENOMES.ezv file"),
    make_option(c("-s", "--shortname"),
-       help="[required ] one virus shortname to plot")
+       help="[required ] one virus shortname to plot"),
+   make_option(c("-n", "--table_names"),
+       help="[required ] table regrouping virus names"),
+    make_option(c("-g", "--genome_lengths"),
+       help="[required] table regrouping genome lengths")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -92,7 +96,7 @@ bval = as.integer(common$DC)
 bcol = toString(common$DCN) # color name for this virus family
 
 
-names_tab=read.csv(snakemake@params[["names_tab"]],sep='\t',header=T)
+names_tab=read.csv(opt$table_names,sep='\t',header=T)
 
 # make outfile
 pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, width=10, height=5)
@@ -101,13 +105,15 @@ pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, wid
 for (file in FN) {
   data = read.table(file, header=F, sep="\t")
   colnames(data) <- c("genome","pos","coverage")
-  depth <- mean(data[,"coverage"])
+  bn=basename(file)
+  genname=gsub(".csv","",bn)
+  genome_len = genome_lengths[genome_lengths$X==genname,"genome_length"]# get length of the genome
+  depth <- sum(data[,"coverage"])/genome_len
   this_genome = toString(data$genome[1])
 
   ### get how much of genome is covered ###
-  genome_len = max(data$pos) # get length of the genome
-  naked = sum(data$coverage == 0) # get genome regions with no reads mapped
-  covered = genome_len - naked # get bases that are covered
+   # get genome regions with no reads mapped
+  covered = length(data$coverage) # get bases that are covered
   percent_covered = (covered / genome_len) * 100   # % of genome covered at least once
 
   ### get date and time and format nicely ###
@@ -115,11 +121,8 @@ for (file in FN) {
   t2 = format(Sys.time(), format="%I:%M %p")
 
   ### make plot title from this file name ###
-  pathparts = strsplit(file, "/")
-  filename = pathparts[[1]][length(pathparts[[1]])]
-  acc_id = strsplit(filename, ".csv")
   # get rid of linking characters for nicer titles
-  name=names_tab$genome_names[names$X==acc_id]
+  name=as.character(names_tab[names_tab$X==genname,"genome_names"])
   cleanname = gsub("_", " ", name)
 
 
