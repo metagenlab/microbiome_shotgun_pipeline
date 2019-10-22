@@ -1,5 +1,6 @@
 import pandas as pd
 from ete3 import NCBITaxa
+import numpy as np
 ncbi = NCBITaxa()
 
 
@@ -10,38 +11,47 @@ for path in input_file_list:
     dic[sample]=path
 
 
-def get_linear_tax(ncbi,target_ranks,table):
-    taxid_read_counts_dic = dict(zip(table['taxid'], table['reads_assigned']))
-
-    taxid_list=list(taxid_read_counts_dic.keys())
+def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
+    tab=tab.replace(np.nan,0)
+    taxid_list = tab['taxid']
+    percents = tab['read_percent']
+    counts = tab['reads_assigned']
+    count_dic = dict(zip(taxid_list, counts))
+    percent_dic = dict(zip(taxid_list, percents))
     for taxid in taxid_list:
-        tax[taxid] = {'taxid': taxid,'read_counts': taxid_read_counts_dic[taxid]}
-        try:
-            int(taxid)
+        tax[taxid] = {'taxid': str(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
+        if taxid > 0:
             lin_txid = ncbi.get_lineage(taxid)
             lin_translation = ncbi.get_taxid_translator(lin_txid)
             taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
-            for k in taxid2rank.keys():
+            taxid_path = []
+            for n, k in enumerate(taxid2rank.keys()):
                 if taxid2rank[k] in target_ranks:
                     tax[taxid][taxid2rank[k]] = lin_translation[k]
-        except ValueError:#If the taxid is not an integer
+                    tax[taxid]['taxid_path'] = taxid_path.append(str(lin_txid[n]))
+            tax[taxid]['taxid_path'] = '|'.join(taxid_path)
+        else:
             for j in target_ranks:
-                tax[taxid][j] = 'NA'
-    linear_tax_tab=pd.DataFrame.from_dict(tax,orient='index')
-    return linear_tax_tab
+                tax[taxid][j] = np.nan
+                tax[taxid]['taxid_path'] = np.nan
+
+    df = pd.DataFrame.from_dict(tax, orient='index')
+    return df
 
 
-target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
 
 tables_list=[]
 for sample in dic.keys():
     sample_tb=pd.read_csv(dic[sample],sep='\t')
     sample_tb.columns=["file", "read_percent", "reads_assigned", "taxid", "lineage"]
-    lin_tax_tb=get_linear_tax(ncbi,target_ranks,sample_tb)
-    lin_tax_tb.rename(columns={'read_counts': f'{sample}'})
-    tables_list.append(sample_tb)
+    lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
+    lin_tax_tb=lin_tax_tb.rename(columns={'read_counts': f'{sample}_counts','read_percent':f'{sample}_percent'})
+    lin_tax_tb=lin_tax_tb.groupby(['taxid', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path'],
+                       as_index=False).sum()
+    tables_list.append(lin_tax_tb)
 
-concatDf=pd.concat(tables_list,sort=False,axis=0,join='outer')
+concatDf=pd.concat(tables_list,sort=False,axis=0,)
 concatDf.to_csv(snakemake.output[0],sep='\t')

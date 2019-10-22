@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import re
 import math
 import copy
@@ -10,7 +11,7 @@ sample_names=[name.split("/")[1] for name in input_file_list]
 dic=dict(zip(sample_names,input_file_list))
 
 read_length=snakemake.params["read_len"]
-target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
 def get_filtered_read_counts(table,read_len,threshold):
     read_counts = {}
@@ -38,15 +39,17 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
     for i in range(len(taxonomy_summary)):
         taxid = taxonomy_summary[i]['TaxId']
         tax[taxid] = {}
-        tax[taxid]['name'] = taxonomy_summary[i]['ScientificName']
+        tax[taxid]['ScientificName'] = taxonomy_summary[i]['ScientificName']
+        taxid_path = []
         for j in taxonomy_summary[i]['LineageEx']:
             rank = j['Rank']
             if rank in target_ranks:
                 names = j['ScientificName']
                 tax[taxid][rank] = names
-        for n, rank in enumerate(target_ranks):
-            if rank not in tax[taxid]:  # If a target rank is lacking
+                taxid_path.append(j['TaxId'])
+            else:
                 tax[taxid][rank] = 'NA'
+        tax[taxid]['taxid_path'] = '|'.join(taxid_path)
     return tax
 
 def get_tax_table(table,read_len,threshold,target_ranks):
@@ -60,15 +63,17 @@ def get_tax_table(table,read_len,threshold,target_ranks):
         dico[genome]['read_counts'] = read_counts_dic[genome]
         dico[genome]['taxid'] = tax_id
     tb = pd.DataFrame.from_dict(dico, orient='index')
+    tb=tb.replace(np.nan,'NA')
     return tb
 
 tables_list=[]
 for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
-    ezvir_parsed_tb.rename(columns={'read_counts': f'{i}'})
-    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid', 'name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom']).sum()
+    ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
+    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','species','genus','family','order','phylum','superkingdom'],as_index=False).sum()
+    samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'] / samples_ezvir_tb[f'{i}_counts'].sum()
     tables_list.append(samples_ezvir_tb)
 
-all_ezvir_tab = pd.concat(tables_list, sort=False, axis=0, join='outer')
+all_ezvir_tab = pd.concat(tables_list, sort=False, axis=0)
 all_ezvir_tab.to_csv(snakemake.output[0],sep='\t')

@@ -1,5 +1,6 @@
 import pandas as pd
 from ete3 import NCBITaxa
+import numpy as np
 ncbi = NCBITaxa()
 
 
@@ -18,39 +19,46 @@ for path in bacteria_input:
     bac_dic[sample]=path
 
 
-def get_linear_tax(ncbi,target_ranks,table):
-    taxid_read_counts_dic = dict(zip(table['taxid'], table['reads_assigned']))
-    taxid_names_dic = dict(zip(table['taxid'], table['name']))
-    taxid_list=list(taxid_read_counts_dic.keys())
+def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
+    taxid_list = tab['taxid']
+    percents = tab['read_percent']
+    counts = tab['reads_assigned']
+    count_dic = dict(zip(taxid_list, counts))
+    percent_dic = dict(zip(taxid_list, percents))
     for taxid in taxid_list:
-        tax[taxid] = {'taxid': taxid, 'name': taxid_names_dic[taxid], 'read_counts': taxid_read_counts_dic[taxid]}
-        try:
-            int(taxid)
+        tax[taxid] = {'taxid': str(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
+        if taxid > 0:
             lin_txid = ncbi.get_lineage(taxid)
             lin_translation = ncbi.get_taxid_translator(lin_txid)
             taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
-            for k in taxid2rank.keys():
+            taxid_path = []
+            for n, k in enumerate(taxid2rank.keys()):
                 if taxid2rank[k] in target_ranks:
                     tax[taxid][taxid2rank[k]] = lin_translation[k]
-        except ValueError:#If the taxid is not an integer
+                    tax[taxid]['taxid_path'] = taxid_path.append(str(lin_txid[n]))
+            tax[taxid]['taxid_path'] = '|'.join(taxid_path)
+        else:
             for j in target_ranks:
-                tax[taxid][j] = 'NA'
-    linear_tax_tab=pd.DataFrame.from_dict(tax,orient='index')
-    return linear_tax_tab
+                tax[taxid][j] = np.nan
+                tax[taxid]['taxid_path'] = np.nan
 
-sample_table_list=[]
-target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+    df = pd.DataFrame.from_dict(tax, orient='index')
+    return df
+
+tables_list=[]
+target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
 for sample in vir_dic.keys():
     vir_tb_input=pd.read_csv(vir_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
-    vir_tb_linear_tax=get_linear_tax(ncbi,target_ranks,vir_tb_input)
+    vir_tb_linear_tax=get_lin_tax(vir_tb_input,ncbi,target_ranks)
     bac_tb_input=pd.read_csv(bac_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
-    bac_tb_linear_tax=get_linear_tax(ncbi,target_ranks,bac_tb_input)
+    bac_tb_linear_tax=get_lin_tax(bac_tb_input,ncbi,target_ranks)
     all_tb=pd.concat([bac_tb_linear_tax, vir_tb_linear_tax], sort=False)
-    all_grouped=all_tb.groupby(['taxid', 'name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom']).sum()
-    all_grouped.rename(columns={'read_counts':f'{sample}'})
-    sample_table_list.append(all_grouped)
+    all_grouped=all_tb.groupby(['taxid','species', 'genus', 'family', 'order', 'phylum', 'superkingdom','taxid_path'],as_index=False).sum()
+    all_grouped=all_grouped.rename(columns={'read_counts':f'{sample}_counts','read_percent': f'{sample}_percent'})
+    tables_list.append(all_grouped)
 
-all_ganon=pd.concat(sample_table_list,sort=False,axis=0,join='outer')
+all_ganon=pd.concat(tables_list,sort=False,axis=0)
+
 all_ganon.to_csv(snakemake.output[0],sep='\t')

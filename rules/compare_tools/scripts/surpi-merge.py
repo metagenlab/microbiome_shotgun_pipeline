@@ -61,24 +61,26 @@ def get_taxonomy(filtered_col_tab, non_null_counts_rows):
 
 def names_to_taxid(ncbi,taxonomy, counts_dict):
     names2taxid = {}
-    target_ranks = ['species', 'genus', 'family', 'order', 'phylum', 'superkingdom']
+    target_ranks = ['superkingdom','phylum','order','family','genus','species']
     for i in taxonomy.keys():
         txid = list(ncbi.get_name_translator([taxonomy[i]]).values())
         if len(txid) == 1:
-            lin_txid = ncbi.get_lineage(txid[0][0])
+            taxid=txid[0][0]
+            lin_txid = ncbi.get_lineage(taxid)
             lin_translation = ncbi.get_taxid_translator(lin_txid)
             taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
-
-            names2taxid[i] = {'name': taxonomy[i], 'taxid': txid[0][0], 'read_counts': counts_dict[i]}
-
-            for k in taxid2rank.keys():
+            names2taxid[i] = {'name': taxonomy[i], 'taxid': taxid, 'read_counts': counts_dict[i]}
+            taxid_path=[]
+            for n, k in enumerate(taxid2rank.keys()):
                 if taxid2rank[k] in target_ranks:
                     names2taxid[i][taxid2rank[k]] = lin_translation[k]
+                    names2taxid[i]['taxid_path'] = taxid_path.append(str(lin_txid[n]))
+            names2taxid[i]['taxid_path'] = '|'.join(taxid_path)
         if len(txid) > 1:
-            print(f'More than one taxid matching input name: {taxonomy[i]} (at row number: {i})')
+            logging.warning(f'More than one taxid matching input name: {taxonomy[i]} (at row number: {i})')
             names2taxid = None
         if len(txid) == 0:
-            print(f'No taxid matching for input name: {taxonomy[i]} (at row number: {i})')
+            logging.warning(f'No taxid matching for input name: {taxonomy[i]} (at row number: {i})')
             names2taxid[i] = {'name': taxonomy[i], 'taxid': 'NA', 'read_counts': counts_dict[i]}
 
     return names2taxid
@@ -105,7 +107,7 @@ for sample in vir_dic.keys():
    full_tab=full_tab.rename(columns={'read_counts':f'{sample}'})
    list_tables.append(full_tab)
 
-all_surpi_tab=pd.concat(list_tables,sort=False,axis=0,join='outer')
+all_surpi_tab=pd.concat(list_tables,sort=False)
 all_surpi_tab.to_csv(snakemake.output[0],sep='\t')
 
 
