@@ -1,7 +1,7 @@
 
 rule all_tools_output:
     input: all_tsv=expand("tool_outputs_comparison/{tool}.tsv",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon']),
-            all_hetmaps=expand("tool_outputs_comparison/{tool}.png",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
+            all_hetmaps=expand("tool_outputs_comparison/heatmaps/{tool}.png",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
 
 
 def paired(wildcards):
@@ -41,7 +41,7 @@ rule merge_Pathseq_outputs:
 rule merge_kaiju_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("kaiju/{sample}/summary.tsv")
+    input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_kaiju.tsv"
 
@@ -70,14 +70,14 @@ rule merge_ezvir_outputs:
 
     params: read_len=config["samples_read_length"]
 
-    script: "scripts/ezvir-merge.py"
+    script: "scripts/Ezvir-merge.py"
 
 
 rule merge_ganon_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: vir=expand("ganon/{sample}/viruses/classified.rep",sample=list(read_naming.keys())),
-           human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
+           #human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
            bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_ganon.tsv"
@@ -96,6 +96,7 @@ rule generate_heatmaps:
     params: rank=config["target_rank"]
 
     script: "scripts/heatmap.py"
+
 
 
 
