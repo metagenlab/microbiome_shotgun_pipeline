@@ -1,8 +1,6 @@
 
 include: "rules/making_sample_dataset.rules"
 
-print()
-
 rule assembly:
     input:
        qualimap_report = "report/multiqc_assembly/multiqc_report.html",
@@ -19,6 +17,7 @@ rule motus:
     input:
         "report/motus2/relative/phylum/merged_profile.motus",
         "report/motus2/relative/genus/merged_profile.motus",
+        "report/motus2/relative/species/merged_profile.motus",
         "report/motus2/relative/mOTU/merged_profile.motus",
 
 rule homology_search:
@@ -41,6 +40,7 @@ rule annotation:
     input:
         expand("samples/{sample}/annotation/rgi/rgi.json", sample = list(read_naming.keys())),
         expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys()))
+
 
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = "../../data/configuration_files/multiqc/config.yaml"

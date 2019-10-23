@@ -3,6 +3,8 @@
 rule execute_motus2_relative:
     conda:
         "../../envs/motus2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
     input:
         "samples/{sample}/reads/trimmed/R1_paired.fastq",
         "samples/{sample}/reads/trimmed/R2_paired.fastq"
@@ -12,13 +14,15 @@ rule execute_motus2_relative:
         "samples/{sample}/motus2/relative/{rank}/profile.motus"
     shell:
         """
-        motus profile -f {input[0]} -r {input[1]} -t 8 -o {output[0]} -k {wildcards.rank} -n {wildcards.sample}
+        motus profile -f {input[0]} -r {input[1]} -t 8 -o {output[0]} -k {wildcards.rank} -q -n {wildcards.sample}
         """
 
 
 rule execute_motus2_absolute:
     conda:
         "../../envs/motus2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
     input:
         "samples/{sample}/reads/trimmed/R1_paired.fastq",
         "samples/{sample}/reads/trimmed/R2_paired.fastq"
@@ -28,7 +32,7 @@ rule execute_motus2_absolute:
         "samples/{sample}/motus2/absolute/{rank}/profile.motus"
     shell:
         """
-        motus profile -f {input[0]} -r {input[1]} -c -t 8 -o {output[0]} -k {wildcards.rank} -n {wildcards.sample}
+        motus profile -f {input[0]} -r {input[1]} -c -t 8 -o {output[0]} -k {wildcards.rank} -q -n {wildcards.sample}
         """
 
 
@@ -43,6 +47,8 @@ def get_input_string(wildcards):
 rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
     input:
         expand("samples/{sample}/motus2/relative/{{rank}}/profile.motus", sample = list(read_naming.keys()))
     params:
