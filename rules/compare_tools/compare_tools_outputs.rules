@@ -1,7 +1,7 @@
 
 rule all_tools_output:
-    input: all_tsv=expand("tool_outputs_comparison/{tool}.tsv",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon']),
-            all_hetmaps=expand("tool_outputs_comparison/heatmaps/{tool}.png",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
+    input: merged_tsv=expand("tool_outputs_comparison/{tool}.tsv",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon']),
+            all_hetmaps=expand("tool_outputs_comparison/heatmaps/{tool}.pdf",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
 
 
 def paired(wildcards):
@@ -44,6 +44,8 @@ rule merge_kaiju_outputs:
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
 
     output: "tool_outputs_comparison/all_kaiju.tsv"
+
+    log: logging_folder + "tool_outputs_comparison/kaiju.log"
 
     script: "scripts/kaiju-merge.py"
 
@@ -91,13 +93,12 @@ rule generate_heatmaps:
 
     input: "tool_outputs_comparison/{tool}.tsv"
 
-    output: "tool_outputs_comparison/heatmaps/{tool}.png"
+    output: "tool_outputs_comparison/heatmaps/{tool}.pdf"
 
-    params: rank=config["target_rank"]
+    params: rank=config["target_rank"],
+            value=config["target_value"]
 
     script: "scripts/heatmap.py"
-
-
 
 
 
