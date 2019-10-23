@@ -21,6 +21,8 @@ for path in bacteria_input:
 
 def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
+    tab=tab.replace(np.nan,0)
+    tab=tab.replace('unclassified',0)
     taxid_list = tab['taxid']
     percents = tab['read_percent']
     counts = tab['reads_assigned']
@@ -28,7 +30,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
     percent_dic = dict(zip(taxid_list, percents))
     for taxid in taxid_list:
         tax[taxid] = {'taxid': str(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
-        if taxid > 0:
+        if int(taxid) > 0:
             lin_txid = ncbi.get_lineage(taxid)
             lin_translation = ncbi.get_taxid_translator(lin_txid)
             taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
@@ -46,6 +48,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
     df = pd.DataFrame.from_dict(tax, orient='index')
     return df
 
+
 tables_list=[]
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
@@ -55,10 +58,10 @@ for sample in vir_dic.keys():
     bac_tb_input=pd.read_csv(bac_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
     bac_tb_linear_tax=get_lin_tax(bac_tb_input,ncbi,target_ranks)
     all_tb=pd.concat([bac_tb_linear_tax, vir_tb_linear_tax], sort=False)
-    all_grouped=all_tb.groupby(['taxid','species', 'genus', 'family', 'order', 'phylum', 'superkingdom','taxid_path'],as_index=False).sum()
+    all_grouped=all_tb.groupby(['taxid','species', 'genus', 'family', 'order', 'phylum', 'superkingdom','taxid_path']).sum()
     all_grouped=all_grouped.rename(columns={'read_counts':f'{sample}_counts','read_percent': f'{sample}_percent'})
     tables_list.append(all_grouped)
 
-all_ganon=pd.concat(tables_list,sort=False,axis=0)
+all_ganon=pd.concat(tables_list,sort=False,axis=1)
 
 all_ganon.to_csv(snakemake.output[0],sep='\t')

@@ -47,9 +47,10 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
                 names = j['ScientificName']
                 tax[taxid][rank] = names
                 taxid_path.append(j['TaxId'])
+                tax[taxid]['taxid_path'] = '|'.join(taxid_path)
             else:
                 tax[taxid][rank] = 'NA'
-        tax[taxid]['taxid_path'] = '|'.join(taxid_path)
+                tax[taxid]['taxid_path']='NA'
     return tax
 
 def get_tax_table(table,read_len,threshold,target_ranks):
@@ -71,9 +72,9 @@ for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
-    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','species','genus','family','order','phylum','superkingdom'],as_index=False).sum()
+    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','species','genus','family','order','phylum','superkingdom','taxid_path']).sum()
     samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'] / samples_ezvir_tb[f'{i}_counts'].sum()
     tables_list.append(samples_ezvir_tb)
 
-all_ezvir_tab = pd.concat(tables_list, sort=False, axis=0)
+all_ezvir_tab = pd.concat(tables_list, sort=False, axis=1)
 all_ezvir_tab.to_csv(snakemake.output[0],sep='\t')

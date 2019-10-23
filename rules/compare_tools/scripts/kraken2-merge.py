@@ -46,10 +46,9 @@ tables_list = []
 for sample in dic.keys():
     sample_tb=pd.read_csv(dic[sample],sep='\t',names=["read_percent","rooted_frag_num","reads_assigned","rank_code","taxid","scientific_names"])
     lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
-    lin_tax_tb.rename(columns={'read_counts': f'{sample}_counts','read_percent': f'{sample}_percent'})
-    lin_tax_tb.groupby(['taxid', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path'],
-                       as_index=False).sum()
+    lin_tax_tb=lin_tax_tb.rename(columns={'read_counts': f'{sample}_counts','read_percent': f'{sample}_percent'})
+    lin_tax_tb=lin_tax_tb.groupby(['taxid', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path']).sum()
     tables_list.append(lin_tax_tb)
 
-concatDf=pd.concat(tables_list,sort=False,axis=0,)
+concatDf=pd.concat(tables_list,sort=False,axis=1)
 concatDf.to_csv(snakemake.output[0],sep='\t')

@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import logging
+
 from ete3 import NCBITaxa
+
 ncbi = NCBITaxa()
 
 logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',datefmt='%d %b %Y %H:%M:%S',
@@ -103,11 +105,12 @@ for sample in vir_dic.keys():
    b_tab=pd.read_csv(bac_dic[sample],sep='\t')
    bac_f=parse_surpi_table(b_tab, ncbi, 5, 0)
    full_tab = pd.concat([vir_f, bac_f], sort=False)
-   full_tab=full_tab.groupby(['taxid', 'name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom']).sum()
-   full_tab=full_tab.rename(columns={'read_counts':f'{sample}'})
+   full_tab=full_tab.groupby(['taxid','species', 'genus', 'family', 'order', 'phylum', 'superkingdom','taxid_path']).sum()
+   full_tab=full_tab.rename(columns={'read_counts':f'{sample}_counts'})
+   full_tab[f'{sample}_percent'] = full_tab[f'{sample}_counts'] / full_tab[f'{sample}_counts'].sum()
    list_tables.append(full_tab)
 
-all_surpi_tab=pd.concat(list_tables,sort=False)
+all_surpi_tab=pd.concat(list_tables,sort=False,axis=1)
 all_surpi_tab.to_csv(snakemake.output[0],sep='\t')
 
 
