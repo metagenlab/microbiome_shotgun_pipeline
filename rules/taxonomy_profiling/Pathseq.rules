@@ -1,19 +1,24 @@
 rule all_pathseq:
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
-           expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
+           #expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
 
 
 rule fastq_to_bam_paired_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
     input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+            r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
     log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     output: "Pathseq/{sample}/PE_input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} 2> {log}"
+    threads: 10
+
+    shell:
+        """
+        gatk --java-options "-Xmx32G -XX:ConcGCThreads=10" FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} &> {log}
+        """
 
 rule fastq_to_bam_unpaired_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
@@ -24,7 +29,12 @@ rule fastq_to_bam_unpaired_reads:
 
     output: "Pathseq/{sample}/SE_input_reads.bam"
 
-    shell: "gatk FastqToSam -F1 {input.r1} -O {output} -SM {wildcards.sample} 2> {log}"
+    threads: 10
+
+    shell:
+        """
+        gatk --java-options "-Xmx32G -XX:ConcGCThreads=10" FastqToSam -F1 {input.r1} -O {output} -SM {wildcards.sample} &> {log}
+        """
 
 db_path=config["pathseq_database"]
 
@@ -51,84 +61,87 @@ def get_bam_input(wildcards):
 
 
 
-# rule classify_reads:
-#     singularity: "docker://broadinstitute/gatk:4.1.3.0"
-#
-#     input: bam=get_bam_input,
-#            host_kmer=f"{db_path}/pathseq_host.bfi",
-#            host_bwa=f"{db_path}/pathseq_host.fa.img",
-#            microbe_fa=f"{db_path}/pathseq_microbe.fa",
-#            microbe_bwa=f"{db_path}/pathseq_microbe.fa.img",
-#            microbe_dict=f"{db_path}/pathseq_microbe.dict",
-#            tax_db=f"{db_path}/pathseq_taxonomy.db"
-#
-#     output: score_out="Pathseq/{sample}/output/scores.txt",
-#             bam_out="Pathseq/{sample}/output/output_reads.bam",
-#             filter_met="Pathseq/{sample}/output/filter_metrics.txt",
-#             score_met="Pathseq/{sample}/output/score_metrics.txt"
-#
-#     params: min_clip_len=config["min_clip_len"],
-#             min_score=config["min_score_identity"],
-#             margin=config["identity_margin"],
-#             skip_host_filter=config["skip_host_align"],
-#             divide_by_gen_len=config["divide_by_gen_len"],
-#             mem_limit="32G"
-#
-#     threads: 30
-#
-#     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
-#
-#     shell:
-#         """
-#         gatk PathSeqPipelineSpark --input {input.bam} \
-#                                   --kmer-file {input.host_kmer} \
-#                                   --filter-bwa-image {input.host_bwa} \
-#                                   --microbe-bwa-image {input.microbe_bwa} \
-#                                   --microbe-fasta {input.microbe_fa} \
-#                                   --taxonomy-file {input.tax_db} \
-#                                   --min-clipped-read-length {params.min_clip_len} \
-#                                   --min-score-identity {params.min_score} \
-#                                   --identity-margin {params.margin} \
-#                                   --scores-output {output.score_out} \
-#                                   --output {output.bam_out} \
-#                                   --filter-metrics {output.filter_met} \
-#                                   --score-metrics {output.score_met} \
-#                                   --is-host-aligned {params.skip_host_filter} \
-#                                   --divide-by-genome-length {params.divide_by_gen_len} \
-#                                   --conf 'spark.executor.cores={threads}' 2> {log}
-#         """
 rule classify_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
     input: bam=get_bam_input,
+           host_kmer=f"{db_path}/pathseq_host.bfi",
+           host_bwa=f"{db_path}/pathseq_host.fa.img",
+           microbe_fa=f"{db_path}/pathseq_microbe.fa",
+           microbe_bwa=f"{db_path}/pathseq_microbe.fa.img",
+           microbe_dict=f"{db_path}/pathseq_microbe.dict",
            tax_db=f"{db_path}/pathseq_taxonomy.db"
 
     output: score_out="Pathseq/{sample}/output/scores.txt",
             bam_out="Pathseq/{sample}/output/output_reads.bam",
+            filter_met="Pathseq/{sample}/output/filter_metrics.txt",
             score_met="Pathseq/{sample}/output/score_metrics.txt"
 
     params: min_clip_len=config["min_clip_len"],
             min_score=config["min_score_identity"],
             margin=config["identity_margin"],
+            skip_host_filter=config["skip_host_align"],
             divide_by_gen_len=config["divide_by_gen_len"],
-            mem_limit='20G'
+            mem_limit="32G"
 
-    threads: 15
+    threads: 30
 
     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
     shell:
         """
-        gatk --java-options "-Xmx{params.mem_limit} -XX:ConcGCThreads={threads}" \
-        PathSeqScoreSpark --paired-input {input.bam} \
-                          --taxonomy-file {input.tax_db} \
-                          --min-score-identity {params.min_score} \
-                          --identity-margin {params.margin} \
-                          --scores-output {output.score_out} \
-                          --output {output.bam_out} \
-                          --score-metrics {output.score_met} \
-                          --divide-by-genome-length {params.divide_by_gen_len} 2> {log} 
+        gatk PathSeqPipelineSpark --java-options "-Xmx{params.mem_limit}" --input {input.bam} \
+                                  --kmer-file {input.host_kmer} \
+                                  --filter-bwa-image {input.host_bwa} \
+                                  --microbe-bwa-image {input.microbe_bwa} \
+                                  --microbe-fasta {input.microbe_fa} \
+                                  --taxonomy-file {input.tax_db} \
+                                  --min-clipped-read-length {params.min_clip_len} \
+                                  --min-score-identity {params.min_score} \
+                                  --identity-margin {params.margin} \
+                                  --scores-output {output.score_out} \
+                                  --output {output.bam_out} \
+                                  --filter-metrics {output.filter_met} \
+                                  --score-metrics {output.score_met} \
+                                  --is-host-aligned {params.skip_host_filter} \
+                                  --divide-by-genome-length {params.divide_by_gen_len} \
+                                  --conf 'spark.executor.cores={threads}' 2> {log}
         """
+# rule classify_reads:
+#     singularity: "docker://broadinstitute/gatk:4.1.3.0"
+#
+#     input: bam=get_bam_input,
+#            tax_db=f"{db_path}/pathseq_taxonomy.db"
+#
+#     output: score_out="Pathseq/{sample}/output/scores.txt",
+#             bam_out="Pathseq/{sample}/output/output_reads.bam",
+#             score_met="Pathseq/{sample}/output/score_metrics.txt"
+#
+#     params: min_clip_len=config["min_clip_len"],
+#             min_score=config["min_score_identity"],
+#             margin=config["identity_margin"],
+#             divide_by_gen_len=config["divide_by_gen_len"],
+#             mem_limit='32G'
+#
+#     threads: 30
+#
+#     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
+#
+#     resources: parallel_class=1
+#
+#     shell:
+#         """
+#         gatk --java-options "-Xmx32G" \
+#         PathSeqScoreSpark --paired-input {input.bam} \
+#                           --taxonomy-file {input.tax_db} \
+#                           --min-score-identity {params.min_score} \
+#                           --identity-margin {params.margin} \
+#                           --scores-output {output.score_out} \
+#                           --output {output.bam_out} \
+#                           --score-metrics {output.score_met} \
+#                           --divide-by-genome-length {params.divide_by_gen_len} \
+#                           --conf spark.executor.cores=30 2> {log}
+#         """
 rule Pathseq_to_krona:
     input: "Pathseq/{sample}/output/scores.txt"
 
