@@ -1,0 +1,16 @@
+
+rule blastn_plsdb:
+    conda:
+        "../../envs/hmmer.yml"
+    singularity:
+        "docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4"
+    input:
+        "samples/{sample}/gene_call/clean_{sample}.faa"
+    threads:
+        8
+    output:
+        "samples/{sample}/contigs_classification/plsdb/{sample}.tsv"
+    shell:
+        """
+        blastn -evalue 1e-5 -soft_masking false -query {input[0]} -db databases/plasmids/plsdb.fna -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs"
+        """

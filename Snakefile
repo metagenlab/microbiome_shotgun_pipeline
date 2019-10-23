@@ -38,7 +38,10 @@ rule anvio:
 
 rule annotation:
     input:
-        expand("samples/{sample}/annotation/rgi/rgi.json", sample = list(read_naming.keys())),
+        expand("samples/{sample}/annotation/rgi/rgi_proteins.json", sample = list(read_naming.keys())),
+        expand("samples/{sample}/contigs_classification/core_genes/{sample}.tsv", sample = list(read_naming.keys())),
+        #expand("samples/{sample}/contigs_classification/plsdb/{sample}.tsv", sample = list(read_naming.keys())),
+        expand("samples/{sample}/contigs_classification/COG_mobilome/{sample}.tsv", sample = list(read_naming.keys())),
         expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys()))
 
 
@@ -84,3 +87,6 @@ include: "rules/annotation/rgi.rules"
 
 # contig classification
 include: "rules/contigs_classification/deepvirfinder.rules"
+include: "rules/contigs_classification/core_genes.rules"
+include: "rules/contigs_classification/plasmids.rules"
+include: "rules/contigs_classification/COG_mobilome.rules"

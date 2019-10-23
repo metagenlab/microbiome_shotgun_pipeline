@@ -1,16 +1,34 @@
 
-rule execute_rgi:
+rule execute_rgi_proteins:
     conda: 
         "envs/anvio.yml"
     singularity:
         "docker://metagenlab/rgi:5.0.0-v3.0.4"
     input:
-        scaffolds = "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+        "samples/{sample}/gene_call/{sample}.faa",
     threads:
         8
     output:
-        "samples/{sample}/annotation/rgi/rgi.json"
+        "samples/{sample}/annotation/rgi/rgi_proteins.json",
+        "samples/{sample}/annotation/rgi/rgi_proteins.txt"
     shell:
         """
-        rgi main -t contig -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi
+        rgi main -t protein -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi_proteins
+        """
+
+rule execute_rgi_contigs:
+    conda: 
+        "envs/anvio.yml"
+    singularity:
+        "docker://metagenlab/rgi:5.0.0-v3.0.4"
+    input:
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    threads:
+        8
+    output:
+        "samples/{sample}/annotation/rgi/rgi_contigs.json",
+        "samples/{sample}/annotation/rgi/rgi_contigs.txt"
+    shell:
+        """
+        rgi main -t contig -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi_contigs
         """

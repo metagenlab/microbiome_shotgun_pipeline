@@ -13,4 +13,6 @@ rule orfing_with_prodigal:
     shell:
         """
         prodigal -a {output[0]} -i {input[contigs]} -m -o {output[1]} -q -f 'gbk' -p meta
+        # remove asterisks from faa file
+        sed -i 's/*$//g' {output[0]}
         """

@@ -1,0 +1,65 @@
+
+'''
+rule hmmsearch_core_genes:
+    conda:
+        "../../envs/hmmer.yml"
+    singularity:
+        "docker://quay.io/biocontainers/hmmer:3.2.1--hf484d3e_1"
+    input:
+        "samples/{sample}/gene_call/{sample}.faa"
+    threads:
+        8
+    output:
+        "samples/{sample}/contigs_classification/core_genes/{sample}.tsv"
+    shell:
+        """
+        hmmsearch --cut_tc --tblout {output} --noali databases/core_genes/checkm_bacteria_hmm_core.hmm {input[0]} > /dev/null
+        """
+'''
+
+checkpoint checkm_analyse:
+    conda:
+        "../../envs/checkm.yml"
+    singularity:
+        "docker://metagenlab/checkm:1.0.18"
+    threads:
+        8
+    input:
+        "samples/{sample}/gene_call/{sample}.faa"
+    output:
+        "samples/{sample}/contigs_classification/core_genes/{sample}.tsv"
+    shell:
+        """
+        checkm analyze --genes -x faa databases/core_genes/bacteria.ms $(dirname {input[0]}) samples/{wildcards.sample}/contigs_classification/core_genes/ -t {threads}
+        """
+
+
+rule checkm_qa:
+    conda:
+        "../../envs/checkm.yml"
+    threads:
+        8
+    input:
+        marker_set = "databases/virulence/complete_genomes/{taxid}/checkm/checkm_marker_set.ms",
+        checkm_log = "databases/virulence/complete_genomes/{taxid}/checkm_log.txt"
+    output:
+        qa_results = "databases/virulence/complete_genomes/{taxid}/checkm_analyse/qa_results.txt"
+    shell:
+        """
+        checkm qa {input[0]} databases/virulence/complete_genomes/{wildcards.taxid}/checkm_analyse -o 2 --tab_table > {output[0]}
+        """
+
+rule checkm_marker_set:
+    conda:
+        "../../envs/checkm.yml"
+    threads:
+        8
+    input:
+        marker_set = "databases/virulence/complete_genomes/{taxid}/checkm/checkm_marker_set.ms",
+        qa_results = "databases/virulence/complete_genomes/{taxid}/checkm_analyse/qa_results.txt"
+    output:
+        checkm_table = "databases/virulence/complete_genomes/{taxid}/checkm_analyse/markers.tab"
+    shell:
+        """
+        checkm qa {input[0]} databases/virulence/complete_genomes/{wildcards.taxid}/checkm_analyse -o 5 --tab_table > {output[0]}
+        """
