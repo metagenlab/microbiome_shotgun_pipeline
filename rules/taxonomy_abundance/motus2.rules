@@ -4,7 +4,7 @@ rule execute_motus2_relative:
     conda:
         "../../envs/motus2.yml"
     singularity:
-        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
+        "docker://quay.io/biocontainers/motus:2.1.0--py36_2"
     input:
         "samples/{sample}/reads/trimmed/R1_paired.fastq",
         "samples/{sample}/reads/trimmed/R2_paired.fastq"
@@ -22,7 +22,7 @@ rule execute_motus2_absolute:
     conda:
         "../../envs/motus2.yml"
     singularity:
-        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
+        "docker://quay.io/biocontainers/motus:2.1.0--py36_2"
     input:
         "samples/{sample}/reads/trimmed/R1_paired.fastq",
         "samples/{sample}/reads/trimmed/R2_paired.fastq"
@@ -48,7 +48,7 @@ rule motus2_merge:
     conda:
         "../../envs/motus2.yml"
     singularity:
-        "docker://quay.io/biocontainers/motus:2.1.1--py37_3"
+        "docker://quay.io/biocontainers/motus:2.1.0--py36_2"
     input:
         expand("samples/{sample}/motus2/relative/{{rank}}/profile.motus", sample = list(read_naming.keys()))
     params:
