@@ -1,9 +1,11 @@
 import pandas as pd
-import numpy as np
 import re
 import math
 import copy
+from ete3 import NCBITaxa
+import numpy as np
 from Bio import Entrez
+ncbi = NCBITaxa()
 Entrez.email=snakemake.config["email"]
 Entrez.api_key=snakemake.config["api_key"]
 input_file_list=snakemake.input
@@ -33,24 +35,37 @@ def get_taxid_from_accession(acc_read_counts_dic):
     return acc_id_tax_dic
 
 def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
-    all_taxid = acc_taxid_dic.values()
-    taxonomy_summary = Entrez.read(Entrez.efetch(db='taxonomy', id=','.join(all_taxid)))
-    tax = {}
-    for i in range(len(taxonomy_summary)):
-        taxid = taxonomy_summary[i]['TaxId']
+    tax={}
+    taxid_list = list(acc_taxid_dic.values())
+    for taxid in taxid_list:
         tax[taxid] = {}
-        tax[taxid]['ScientificName'] = taxonomy_summary[i]['ScientificName']
-        taxid_path = []
-        for j in taxonomy_summary[i]['LineageEx']:
-            rank = j['Rank']
-            if rank in target_ranks:
-                names = j['ScientificName']
-                tax[taxid][rank] = names
-                taxid_path.append(j['TaxId'])
-                tax[taxid]['taxid_path'] = '|'.join(taxid_path)
-            else:
-                tax[taxid][rank] = 'NA'
-                tax[taxid]['taxid_path']='NA'
+        if int(taxid) > 0:
+            scientific_name = ncbi.translate_to_names([taxid])[0]
+            tax[taxid]={'taxid':str(taxid),'scientific_name':scientific_name}
+            lineage = ncbi.get_lineage(taxid)
+            names = ncbi.get_taxid_translator(lineage)
+            ranks = ncbi.get_rank(lineage)
+            path = []
+            for sub_taxid in lineage:
+                rank = ranks[sub_taxid]
+                name = names[sub_taxid]
+                if rank in target_ranks:
+                    tax[taxid][rank] = name
+                    path.append(str(sub_taxid))
+            last_taxid = path[len(path) - 1]
+            last_rank = ranks[int(last_taxid)]
+            tax[taxid]['last_taxid'] = last_taxid
+            tax[taxid]['last_rank'] = last_rank
+            tax[taxid]['taxid_path'] = '|'.join(path)
+        else:
+            for j in target_ranks:
+                tax[taxid][j] = np.nan
+                tax[taxid]['taxid_path'] = np.nan
+                tax[taxid]['scientific_name'] = np.nan
+                tax[taxid]['last_taxid'] = np.nan
+                tax[taxid]['last_rank'] = np.nan
+                tax[taxid]['taxid_path'] = np.nan
+
     return tax
 
 def get_tax_table(table,read_len,threshold,target_ranks):
@@ -62,7 +77,6 @@ def get_tax_table(table,read_len,threshold,target_ranks):
         tax_id = acc_taxid_dic[genome]
         dico[genome] = copy.deepcopy(tax[tax_id])
         dico[genome]['read_counts'] = read_counts_dic[genome]
-        dico[genome]['taxid'] = tax_id
     tb = pd.DataFrame.from_dict(dico, orient='index')
     tb=tb.replace(np.nan,'NA')
     return tb
@@ -72,8 +86,9 @@ for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
-    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','species','genus','family','order','phylum','superkingdom','taxid_path']).sum()
-    samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'] / samples_ezvir_tb[f'{i}_counts'].sum()
+    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','scientific_name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path','last_taxid','last_rank']).sum()
+    samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'].div(sum(samples_ezvir_tb[f'{i}_counts'])).mul(100)
+    samples_ezvir_tb.to_csv(f"benchmark_tools/tables/ezvir/{i}.tsv", sep='\t')
     tables_list.append(samples_ezvir_tb)
 
 all_ezvir_tab = pd.concat(tables_list, sort=False, axis=1)

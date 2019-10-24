@@ -62,30 +62,37 @@ def get_taxonomy(filtered_col_tab, non_null_counts_rows):
 
 
 def names_to_taxid(ncbi,taxonomy, counts_dict):
-    names2taxid = {}
+    tax = {}
     target_ranks = ['superkingdom','phylum','order','family','genus','species']
     for i in taxonomy.keys():
         txid = list(ncbi.get_name_translator([taxonomy[i]]).values())
         if len(txid) == 1:
             taxid=txid[0][0]
-            lin_txid = ncbi.get_lineage(taxid)
-            lin_translation = ncbi.get_taxid_translator(lin_txid)
-            taxid2rank = ncbi.get_rank(list(lin_translation.keys()))
-            names2taxid[i] = {'name': taxonomy[i], 'taxid': taxid, 'read_counts': counts_dict[i]}
-            taxid_path=[]
-            for n, k in enumerate(taxid2rank.keys()):
-                if taxid2rank[k] in target_ranks:
-                    names2taxid[i][taxid2rank[k]] = lin_translation[k]
-                    names2taxid[i]['taxid_path'] = taxid_path.append(str(lin_txid[n]))
-            names2taxid[i]['taxid_path'] = '|'.join(taxid_path)
+            scientific_name = ncbi.translate_to_names([taxid])[0]
+            tax[taxid] = {'taxid':taxid,'scientific_name': scientific_name, 'read_counts': counts_dict[i]}
+            lineage = ncbi.get_lineage(taxid)
+            names = ncbi.get_taxid_translator(lineage)
+            ranks = ncbi.get_rank(lineage)
+            path = []
+            for sub_taxid in lineage:
+                rank = ranks[sub_taxid]
+                name = names[sub_taxid]
+                if rank in target_ranks:
+                    tax[taxid][rank] = name
+                    path.append(str(sub_taxid))
+            last_taxid = path[len(path) - 1]
+            last_rank = ranks[int(last_taxid)]
+            tax[taxid]['last_taxid'] = last_taxid
+            tax[taxid]['last_rank'] = last_rank
+            tax[taxid]['taxid_path'] = '|'.join(path)
         if len(txid) > 1:
             logging.warning(f'More than one taxid matching input name: {taxonomy[i]} (at row number: {i})')
-            names2taxid = None
+            tax = None
         if len(txid) == 0:
             logging.warning(f'No taxid matching for input name: {taxonomy[i]} (at row number: {i})')
-            names2taxid[i] = {'name': taxonomy[i], 'taxid': 'NA', 'read_counts': counts_dict[i]}
+            tax[i] = {'scientific_name': taxonomy[i], 'taxid': 'NA', 'read_counts': counts_dict[i]}
 
-    return names2taxid
+    return tax
 
 
 def parse_surpi_table(table, ncbi, col_threshold, row_threshold):
@@ -105,9 +112,10 @@ for sample in vir_dic.keys():
    b_tab=pd.read_csv(bac_dic[sample],sep='\t')
    bac_f=parse_surpi_table(b_tab, ncbi, 5, 0)
    full_tab = pd.concat([vir_f, bac_f], sort=False)
-   full_tab=full_tab.groupby(['taxid','species', 'genus', 'family', 'order', 'phylum', 'superkingdom','taxid_path']).sum()
+   full_tab=full_tab.groupby(['taxid','scientific_name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path','last_taxid','last_rank']).sum()
    full_tab=full_tab.rename(columns={'read_counts':f'{sample}_counts'})
-   full_tab[f'{sample}_percent'] = full_tab[f'{sample}_counts'] / full_tab[f'{sample}_counts'].sum()
+   full_tab[f'{sample}_percent'] = full_tab[f'{sample}_counts'].div(sum(full_tab[f'{sample}_counts'])).mul(100)
+   full_tab.to_csv(f"benchmark_tools/tables/surpi/{sample}.tsv", sep='\t')
    list_tables.append(full_tab)
 
 all_surpi_tab=pd.concat(list_tables,sort=False,axis=1)

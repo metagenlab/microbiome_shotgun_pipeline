@@ -1,9 +1,10 @@
 
 rule all_tools_output:
-    input: merged_tsv=expand("tool_outputs_comparison/{tool}.tsv",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon']),
-            all_hetmaps=expand("tool_outputs_comparison/heatmaps/{tool}.pdf",tool=['all_kraken2','all_bracken','all_pathseq','all_kaiju','all_surpi','all_ezvir','all_ganon'])
-
-
+    input: merged_tsv=expand("benchmark_tools/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            all_hetmaps=expand("benchmark_tools/heatmaps/all_{tool}.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            gold_standard_profile_files=expand("gold_standard/profile_files/{sample}.profile",sample=list(read_naming.keys())),
+            sample_profile_files=expand("benchmark_tools/profile_files/{tool}/{sample}.profile",sample=list(read_naming.keys()),tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            stats=expand("benchmark_tools/stats/{tool}/{sample}/opal.txt",sample=list(read_naming.keys()),tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
 def paired(wildcards):
     fastq_list = read_naming[wildcards.sample]
     if len(fastq_list) == 2:
@@ -16,7 +17,7 @@ rule merge_Kraken2_outputs:
 
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_kraken2.tsv"
+    output: "benchmark_tools/tables/kraken2/all_kraken2.tsv"
 
     script: "scripts/kraken2-merge.py"
 
@@ -25,7 +26,7 @@ rule merge_Bracken_outputs:
 
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_bracken.tsv"
+    output: "benchmark_tools/tables/bracken/all_bracken.tsv"
 
     script: "scripts/bracken-merge.py"
 
@@ -34,7 +35,7 @@ rule merge_Pathseq_outputs:
 
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_pathseq.tsv"
+    output: "benchmark_tools/tables/pathseq/all_pathseq.tsv"
 
     script: "scripts/pathseq-merge.py"
 
@@ -43,9 +44,9 @@ rule merge_kaiju_outputs:
 
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_kaiju.tsv"
+    output: "benchmark_tools/tables/kaiju/all_kaiju.tsv"
 
-    log: logging_folder + "tool_outputs_comparison/kaiju.log"
+    log: logging_folder + "benchmark_tools/kaiju.log"
 
     script: "scripts/kaiju-merge.py"
 
@@ -56,9 +57,9 @@ rule merge_SURPI_outputs:
            vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
             #dust.annotated file because low complexity regions are substracted
 
-    output: "tool_outputs_comparison/all_surpi.tsv"
+    output: "benchmark_tools/tables/surpi/all_surpi.tsv"
 
-    log: logging_folder + "tool_outputs_comparison/surpi.log"
+    log: logging_folder + "benchmark_tools/surpi.log"
 
     script: "scripts/surpi-merge.py"
 
@@ -68,7 +69,7 @@ rule merge_ezvir_outputs:
 
     input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_ezvir.tsv"
+    output: "benchmark_tools/tables/ezvir/all_ezvir.tsv"
 
     params: read_len=config["samples_read_length"]
 
@@ -82,7 +83,7 @@ rule merge_ganon_outputs:
            #human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
            bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
 
-    output: "tool_outputs_comparison/all_ganon.tsv"
+    output: "benchmark_tools/tables/ganon/all_ganon.tsv"
 
     script: "scripts/ganon-merge.py"
 
@@ -91,17 +92,47 @@ rule merge_ganon_outputs:
 rule generate_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: "tool_outputs_comparison/{tool}.tsv"
+    input: "benchmark_tools/tables/{tool}/all_{tool}.tsv"
 
-    output: "tool_outputs_comparison/heatmaps/{tool}.pdf"
+    output: "benchmark_tools/heatmaps/all_{tool}.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"]
 
     script: "scripts/heatmap.py"
 
+rule genereate_gold_standard_profiles:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: "gold_standard/tables/{sample}.tsv"
+
+    output: "gold_standard/profile_files/{sample}.profile"
+
+    script: "scripts/profile.py"
 
 
+rule genereate_sample_profiles:
+    conda: pipeline_path + "envs/compare-tools.yml"
 
+    input: "benchmark_tools/tables/{tool}/{sample}.tsv"
 
+    output: "benchmark_tools/profile_files/{tool}/{sample}.profile"
 
+    script: "scripts/sample-profile.py"
+
+rule get_stats:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard="gold_standard/profile_files/{sample}.profile",
+             sample_profile="benchmark_tools/profile_files/{tool}/{sample}.profile"
+
+    output: "benchmark_tools/stats/{tool}/{sample}/opal.txt"
+
+    params: "benchmark_tools/stats/{tool}/{sample}"
+
+    log: logging_folder + "benchmark_tools/stats/{tool}/{sample}.log"
+
+    shell:
+        """
+        opal.py -g {input.gold_standard} -o {params} {input.sample_profile}
+        """
