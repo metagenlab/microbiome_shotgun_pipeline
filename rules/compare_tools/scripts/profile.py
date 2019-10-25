@@ -3,9 +3,9 @@ from datetime import date
 import pandas as pd
 #import numpy as np
 today=date.today()
-d=today.strftime("%d/%m/%Y")
+d=today.strftime("%d.%m.%Y")
 ncbi = NCBITaxa()
-sample=snakemake.wildcards.sample
+
 
 def get_lin_tax(table,ncbi,target_ranks):
     taxid_list=table['Taxid']
@@ -36,17 +36,30 @@ def get_lin_tax(table,ncbi,target_ranks):
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 table=pd.read_csv(snakemake.input[0],sep='\t')
 lin_tax_tab=get_lin_tax(table,ncbi,target_ranks)
-tb=lin_tax_tab[['last_taxid','last_rank','taxid_path','read_counts']]
-tb.columns=['TAXID','RANK','TAXPATH','COUNTS']
-tb_human_filtered=tb.drop([9606])#drop human reads
-tb_human_filtered['PERCENTAGE']=tb_human_filtered['COUNTS'].div(sum(tb_human_filtered['COUNTS'])).mul(100)
-tb_human_filtered=tb_human_filtered[['TAXID','RANK','TAXPATH','PERCENTAGE']]
-str_tb=tb_human_filtered.to_string(index=False)
+lin_tax_tab.to_csv(snakemake.output[0],sep='\t')
 
-profile_file=open(snakemake.output[0],"w+")
-profile_file.write(f'@SampleID:{sample}\n\
-@Version:0.9.1"\n\
-@Ranks:superkingdom|phylum|order|family|genus|species\n\
-@TaxonomyID:ncbi-taxonomy_{d}\n\
-@@ {str_tb}')
-profile_file.close()
+
+# tb=lin_tax_tab[['last_taxid','last_rank','taxid_path','read_counts']]
+# tb.columns=['TAXID','RANK','TAXPATH','COUNTS']
+# tb_human_filtered=tb.drop([9606])#drop human reads
+# tb_human_filtered['PERCENTAGE']=tb_human_filtered['COUNTS'].div(sum(tb_human_filtered['COUNTS'])).mul(100)
+# tb_human_filtered=tb_human_filtered[['TAXID','RANK','TAXPATH','PERCENTAGE']]
+#
+# row_list=[]
+# for index, row in tb_human_filtered.iterrows():
+#     taxid=row['TAXID']
+#     rank=row['RANK']
+#     path=row['TAXPATH']
+#     percent=float(row['PERCENTAGE'])
+#     row_list.append(f"{taxid}\t{rank}\t{path}\t{percent}")
+#
+# str_tb='\n'.join(row_list)
+#
+# profile_file=open(snakemake.output[0],"w+")
+# profile_file.write(f'@SampleID:{sample}\n\
+# @Version:0.9.1"\n\
+# @Ranks:superkingdom|phylum|order|family|genus|species\n\
+# @TaxonomyID:ncbi-taxonomy_{d}\n\
+# @@TAXID\tRANK\tTAXPATH\tPERCENTAGE\n\
+# {str_tb}')
+# profile_file.close()
