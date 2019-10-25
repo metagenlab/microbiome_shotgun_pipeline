@@ -1,0 +1,48 @@
+
+rule execute_kaiju_proteins:
+    conda:
+        "../../envs/kaiju.yml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
+    params:
+        database_dir = config["kaju_database"],
+    input:
+        "samples/{sample}/gene_call/{sample}.faa"
+    output:
+         "samples/{sample}/binning/kaiju/kaiju_output.txt",
+    shell:
+        '''
+         kaiju -t {params[database_dir]}nodes.dmp -f {params[database_dir]}kaiju_db.fmi -i {input[0]} -p -v -o {output[0]}
+        '''
+
+
+rule kaiju_add_phylum_names:
+    conda:
+        "../../envs/kaiju.yaml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
+    input:
+        "samples/{sample}/binning/kaiju/kaiju_output.txt",
+    output:
+        "samples/{sample}/binning/kaiju/locus_phylum_taxonomy.tab",
+    shell:
+        '''
+         addTaxonNames -i {input[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum -o {output[0]}
+        '''
+
+# if config['meta'] != True:
+rule kaiju_report_phylum:
+    conda:
+        "../../envs/kaiju.yml"
+    singularity:
+        "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
+    input:
+        "samples/{sample}/binning/kaiju/kaiju_output.txt",
+    output:
+        "samples/{sample}/binning/kaiju/report_phylum.txt",
+    shell:
+        '''
+        #kaiju2table -i {input[0]} -o {output[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum
+        kaiju2table -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum -o {output[0]} {input[0]}
+        '''
+
