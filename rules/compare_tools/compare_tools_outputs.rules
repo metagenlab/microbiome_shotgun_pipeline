@@ -2,15 +2,7 @@
 rule all_tools_output:
     input: merged_tsv=expand("benchmark_tools/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             all_hetmaps=expand("benchmark_tools/heatmaps/all_{tool}.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
-            gold_standard_profile_files=expand("gold_standard/profile_files/{sample}.profile",sample=list(read_naming.keys())),
-            sample_profile_files=expand("benchmark_tools/profile_files/{tool}/{sample}.profile",sample=list(read_naming.keys()),tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
-            stats=expand("benchmark_tools/stats/{tool}/{sample}/opal.txt",sample=list(read_naming.keys()),tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
-def paired(wildcards):
-    fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
-        return True
-    else:
-        return False
+
 
 rule merge_Kraken2_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
@@ -101,38 +93,37 @@ rule generate_heatmaps:
 
     script: "scripts/heatmap.py"
 
-rule genereate_gold_standard_profiles:
+community=config['community_name']
+
+rule genereate_gold_standard_profile:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: "gold_standard/tables/{sample}.tsv"
+    input: f"gold_standard/tables/{community}.tsv"
 
-    output: "gold_standard/profile_files/{sample}.profile"
+    output: "gold_standard/tables/gold_standard.tsv"
 
     script: "scripts/profile.py"
 
 
-rule genereate_sample_profiles:
-    conda: pipeline_path + "envs/compare-tools.yml"
-
-    input: "benchmark_tools/tables/{tool}/{sample}.tsv"
-
-    output: "benchmark_tools/profile_files/{tool}/{sample}.profile"
-
-    script: "scripts/sample-profile.py"
+# rule genereate_sample_profiles:
+#     conda: pipeline_path + "envs/compare-tools.yml"
+#
+#     input: "benchmark_tools/tables/{tool}/{sample}.tsv"
+#
+#     output: "benchmark_tools/profile_files/{tool}/{sample}.profile"
+#
+#     script: "scripts/sample-profile.py"
 
 rule get_stats:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: gold_standard="gold_standard/profile_files/{sample}.profile",
-             sample_profile="benchmark_tools/profile_files/{tool}/{sample}.profile"
+    input: gold_standard="gold_standard/tables/gold_standard.tsv",
+            tool_out="benchmark_tools/tables/{tool}/all_{tool}.tsv"
 
-    output: "benchmark_tools/stats/{tool}/{sample}/opal.txt"
+    output: "benchmark_tools/stats/{tool}/results.tsv"
 
-    params: "benchmark_tools/stats/{tool}/{sample}"
+    log: logging_folder + "benchmark_tools/stats/{tool}.log"
 
-    log: logging_folder + "benchmark_tools/stats/{tool}/{sample}.log"
+    script: "scripts/stats.py"
 
-    shell:
-        """
-        opal.py -g {input.gold_standard} -o {params} {input.sample_profile}
-        """
+#bracken,ezvir,ganon,kaiju,kraken2,pathseq,surpi
