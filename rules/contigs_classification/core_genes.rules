@@ -1,5 +1,5 @@
 
-'''
+
 rule hmmsearch_core_genes:
     conda:
         "../../envs/hmmer.yml"
@@ -15,8 +15,13 @@ rule hmmsearch_core_genes:
         """
         hmmsearch --cut_tc --tblout {output} --noali databases/core_genes/checkm_bacteria_hmm_core.hmm {input[0]} > /dev/null
         """
-'''
 
+
+
+
+
+
+'''
 checkpoint checkm_analyse:
     conda:
         "../../envs/checkm.yml"
@@ -63,3 +68,4 @@ rule checkm_marker_set:
         """
         checkm qa {input[0]} databases/virulence/complete_genomes/{wildcards.taxid}/checkm_analyse -o 5 --tab_table > {output[0]}
         """
+'''
