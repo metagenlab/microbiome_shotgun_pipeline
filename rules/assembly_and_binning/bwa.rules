@@ -47,31 +47,7 @@ rule map_single_reads_with_bwa:
         (bwa mem -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}\\tPL:{params.platform}' {input[ref]} {input[fastq]} -v 1 | samtools sort -O BAM -o {output[0]}) 2> {log}
         """
 
-rule extract_contig_coverage:
-    input:
-        # report/qualimap/{sample}/{mapping_method}/{ref}/
-        genome_cov = "report/qualimap/{sample}/{mapping_method}/{sample}_assembled/genome_results.txt"
-    output:
-        extract = "samples/{sample}/{mapping_method}/{sample}_assembled/contig_coverage.txt"
-    shell:
-        """
-        sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep NODE_ | sed "s/^[ \\t]*//" > {output[extract]}
-        """
-
-rule compute_all_samples_depth:
-    conda:
-        "../../envs/metabat2.yml"
-    singularity:
-        "docker://quay.io/biocontainers/metabat2:2.14--h137b6e9_0"
-    input:
-        bam_files = expand("samples/{sample}/mapping/{{mapping_method}}/{sample}.bam", sample=list(read_naming.keys())),
-    output:
-        extract = "samples/{sample}/{mapping_method}/{sample}_assembled/metabat2_coverage.txt"
-    shell:
-        """
-        jgi_summarize_bam_contig_depths --outputDepth metabat2_coverage.txt {input}
-        """
-    
+ 
 rule index_reference_fasta:
     conda:
         "../../envs/bwa-samtools.yml"

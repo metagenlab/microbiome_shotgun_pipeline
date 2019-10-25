@@ -1,0 +1,17 @@
+
+rule chekm_maxbin:
+    conda:
+        "../../checkm.yml"
+    singularity:
+        "docker://quay.io/biocontainers/checkm-genome:1.0.18--py_0"
+    input:
+        fasta_dir = "samples/{sample}/binning/maxbin/",
+        fasta_files = dynamic("samples/{sample}/binning/maxbin/{bin_id}.fasta"),
+    output:
+        "samples/{sample}/binning/maxbin/checkm_bacteria/storage/bin_stats.analyze.tsv",
+    log:
+        "samples/{sample}/binning/maxbin/{sample}.log",
+    shell:
+        """
+        checkm analyze -t 6 scripts/bacteria.ms {input[fasta_dir]} samples/{sample}/binning/maxbin/checkm_bacteria -x fasta
+        """

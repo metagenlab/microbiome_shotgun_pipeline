@@ -42,7 +42,11 @@ rule annotation:
         expand("samples/{sample}/contigs_classification/core_genes/{sample}.tsv", sample = list(read_naming.keys())),
         expand("samples/{sample}/contigs_classification/plsdb/{sample}.tsv", sample = list(read_naming.keys())),
         expand("samples/{sample}/contigs_classification/COG_mobilome/{sample}.tsv", sample = list(read_naming.keys())),
-        expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys()))
+        expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys())),
+        expand("samples/{sample}/bwa/{sample}_assembled/{sample}_metabat2_depth.txt", sample = list(read_naming.keys())),
+        expand("samples/{sample}/binning/kaiju/report_phylum.txt", sample = list(read_naming.keys())),
+        #expand("samples/{sample}/contigs_classification/cat_bat/out.BAT.ORF2LCA.txt", sample = list(read_naming.keys())),
+        expand("samples/{sample}/contigs_classification/{sample}_GC.tsv", sample = list(read_naming.keys())),
 
 
 pipeline_path = workflow.basedir + '/'
@@ -63,11 +67,12 @@ include: "rules/QC/fastqc.rules"
 include: "rules/QC/trimmomatic.rules"
 
 # metagenomic assembly
-include: "rules/assembly_and_binning/quality_check.rules"
+include: "rules/assembly_and_binning/gc_cov_plots.rules"
 include: "rules/assembly_and_binning/prodigal.rules"
 include: "rules/assembly_and_binning/bwa.rules"
 include: "rules/assembly_and_binning/assembly.rules"
 include: "rules/assembly_and_binning/binning.rules"
+include: "rules/assembly_and_binning/checkm.rules"
 
 # database setup
 include: "rules/databases/virulence/virulence.smk"
@@ -90,3 +95,6 @@ include: "rules/contigs_classification/deepvirfinder.rules"
 include: "rules/contigs_classification/core_genes.rules"
 include: "rules/contigs_classification/plasmids.rules"
 include: "rules/contigs_classification/COG_mobilome.rules"
+include: "rules/contigs_classification/kaiju.rules"
+include: "rules/contigs_classification/cat_bat.rules"
+include: "rules/contigs_classification/contigs_statistics.rules"

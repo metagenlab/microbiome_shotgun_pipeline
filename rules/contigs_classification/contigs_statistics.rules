@@ -1,0 +1,39 @@
+rule calculate_contigs_GC:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
+    threads:
+        1
+    output:
+        "samples/{sample}/contigs_classification/{sample}_GC.tsv"
+    script: "scripts/contigs_GC.py"
+
+
+rule compute_contigs_depth_single:
+    conda:
+        "../../envs/metabat2.yml"
+    singularity:
+        "docker://quay.io/biocontainers/metabat2:2.14--h137b6e9_0"
+    input:
+        bam_file = "samples/{sample}/mapping/{mapping_method}/{sample}.bam",
+    output:
+        extract = "samples/{sample}/{mapping_method}/{sample}_assembled/{sample}_metabat2_depth.txt"
+    shell:
+        """
+        jgi_summarize_bam_contig_depths --outputDepth {output[0]} {input}
+        """
+
+
+rule extract_contig_coverage:
+    input:
+        # report/qualimap/{sample}/{mapping_method}/{ref}/
+        genome_cov = "report/qualimap/{sample}/{mapping_method}/{sample}_assembled/genome_results.txt"
+    output:
+        extract = "samples/{sample}/{mapping_method}/{sample}_assembled/contig_coverage.txt"
+    shell:
+        """
+        sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep NODE_ | sed "s/^[ \\t]*//" > {output[extract]}
+        """

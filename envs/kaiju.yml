@@ -1,4 +1,4 @@
 channels:
  - bioconda
 dependencies:
-- kaiju = 1.6.2
+- kaiju = 1.7.2
