@@ -45,7 +45,7 @@ rule annotation:
         expand("samples/{sample}/contigs_classification/deepvirfinder/large_contigs_edit.fasta_gt500bp_dvfpred.txt", sample = list(read_naming.keys())),
         expand("samples/{sample}/bwa/{sample}_assembled/{sample}_metabat2_depth.txt", sample = list(read_naming.keys())),
         expand("samples/{sample}/binning/kaiju/report_phylum.txt", sample = list(read_naming.keys())),
-        #expand("samples/{sample}/contigs_classification/cat_bat/out.BAT.ORF2LCA.txt", sample = list(read_naming.keys())),
+        expand("samples/{sample}/contigs_classification/cat_bat/out.CAT.ORF2LCA.txt", sample = list(read_naming.keys())),
         expand("samples/{sample}/contigs_classification/{sample}_GC.tsv", sample = list(read_naming.keys())),
 
 
