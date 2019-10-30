@@ -38,34 +38,34 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
     tax={}
     taxid_list = list(acc_taxid_dic.values())
     for taxid in taxid_list:
-        tax[taxid] = {}
+        tax[taxid] = {'taxid':str(taxid)}
         if int(taxid) > 0:
             scientific_name = ncbi.translate_to_names([taxid])[0]
-            tax[taxid]={'taxid':str(taxid),'scientific_name':scientific_name}
+            tax[taxid]['scientific_name'] = scientific_name
             lineage = ncbi.get_lineage(taxid)
             names = ncbi.get_taxid_translator(lineage)
             ranks = ncbi.get_rank(lineage)
-            path = []
+            rank_list = list(ranks.values())
+            name_list = list(names.values())
+            rank2names = dict(zip(rank_list, name_list))
+
             for sub_taxid in lineage:
                 rank = ranks[sub_taxid]
-                name = names[sub_taxid]
                 if rank in target_ranks:
-                    tax[taxid][rank] = name
-                    path.append(str(sub_taxid))
-            last_taxid = path[len(path) - 1]
-            last_rank = ranks[int(last_taxid)]
-            tax[taxid]['last_taxid'] = last_taxid
-            tax[taxid]['last_rank'] = last_rank
-            tax[taxid]['taxid_path'] = '|'.join(path)
-        else:
-            for j in target_ranks:
-                tax[taxid][j] = np.nan
-                tax[taxid]['taxid_path'] = np.nan
-                tax[taxid]['scientific_name'] = np.nan
-                tax[taxid]['last_taxid'] = np.nan
-                tax[taxid]['last_rank'] = np.nan
-                tax[taxid]['taxid_path'] = np.nan
-
+                    tax[taxid][f"{rank}_taxid"] = sub_taxid
+            for n, rank in enumerate(target_ranks):
+                if rank in rank2names.keys():
+                    tax[taxid][rank] = rank2names[rank]
+                else:
+                    previous_name = 'root'
+                    for ranks_to_skip in range(1, len(target_ranks) + 1):
+                        previous_rank = target_ranks[n - ranks_to_skip]
+                        if previous_rank in rank2names.keys():
+                            previous_name = rank2names[previous_rank]
+                            break
+                        if previous_rank not in rank2names.keys():
+                            continue
+                    tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
     return tax
 
 def get_tax_table(table,read_len,threshold,target_ranks):
@@ -86,7 +86,7 @@ for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
-    samples_ezvir_tb=ezvir_parsed_tb.groupby(['taxid','scientific_name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path','last_taxid','last_rank']).sum()
+    samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'].div(sum(samples_ezvir_tb[f'{i}_counts'])).mul(100)
     samples_ezvir_tb.to_csv(f"benchmark_tools/tables/ezvir/{i}.tsv", sep='\t')
     tables_list.append(samples_ezvir_tb)

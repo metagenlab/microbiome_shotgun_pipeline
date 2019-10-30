@@ -24,7 +24,7 @@ def get_lin_tax(tb, ncbi, target_ranks):
         tax[taxid] = {'read_counts': count_dic[taxid]}
         if int(taxid) > 1:
             try:
-                tax[taxid] = {'taxid': taxid, 'read_counts': count_dic[taxid]}
+                tax[taxid] = {'taxid': str(taxid), 'read_counts': count_dic[taxid]}
                 lineage = ncbi.get_lineage(taxid)
             except ValueError:
                 taxonomy_path = path_dic[taxid]
@@ -39,27 +39,31 @@ def get_lin_tax(tb, ncbi, target_ranks):
             scientific_name = ncbi.translate_to_names([taxid])[0]
             tax[taxid]['scientific_name'] = scientific_name
 
-            path = []
+            rank_list = list(ranks.values())
+            name_list = list(names.values())
+            rank2names = dict(zip(rank_list, name_list))
+
             for sub_taxid in lineage:
                 rank = ranks[sub_taxid]
-                name = names[sub_taxid]
                 if rank in target_ranks:
-                    tax[taxid][rank] = name
-                    path.append(str(sub_taxid))
+                    tax[taxid][f"{rank}_taxid"] = sub_taxid
 
-            if len(path) > 0:
-                last_taxid = path[len(path) - 1]
-                last_rank = ranks[int(last_taxid)]
-                tax[taxid]['last_taxid'] = last_taxid
-                tax[taxid]['last_rank'] = last_rank
-                tax[taxid]['taxid_path'] = '|'.join(path)
-        else:
-            tax[taxid]['scientific_name'] = np.nan
-            tax[taxid]['last_taxid'] = np.nan
-            tax[taxid]['last_rank'] = np.nan
-            tax[taxid]['taxid_path'] = np.nan
+            for n, rank in enumerate(target_ranks):
+                if rank in rank2names.keys():
+                    tax[taxid][rank] = rank2names[rank]
+                else:
+                    previous_name = 'root'
+                    for ranks_to_skip in range(1, len(target_ranks) + 1):
+                        previous_rank = target_ranks[n - ranks_to_skip]
+                        if previous_rank in rank2names.keys():
+                            previous_name = rank2names[previous_rank]
+                            break
+                        if previous_rank not in rank2names.keys():
+                            continue
 
+                    tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
     df = pd.DataFrame.from_dict(tax, orient='index')
+    df=df.replace(np.nan,'NA')
     return df
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 tables_list=[]
@@ -73,7 +77,7 @@ for sample in dic.keys():
 
     lin_tax_tb[f'{sample}_percent'] = lin_tax_tb[f'{sample}_counts'].div(sum(lin_tax_tb[f'{sample}_counts'])).mul(100)
 
-    lin_tax_tb = lin_tax_tb.groupby(['taxid', 'scientific_name', 'species', 'genus', 'family', 'order', 'phylum', 'superkingdom', 'taxid_path','last_taxid', 'last_rank']).sum()
+    lin_tax_tb = lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     lin_tax_tb.to_csv(f"benchmark_tools/tables/pathseq/{sample}.tsv", sep='\t')
     tables_list.append(lin_tax_tb)
 
