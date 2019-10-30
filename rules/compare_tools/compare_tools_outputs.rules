@@ -1,7 +1,9 @@
-
+rank=config["target_rank"]
 rule all_tools_output:
     input: merged_tsv=expand("benchmark_tools/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             all_hetmaps=expand("benchmark_tools/heatmaps/all_{tool}.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            gold_standard="gold_standard/tables/gold_standard.tsv",
+            tool_scores=f"benchmark_tools/stats/all_tools_{rank}_level.tsv"
 
 
 rule merge_Kraken2_outputs:
@@ -72,7 +74,6 @@ rule merge_ganon_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: vir=expand("ganon/{sample}/viruses/classified.rep",sample=list(read_naming.keys())),
-           #human=expand("ganon/{sample}/human/classified.rep",sample=list(read_naming.keys())),
            bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
 
     output: "benchmark_tools/tables/ganon/all_ganon.tsv"
@@ -105,25 +106,29 @@ rule genereate_gold_standard_profile:
     script: "scripts/profile.py"
 
 
-# rule genereate_sample_profiles:
-#     conda: pipeline_path + "envs/compare-tools.yml"
-#
-#     input: "benchmark_tools/tables/{tool}/{sample}.tsv"
-#
-#     output: "benchmark_tools/profile_files/{tool}/{sample}.profile"
-#
-#     script: "scripts/sample-profile.py"
 
-rule get_stats:
+rule calculate_precision_recall_f1_score:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard="gold_standard/tables/gold_standard.tsv",
             tool_out="benchmark_tools/tables/{tool}/all_{tool}.tsv"
 
-    output: "benchmark_tools/stats/{tool}/results.tsv"
+    output: f"benchmark_tools/stats/{{tool}}/scores_{rank}_level.tsv"
 
-    log: logging_folder + "benchmark_tools/stats/{tool}.log"
+
+    log: logging_folder + f"benchmark_tools/false_negatives/{rank}_level/{{tool}}.log"
 
     script: "scripts/stats.py"
 
-#bracken,ezvir,ganon,kaiju,kraken2,pathseq,surpi
+
+rule regroup_tool_scores:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: expand(f"benchmark_tools/stats/{{tool}}/scores_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
+
+    output: f"benchmark_tools/stats/all_tools_{rank}_level.tsv"
+
+    script: "scripts/concat.py"
+
+
+
