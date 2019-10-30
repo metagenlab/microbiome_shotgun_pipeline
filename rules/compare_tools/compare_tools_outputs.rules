@@ -1,9 +1,13 @@
 rank=config["target_rank"]
 rule all_tools_output:
-    input: merged_tsv=expand("benchmark_tools/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
-            all_hetmaps=expand("benchmark_tools/heatmaps/all_{tool}.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+    input: merged_tsv=expand("benchmarks/classification/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            vir_read_counts_heatmaps=expand("benchmarks/classification/heatmaps/{tool}/viruses.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+            bac_read_counts_heatmaps=expand("benchmarks/classification/heatmaps/{tool}/bacteria.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             gold_standard="gold_standard/tables/gold_standard.tsv",
-            tool_scores=f"benchmark_tools/stats/all_tools_{rank}_level.tsv"
+            all_vir_scores=f"benchmarks/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
+            all_vir_presence=f"benchmarks/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
+            all_bac_scores=f"benchmarks/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
+            all_bac_presence=f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
 
 
 rule merge_Kraken2_outputs:
@@ -11,7 +15,7 @@ rule merge_Kraken2_outputs:
 
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/kraken2/all_kraken2.tsv"
+    output: "benchmarks/classification/tables/kraken2/all_kraken2.tsv"
 
     script: "scripts/kraken2-merge.py"
 
@@ -20,7 +24,7 @@ rule merge_Bracken_outputs:
 
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/bracken/all_bracken.tsv"
+    output: "benchmarks/classification/tables/bracken/all_bracken.tsv"
 
     script: "scripts/bracken-merge.py"
 
@@ -29,7 +33,7 @@ rule merge_Pathseq_outputs:
 
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/pathseq/all_pathseq.tsv"
+    output: "benchmarks/classification/tables/pathseq/all_pathseq.tsv"
 
     script: "scripts/pathseq-merge.py"
 
@@ -38,9 +42,9 @@ rule merge_kaiju_outputs:
 
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/kaiju/all_kaiju.tsv"
+    output: "benchmarks/classification/tables/kaiju/all_kaiju.tsv"
 
-    log: logging_folder + "benchmark_tools/kaiju.log"
+    log: logging_folder + "benchmarks/classification/kaiju.log"
 
     script: "scripts/kaiju-merge.py"
 
@@ -51,9 +55,9 @@ rule merge_SURPI_outputs:
            vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
             #dust.annotated file because low complexity regions are substracted
 
-    output: "benchmark_tools/tables/surpi/all_surpi.tsv"
+    output: "benchmarks/classification/tables/surpi/all_surpi.tsv"
 
-    log: logging_folder + "benchmark_tools/surpi.log"
+    log: logging_folder + "benchmarks/classification/surpi.log"
 
     script: "scripts/surpi-merge.py"
 
@@ -63,7 +67,7 @@ rule merge_ezvir_outputs:
 
     input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/ezvir/all_ezvir.tsv"
+    output: "benchmarks/classification/tables/ezvir/all_ezvir.tsv"
 
     params: read_len=config["samples_read_length"]
 
@@ -76,23 +80,39 @@ rule merge_ganon_outputs:
     input: vir=expand("ganon/{sample}/viruses/classified.rep",sample=list(read_naming.keys())),
            bac=expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys()))
 
-    output: "benchmark_tools/tables/ganon/all_ganon.tsv"
+    output: "benchmarks/classification/tables/ganon/all_ganon.tsv"
 
     script: "scripts/ganon-merge.py"
 
 
 
-rule generate_heatmaps:
+rule virus_read_count_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: "benchmark_tools/tables/{tool}/all_{tool}.tsv"
+    input: "benchmarks/classification/tables/{tool}/all_{tool}.tsv"
 
-    output: "benchmark_tools/heatmaps/all_{tool}.pdf"
+    output: "benchmarks/classification/heatmaps/{tool}/viruses.pdf"
 
     params: rank=config["target_rank"],
-            value=config["target_value"]
+            value=config["target_value"],
+            superkingdom="Viruses"
 
-    script: "scripts/heatmap.py"
+    script: "scripts/heatmap-read-counts.py"
+
+rule bacteria_read_count_heatmaps:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: "benchmarks/classification/tables/{tool}/all_{tool}.tsv"
+
+    output: "benchmarks/classification/heatmaps/{tool}/bacteria.pdf"
+
+    params: rank=config["target_rank"],
+            value=config["target_value"],
+            superkingdom="Bacteria"
+
+    script: "scripts/heatmap-read-counts.py"
+
+
 
 community=config['community_name']
 
@@ -111,22 +131,28 @@ rule calculate_precision_recall_f1_score:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard="gold_standard/tables/gold_standard.tsv",
-            tool_out="benchmark_tools/tables/{tool}/all_{tool}.tsv"
+            tool_out="benchmarks/classification/tables/{tool}/all_{tool}.tsv"
 
-    output: f"benchmark_tools/stats/{{tool}}/scores_{rank}_level.tsv"
-
-
-    log: logging_folder + f"benchmark_tools/false_negatives/{rank}_level/{{tool}}.log"
+    output: vir_scores=f"benchmarks/classification/stats/{{tool}}/vir_scores_{rank}_level.tsv",
+            vir_presence=f"benchmarks/classification/stats/{{tool}}/vir_presence_{rank}_level.tsv",
+            bac_scores=f"benchmarks/classification/stats/{{tool}}/bac_scores_{rank}_level.tsv",
+            bac_presence=f"benchmarks/classification/stats/{{tool}}/bac_presence_{rank}_level.tsv"
 
     script: "scripts/stats.py"
 
 
-rule regroup_tool_scores:
+rule regroup_scores_and_presence:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand(f"benchmark_tools/stats/{{tool}}/scores_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
+    input: vir_scores=expand("benchmarks/classification/stats/{tool}/vir_scores_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank),
+           vir_presence=expand("benchmarks/classification/stats/{tool}/vir_presence_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank),
+           bac_scores=expand("benchmarks/classification/stats/{tool}/bac_scores_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank),
+           bac_presence=expand("benchmarks/classification/stats/{tool}/bac_presence_{rank}_level.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank)
 
-    output: f"benchmark_tools/stats/all_tools_{rank}_level.tsv"
+    output: all_vir_scores=f"benchmarks/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
+            all_vir_presence=f"benchmarks/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
+            all_bac_scores=f"benchmarks/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
+            all_bac_presence=f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
 
     script: "scripts/concat.py"
 
