@@ -28,9 +28,10 @@ def get_heatmap_table(file,rank,value,superkingdom):
 tb=get_heatmap_table(snakemake.input[0],rank,values,superkingdom)
 
 if len(tb)>0:
-    plt.figure(figsize=(20, 10))
+    plt.figure(figsize=(21, 10))
     sns.set(font_scale=0.5)
-    hm=sns.heatmap(tb,cmap="YlGnBu",fmt=".1f")
+    hm=sns.heatmap(tb,cmap="YlGnBu")
+    plt.xticks(rotation=45)
     hm.get_figure().savefig(snakemake.output[0])
 else:
     pdf = FPDF()
