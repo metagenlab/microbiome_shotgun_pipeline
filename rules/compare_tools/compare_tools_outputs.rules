@@ -7,7 +7,10 @@ rule all_tools_output:
             all_vir_scores=f"benchmarks/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
             all_vir_presence=f"benchmarks/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
             all_bac_scores=f"benchmarks/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
-            all_bac_presence=f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
+            all_bac_presence=f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv",
+            vir_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/virus_{rank}_level.pdf",
+            bac_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf"
+
 
 
 rule merge_Kraken2_outputs:
@@ -156,5 +159,27 @@ rule regroup_scores_and_presence:
 
     script: "scripts/concat.py"
 
+
+rule bacteria_presence_hetamap:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
+
+    output: f"benchmarks/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf"
+
+    params: rank=config["target_rank"]
+
+    script: "scripts/heatmap-presence.py"
+
+rule virus_presence_hetamap:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: f"benchmarks/classification/stats/all_tools/vir_presence_{rank}_level.tsv"
+
+    output: f"benchmarks/classification/heatmaps/all_tools/virus_{rank}_level.pdf"
+
+    params: rank=config["target_rank"]
+    
+    script: "scripts/heatmap-presence.py"
 
 
