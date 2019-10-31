@@ -67,7 +67,8 @@ def get_lin_tax(tb, ncbi, target_ranks):
     return df
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 tables_list=[]
-
+split_path=snakemake.output[0].split('/')
+tool_path='/'.join(split_path[0:len(split_path)-1])
 for sample in dic.keys():
     pathseq_tb=pd.read_csv(dic[sample],sep='\t')
     pathseq_tb.columns = ['taxid', 'taxonomy', 'rank', 'name', 'kingdom', 'score', 'score_normalized', 'reads','reads_assigned', 'refence_length']
@@ -78,7 +79,7 @@ for sample in dic.keys():
     lin_tax_tb[f'{sample}_percent'] = lin_tax_tb[f'{sample}_counts'].div(sum(lin_tax_tb[f'{sample}_counts'])).mul(100)
 
     lin_tax_tb = lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
-    lin_tax_tb.to_csv(f"benchmark_tools/tables/pathseq/{sample}.tsv", sep='\t')
+    lin_tax_tb.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(lin_tax_tb)
 
 concatDf=pd.concat(tables_list,sort=False,axis=1)

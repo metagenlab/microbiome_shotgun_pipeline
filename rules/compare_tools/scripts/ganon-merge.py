@@ -65,7 +65,8 @@ def get_lin_tax(tab, ncbi, target_ranks):
 
 tables_list=[]
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
-
+split_path=snakemake.output[0].split('/')
+tool_path='/'.join(split_path[0:len(split_path)-1])
 for sample in vir_dic.keys():
     vir_tb_input=pd.read_csv(vir_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
     vir_tb_linear_tax=get_lin_tax(vir_tb_input,ncbi,target_ranks)
@@ -74,7 +75,7 @@ for sample in vir_dic.keys():
     all_tb=pd.concat([bac_tb_linear_tax, vir_tb_linear_tax], sort=False)
     all_grouped=all_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     all_grouped=all_grouped.rename(columns={'read_counts':f'{sample}_counts','read_percent': f'{sample}_percent'})
-    all_grouped.to_csv(f"benchmark_tools/tables/ganon/{sample}.tsv", sep='\t')
+    all_grouped.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(all_grouped)
 
 all_ganon=pd.concat(tables_list,sort=False,axis=1)

@@ -82,13 +82,17 @@ def get_tax_table(table,read_len,threshold,target_ranks):
     return tb
 
 tables_list=[]
+
+split_path=snakemake.output[0].split('/')
+tool_path='/'.join(split_path[0:len(split_path)-1])
+
 for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
     samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'].div(sum(samples_ezvir_tb[f'{i}_counts'])).mul(100)
-    samples_ezvir_tb.to_csv(f"benchmark_tools/tables/ezvir/{i}.tsv", sep='\t')
+    samples_ezvir_tb.to_csv(f"{tool_path}/{i}.tsv", sep='\t')
     tables_list.append(samples_ezvir_tb)
 
 all_ezvir_tab = pd.concat(tables_list, sort=False, axis=1)
