@@ -9,8 +9,8 @@ rule all_tools_output:
             all_bac_scores=f"benchmarks/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
             all_bac_presence=f"benchmarks/classification/stats/all_tools/bac_presence_{rank}_level.tsv",
             vir_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/virus_{rank}_level.pdf",
-            bac_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf"
-
+            bac_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf",
+            barplot=expand("benchmarks/classification/plots/{tool}/barplot_{rank}_level.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank)
 
 
 rule merge_Kraken2_outputs:
@@ -179,7 +179,17 @@ rule virus_presence_hetamap:
     output: f"benchmarks/classification/heatmaps/all_tools/virus_{rank}_level.pdf"
 
     params: rank=config["target_rank"]
-    
+
     script: "scripts/heatmap-presence.py"
 
+rule generate_barplot_counts:
+    conda: pipeline_path + "envs/compare-tools.yml"
 
+    input: gold_standard="gold_standard/tables/gold_standard.tsv",
+           tool_out="benchmarks/classification/tables/{tool}/all_{tool}.tsv"
+
+    params: rank=config["target_rank"]
+
+    output: f"benchmarks/classification/plots/{{tool}}/barplot_{rank}_level.pdf"
+
+    script: "scripts/barplot.py"
