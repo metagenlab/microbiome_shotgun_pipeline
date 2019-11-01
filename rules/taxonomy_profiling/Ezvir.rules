@@ -30,6 +30,8 @@ if paired:
 
         log: logging_folder + "Ezvir/mapping/{sample}.log"
 
+        benchmark: "benchmarks/resources_usage/{sample}/ezvir.benchmark.txt"
+
         shell:
             """
             bowtie2 -p {threads} -q1 {input.r1} -q2 {input.r2} -x {params.genome_path} 2> {log} | samtools view -bS -F 12 2> {log} | samtools sort -n -O BAM -o {output} 2> {log}
@@ -48,6 +50,8 @@ else:
         output: "Ezvir/{sample}/{sample}.bam"
 
         log:  logging_folder + "Ezvir/mapping/{sample}.log"
+
+        benchmark: "benchmarks/resources_usage/{sample}/ezvir.benchmark.txt"
 
         shell:
             """

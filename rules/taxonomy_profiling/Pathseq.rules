@@ -88,6 +88,8 @@ rule classify_reads:
 
     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
+    benchmark: "benchmarks/resources_usage/{sample}/pathseq.benchmark.txt"
+
     shell:
         """
         gatk PathSeqPipelineSpark --java-options "-Xmx{params.mem_limit}" --input {input.bam} \
@@ -107,41 +109,7 @@ rule classify_reads:
                                   --divide-by-genome-length {params.divide_by_gen_len} \
                                   --conf 'spark.executor.cores={threads}' 2> {log}
         """
-# rule classify_reads:
-#     singularity: "docker://broadinstitute/gatk:4.1.3.0"
-#
-#     input: bam=get_bam_input,
-#            tax_db=f"{db_path}/pathseq_taxonomy.db"
-#
-#     output: score_out="Pathseq/{sample}/output/scores.txt",
-#             bam_out="Pathseq/{sample}/output/output_reads.bam",
-#             score_met="Pathseq/{sample}/output/score_metrics.txt"
-#
-#     params: min_clip_len=config["min_clip_len"],
-#             min_score=config["min_score_identity"],
-#             margin=config["identity_margin"],
-#             divide_by_gen_len=config["divide_by_gen_len"],
-#             mem_limit='32G'
-#
-#     threads: 30
-#
-#     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
-#
-#     resources: parallel_class=1
-#
-#     shell:
-#         """
-#         gatk --java-options "-Xmx32G" \
-#         PathSeqScoreSpark --paired-input {input.bam} \
-#                           --taxonomy-file {input.tax_db} \
-#                           --min-score-identity {params.min_score} \
-#                           --identity-margin {params.margin} \
-#                           --scores-output {output.score_out} \
-#                           --output {output.bam_out} \
-#                           --score-metrics {output.score_met} \
-#                           --divide-by-genome-length {params.divide_by_gen_len} \
-#                           --conf spark.executor.cores=30 2> {log}
-#         """
+
 rule Pathseq_to_krona:
     input: "Pathseq/{sample}/output/scores.txt"
 

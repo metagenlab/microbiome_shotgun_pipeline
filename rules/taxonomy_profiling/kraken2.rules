@@ -29,6 +29,8 @@ if paired:
 
         log: logging_folder + "kraken2/{sample}.log"
 
+        benchmark: "benchmarks/resources_usage/{sample}/kraken2.benchmark.txt"
+
         shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
                 --classified-out kraken2/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/reads/unclassified_reads#.fq \
                 --report {output.report} {input[0]} {input[1]} &>> {log}"
@@ -49,6 +51,8 @@ else:
         params: db_path=config["kraken_database"]
 
         log: logging_folder + "kraken2/{sample}.log"
+
+        benchmark: "benchmarks/resources_usage/{sample}/kraken2.benchmark.txt"
 
         shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
                 --classified-out {output.classified} --report {output.report} {input[0]}"

@@ -1,6 +1,5 @@
 surpi_db=config["surpi_database"]
 
-
 rule all_surpi:
     input: expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated",sample=list(read_naming.keys()))
 
@@ -48,12 +47,6 @@ rule rename_fastq_headers:
         awk '{{print (NR%4 == 1) ? "@SRR_" ++i : $0}}' {input} > {output[0]}
         """
 
-#rule generate_sample_sheet:
-#    input: "local_samples_subset.tsv"
-
-#    output: "SURPI/SampleSheet.csv"
-
-#    script: "scripts/SURPI/SampleSheet.py"
 
 rule generate_preprocessed_files:
     input: "SURPI/{sample}/{sample}.fastq"
@@ -80,24 +73,6 @@ rule generate_config_file_surpi:
         script: "scripts/SURPI/surpi_config_file.py"
 
 
-#rule generate_config_file_surpi:
-#    singularity: "library://fchaaban/default/surpi:1.0.0"
-
-#    input: "SURPI/{sample}/{sample}.cutadapt.fastq"
-
-#    output: "SURPI/{sample}/{sample}.config"
-
-
-#    params: reference=surpi_db,
-#            img=singularity_image_path
-
-#    shell:
-#        """
-#        bash /scif/apps/SURPI/SURPI/SURPI.sh -z SURPI/{wildcards.sample}/{wildcards.sample}.fastq
-#        """
-
-
-
 rule run_surpi:
     singularity: "library://fchaaban/default/surpi:1.0.1"
 
@@ -114,13 +89,12 @@ rule run_surpi:
 
     resources: mem_mb=1
 
-    log:
-        logging_folder+"SURPI/{sample}.log"
+    log: logging_folder+"SURPI/{sample}.log"
+
+    benchmark: "benchmarks/resources_usage/{sample}/surpi.benchmark.txt"
 
     shell:
         """
         cd SURPI/{wildcards.sample}
         bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder} 
         """
-#&> ../../{params.logging_folder}
-#singularity run --bind "{params.reference},." --app SURPI -f {wildcards.sample}.config &> ../../{params.logging_folder}

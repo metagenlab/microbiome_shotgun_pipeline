@@ -19,6 +19,8 @@ rule run_bracken:
 
     log: logging_folder + "braken/{sample}.log"
 
+    benchmark: "benchmarks/resources_usage/{sample}/bracken.benchmark.txt"
+
     shell:
          """
          bracken -d {params.kraken_db} -i {input} -o {output} -r {params.read_len} -t {params.threshold} -l {params.class_level} &> {log}
