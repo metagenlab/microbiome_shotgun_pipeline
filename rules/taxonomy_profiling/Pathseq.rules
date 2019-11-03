@@ -84,7 +84,7 @@ rule classify_reads:
             divide_by_gen_len=config["divide_by_gen_len"],
             mem_limit="32G"
 
-    threads: 30
+    threads: config["num_cores"]
 
     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 

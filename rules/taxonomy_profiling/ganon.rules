@@ -24,7 +24,7 @@ if paired:
 
         params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db"
 
-        threads: 40
+        threads: config["num_cores"]
 
         resources: parallel_class_bac=1
 
@@ -48,7 +48,7 @@ if paired:
 
         params: viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
-        threads: 40
+        threads: config["num_cores"]
 
         resources: parallel_class_vir=1
 
@@ -72,7 +72,7 @@ if paired:
 
         params: human_db=f"{ganon_db_path}/human/refseqDB/human_db"
 
-        threads: 40
+        threads: config["num_cores"]
 
         resources: parallel_class_human=1
 
@@ -97,7 +97,7 @@ else:
                 human_db=f"{ganon_db_path}/human/refseqDB/human_db",
                 viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
-        threads: 20
+        threads: config["num_cores"]
 
         resources: parallel_sample_class=1
 
@@ -121,7 +121,7 @@ else:
 
             params: viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
-            threads: 40
+            threads: config["num_cores"]
 
             resources: parallel_class_vir=1
 
@@ -145,7 +145,7 @@ else:
 
         params: human_db=f"{ganon_db_path}/human/refseqDB/human_db"
 
-        threads: 40
+        threads: config["num_cores"]
 
         resources: parallel_class_human=1
 

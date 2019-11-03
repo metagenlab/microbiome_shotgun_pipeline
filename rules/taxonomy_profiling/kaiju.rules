@@ -20,7 +20,7 @@ if paired:
 
         output: "kaiju/{sample}/kaiju.out"
 
-        threads: 20
+        threads: config["num_cores"]
 
         params: nodes=config["nodes_dmp"],
                 db=config["kaiju_database"]
@@ -38,7 +38,7 @@ else:
 
         output: "kaiju/{sample}/kaiju.out"
 
-        threads: 20
+        threads: config["num_cores"]
 
         params: nodes=config["nodes_dmp"],
                 db=config["kaiju_database"]

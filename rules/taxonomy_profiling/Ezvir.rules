@@ -24,7 +24,7 @@ if paired:
 
         params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
 
-        threads: 10
+        threads: config["num_cores"]
 
         output: "Ezvir/{sample}/{sample}.bam"
 
@@ -45,7 +45,7 @@ else:
 
         params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
 
-        threads: 10
+        threads: config["num_cores"]
 
         output: "Ezvir/{sample}/{sample}.bam"
 

@@ -23,7 +23,7 @@ if paired:
                 all="kraken2/{sample}/output.txt",
                 report="kraken2/{sample}/report.txt"
 
-        threads: 30
+        threads: config["num_cores"]
 
         params: db_path=config["kraken_database"]
 
@@ -46,7 +46,7 @@ else:
                 all="kraken2/{sample}/output.txt",
                 report="kraken2/{sample}/report.txt"
 
-        threads: 30
+        threads: config["num_cores"]
 
         params: db_path=config["kraken_database"]
 
