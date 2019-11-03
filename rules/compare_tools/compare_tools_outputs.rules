@@ -1,9 +1,10 @@
 rank=config["target_rank"]
+community=config['community_name']
 rule all_tools_output:
     input: merged_tsv=expand("benchmarks/classification/tables/{tool}/all_{tool}.tsv",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             vir_read_counts_heatmaps=expand("benchmarks/classification/heatmaps/{tool}/viruses.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             bac_read_counts_heatmaps=expand("benchmarks/classification/heatmaps/{tool}/bacteria.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
-            gold_standard="gold_standard/tables/gold_standard.tsv",
+            gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             all_vir_scores=f"benchmarks/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
             all_vir_presence=f"benchmarks/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
             all_bac_scores=f"benchmarks/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
@@ -11,7 +12,6 @@ rule all_tools_output:
             vir_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/virus_{rank}_level.pdf",
             bac_presence_heatmap=f"benchmarks/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf",
             barplot=expand("benchmarks/classification/plots/{tool}/barplot_{rank}_level.pdf",tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'],rank=rank)
-
 
 rule merge_Kraken2_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
@@ -117,14 +117,14 @@ rule bacteria_read_count_heatmaps:
 
 
 
-community=config['community_name']
+
 
 rule genereate_gold_standard_profile:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: f"gold_standard/tables/{community}.tsv"
 
-    output: "gold_standard/tables/gold_standard.tsv"
+    output: f"gold_standard/tables/gs_{community}.tsv"
 
     script: "scripts/profile.py"
 
@@ -133,7 +133,7 @@ rule genereate_gold_standard_profile:
 rule calculate_precision_recall_f1_score:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: gold_standard="gold_standard/tables/gold_standard.tsv",
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             tool_out="benchmarks/classification/tables/{tool}/all_{tool}.tsv"
 
     output: vir_scores=f"benchmarks/classification/stats/{{tool}}/vir_scores_{rank}_level.tsv",
@@ -185,7 +185,7 @@ rule virus_presence_hetamap:
 rule generate_barplot_counts:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: gold_standard="gold_standard/tables/gold_standard.tsv",
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            tool_out="benchmarks/classification/tables/{tool}/all_{tool}.tsv"
 
     params: rank=config["target_rank"]
