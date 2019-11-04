@@ -9,7 +9,8 @@ rank=snakemake.params.rank
 def concat_replicate_counts(file, rank, tool_name):
     tb_list = []
     col_sel = []
-    tool_tb = pd.read_csv(file, sep='\t', index_col=rank)
+    tool_tb = pd.read_csv(file, sep='\t')
+    tool_tb=tool_tb.groupby(f'{rank}').sum()
     for col in tool_tb:
         if 'counts' in col:
             col_sel.append(col)
@@ -29,7 +30,7 @@ def concat_replicate_counts(file, rank, tool_name):
 
 gold_standard = pd.read_csv(snakemake.input.gold_standard,sep='\t')
 gold_standard = gold_standard.groupby(f'{rank}').sum()
-gold_standard['type'] = ['gold_standard'] * len(gold_standard)  # add a column to specify if the read counts are from a tool or the gold standard
+gold_standard['type'] = ['gold_standard'] * len(gold_standard)# add a column to specify if the read counts are from a tool or the gold standard
 true = gold_standard[['read_counts', 'type']]
 tool_out = concat_replicate_counts(snakemake.input.tool_out,rank, tool_name)
 cat = pd.concat([true, tool_out], axis=0, sort=False)
@@ -48,9 +49,9 @@ plt.subplots_adjust(bottom=0.4,right=0.81)
 palette={'gold_standard':'C0',f'{tool_name}':'C1'}
 sns.set(font_scale=0.9)
 bp=sns.barplot(data=subset,x=f'{rank}',y='read_counts',hue='type',palette=palette,order=sorted(true_genomes_list))
-plt.legend(loc=2, bbox_to_anchor=(1.05, 1),borderaxespad=0.1)
+bp.legend(loc=2, bbox_to_anchor=(1.05, 1),borderaxespad=0.1)
+
 for tick in bp.xaxis.get_major_ticks():
     tick.label.set_rotation(90)
-    #tick.label.set_fontsize(12)
 
 bp.get_figure().savefig(snakemake.output[0])
