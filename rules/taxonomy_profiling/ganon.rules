@@ -1,7 +1,7 @@
 rule all_ganon:
-    input: expand("ganon/{sample}/viruses/classified.out",sample=list(read_naming.keys())),
+    input: expand("ganon/{sample}/viruses/classified.rep",sample=list(read_naming.keys())),
             #expand("ganon/{sample}/human/classified.out",sample=list(read_naming.keys())),
-            expand("ganon/{sample}/bacteria/classified.out",sample=list(read_naming.keys())),
+            expand("ganon/{sample}/bacteria/classified.rep",sample=list(read_naming.keys())),
 
 ganon_db_path=config["ganon_db_path"]
 
@@ -20,7 +20,8 @@ if paired:
                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="ganon/{sample}/bacteria/classified.out",
-                unclassified="ganon/{sample}/bacteria/unclassified.txt"
+                unclassified="ganon/{sample}/bacteria/unclassified.txt",
+                report="ganon/{sample}/bacteria/classified.rep"
 
         params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db"
 
@@ -44,7 +45,8 @@ if paired:
                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="ganon/{sample}/viruses/classified.out",
-                unclassified="ganon/{sample}/viruses/unclassified.txt"
+                unclassified="ganon/{sample}/viruses/unclassified.txt",
+                report="ganon/{sample}/viruses/classified.rep"
 
         params: viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
@@ -68,13 +70,14 @@ if paired:
                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="ganon/{sample}/human/classified.out",
-                unclassified="ganon/{sample}/human/unclassified.txt"
+                unclassified="ganon/{sample}/human/unclassified.txt",
+                report="ganon/{sample}/human/classified.rep"
 
         params: human_db=f"{ganon_db_path}/human/refseqDB/human_db"
 
         threads: config["num_cores"]
 
-        resources: parallel_class_human=1
+        resources: parallel_human_class=1
 
         log: logging_folder + "ganon/classify/{sample}-human.log"
 
@@ -93,13 +96,13 @@ else:
         output: classified="ganon/{sample}/{sample}.out",
                 unclassified="ganon/{sample}/unclassified_{sample}.txt"
 
-        params: bacteria_db=f"{ganon_db_path}/bacteria/bacteria_db",
-                human_db=f"{ganon_db_path}/human/refseqDB/human_db",
-                viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
+        params: classified="ganon/{sample}/bacteria/classified.out",
+                unclassified="ganon/{sample}/bacteria/unclassified.txt",
+                report="ganon/{sample}/bacteria/classified.rep"
 
         threads: config["num_cores"]
 
-        resources: parallel_sample_class=1
+        resources: parallel_class_bac=1
 
         log: logging_folder + "ganon/classify/{sample}.log"
 
@@ -117,7 +120,8 @@ else:
             input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
             output: classified="ganon/{sample}/viruses/classified.out",
-                    unclassified="ganon/{sample}/viruses/unclassified.txt"
+                    unclassified="ganon/{sample}/viruses/unclassified.txt",
+                    report="ganon/{sample}/viruses/classified.rep"
 
             params: viral_db=f"{ganon_db_path}/viral/refseqDB/viral_db"
 
@@ -141,7 +145,8 @@ else:
         input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
         output: classified="ganon/{sample}/human/classified.out",
-                unclassified="ganon/{sample}/human/unclassified.txt"
+                unclassified="ganon/{sample}/human/unclassified.txt",
+                report="ganon/{sample}/human/classified.rep"
 
         params: human_db=f"{ganon_db_path}/human/refseqDB/human_db"
 

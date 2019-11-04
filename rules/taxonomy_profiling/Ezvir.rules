@@ -16,7 +16,7 @@ def paired(wildcards):
         return False
 
 if paired:
-    rule map_paired_decontaminated_reads:
+    rule ezvir_mapping_paired_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -38,7 +38,7 @@ if paired:
             """
 else:
 
-    rule map_single_decontaminated_reads:
+    rule ezvir_mapping_single_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
@@ -61,7 +61,7 @@ else:
 
 
 
-rule calculate_genome_coverage:
+rule ezvir_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
     input: "Ezvir/{sample}/{sample}.bam"
