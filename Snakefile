@@ -80,6 +80,6 @@ include: "rules/taxonomy_profiling/Pathseq.rules"
 include: "rules/taxonomy_profiling/Ezvir.rules"
 include: "rules/taxonomy_profiling/SURPI.rules"
 include: "rules/taxonomy_profiling/ganon.rules"
-
+include: "rules/taxonomy_profiling/rkmh.rules"
 #Compare tools
 include: "rules/compare_tools/compare_tools_outputs.rules"

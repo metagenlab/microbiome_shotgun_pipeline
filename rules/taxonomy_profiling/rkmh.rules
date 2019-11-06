@@ -1,0 +1,51 @@
+host_acc=config['reference_genome']['filename']
+rkmh_db=config["rkmh_reference"]
+rule all_rkmh:
+    input: expand("rkmh/{sample}/{sample}.classified",sample=list(read_naming.keys()))
+
+def paired(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return True
+    else:
+        return False
+
+if paired:
+    rule interleve_fastq_rkmh:
+        conda: pipeline_path + "envs/fastq-join.yml"
+
+        input: f"unmapped/{host_acc}/{{sample}}_R1.fq",
+               f"unmapped/{host_acc}/{{sample}}_R2.fq"
+
+        output: temp("rkmh/{sample}/{sample}_join.fastq"),
+                temp("rkmh/{sample}/{sample}_un1.fastq"),
+                temp("rkmh/{sample}/{sample}_un2.fastq")
+
+        log: logging_folder + "rkmh/{sample}.log"
+
+        shell: "fastq-join {input[0]} {input[1]} -o rkmh/{wildcards.sample}/{wildcards.sample}_%.fastq &> {log}"
+else:
+    rule rename_fastq_rkmh:
+        input: f"unmapped/{host_acc}/{{sample}}_single.fq"
+
+        output: temp("rkmh/{sample}/{sample}_join.fastq")
+
+        shell: "cp {input} {output}"
+
+rule rkmh_on_reads:
+    singularity: "docker://erictdawson/rkmh:2019-May-09"
+
+    input: "rkmh/{sample}/{sample}_join.fastq"
+
+    output: "rkmh/{sample}/{sample}.classified"
+
+    params: reference=rkmh_db,
+            kmer_size=config["rkmh_kmer_size"],
+            sketch_size=config["rkmh_sketch_size"],
+            kmer_occ=config["min_kmer_occurence"],
+            read_threshold=config["min_read_match"]
+
+    threads: config["num_cores"]
+
+    shell: "rkmh stream -t {threads} -r {params.reference} -f {input} -k {params.kmer_size} -s {params.sketch_size} > {output}"
+

@@ -56,6 +56,13 @@ num_cores: 55
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 ##ganon
 ganon_db_path: /media/data/databases/ganon_db
+##rkmh
+rkmh_reference: /media/data/databases/rkmh_db/reference.fa
+rkmh_kmer_size: 15
+rkmh_sketch_size: 1000
+min_kmer_occurence: 100 #use k-mers that occur more than 10 times in the reads
+min_read_match: 10 #filter reads that map to less than 10 references
+
 
 
 ###NCBI Entrez
