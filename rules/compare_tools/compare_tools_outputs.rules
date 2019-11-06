@@ -1,7 +1,7 @@
 rank=config["target_rank"]
 community=config['community_name']
 rule all_tools_output:
-    input: merged_tsv=expand("benchmarks/{community}/classification/tables/{tool}/all_{tool}.tsv",community=community,tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
+    input:  merged_tsv=expand("benchmarks/{community}/classification/tables/{tool}/all_{tool}.tsv",community=community,tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             vir_read_counts_heatmaps=expand("benchmarks/{community}/classification/heatmaps/{tool}/viruses_{rank}_level.pdf",community=community,rank=rank,tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             bac_read_counts_heatmaps=expand("benchmarks/{community}/classification/heatmaps/{tool}/bacteria_{rank}_level.pdf",community=community,rank=rank,tool=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']),
             gold_standard=f"gold_standard/tables/gs_{community}.tsv",
