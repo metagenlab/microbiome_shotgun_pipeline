@@ -28,17 +28,14 @@ def concat_replicate_counts(file, rank, tool_name):
     return all_replicates
 
 
-gold_standard = pd.read_csv(snakemake.input.gold_standard,sep='\t')
+gold_standard = pd.read_csv(snakemake.input.gold_standard,sep='\t',index_col='taxid')
+gold_standard=gold_standard.drop(9606)#drop human
+gold_standard=gold_standard.reset_index()
 gold_standard = gold_standard.groupby(f'{rank}').sum()
 gold_standard['type'] = ['gold_standard'] * len(gold_standard)# add a column to specify if the read counts are from a tool or the gold standard
 true = gold_standard[['read_counts', 'type']]
 tool_out = concat_replicate_counts(snakemake.input.tool_out,rank, tool_name)
 cat = pd.concat([true, tool_out], axis=0, sort=False)
-
-if rank=='species':
-    cat=cat.drop("Homo sapiens")
-elif rank=='genus':
-    cat=cat.drop("Homo")
 
 true_genomes_list=list(cat.loc[cat['type']=='gold_standard'].index)
 cat=cat.reset_index()
