@@ -72,8 +72,10 @@ api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
 
 ###Tool_comparison
 target_rank: species
-target_value: percent
+target_value: counts
 community_name: CF-metagenome-1
+vir_reads_threshold: 100
+bac_reads_threshold: 10000
 
 # virulence factor search
 virulence_database: databases/virulence/sqlite_db/virulence.db
