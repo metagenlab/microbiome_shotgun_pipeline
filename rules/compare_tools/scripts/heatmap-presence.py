@@ -10,8 +10,8 @@ matrix=pd.pivot_table(data=subset,index=subset[f'{rank}'],columns=subset['tool']
 matrix.columns=matrix.columns.droplevel()
 plt.figure(figsize=(11.7,8.27))
 sns.set(font_scale=1.0)
-catgeories=list(set(subset['present']))
-if len(catgeories)==1 and catgeories[0]==1:
+categories=list(set(subset['present']))
+if len(categories)==1 and categories[0]==1:
     myColors = [(0.3, 0.6, 0.1, 1.0),(0.0, 0.0, 0.0, 0.9)]
 else:
     myColors = [(0.0, 0.0, 0.0, 0.9), (0.3, 0.6, 0.1, 1.0)]#RGB color palette
