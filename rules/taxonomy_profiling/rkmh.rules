@@ -10,7 +10,7 @@ def paired(wildcards):
     else:
         return False
 
-if paired:
+if paired==True:
     rule interleve_fastq_rkmh:
         conda: pipeline_path + "envs/fastq-join.yml"
 
