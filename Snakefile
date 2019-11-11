@@ -1,7 +1,6 @@
 
 include: "rules/making_sample_dataset.rules"
 
-print()
 
 rule assembly:
     input:
