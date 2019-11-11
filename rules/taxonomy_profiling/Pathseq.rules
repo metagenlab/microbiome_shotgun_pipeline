@@ -3,7 +3,7 @@ rule all_pathseq:
            #expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
 
 
-rule fastq_to_bam_paired_reads:
+rule pathseq_fastq_to_bam_PE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
     input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -20,7 +20,7 @@ rule fastq_to_bam_paired_reads:
         gatk --java-options "-Xmx32G -XX:ConcGCThreads=10" FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} &> {log}
         """
 
-rule fastq_to_bam_unpaired_reads:
+rule pathseq_fastq_to_bam_SE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
     input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
