@@ -10,9 +10,9 @@ def paired(wildcards):
     else:
         return False
 
-if paired:
+if paired==True:
 
-    rule kaiju_on_reads:
+    rule kaiju_PE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -31,7 +31,7 @@ if paired:
 
         shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input[0]} -j {input[1]} -o {output} -v &> {log}"
 else:
-    rule kaiju_on_reads:
+    rule kaiju_SE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
