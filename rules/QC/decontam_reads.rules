@@ -26,7 +26,7 @@ rule index_host_genome:
 
     shell: "bwa index -b {params.mem} -a {params.algorithm} {input}"
 
-rule align_PE_reads_to_host_genome:
+rule map_PE_reads_to_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
     input: r1="samples/{sample}/reads/trimmed/R1_paired.fastq",
@@ -35,7 +35,7 @@ rule align_PE_reads_to_host_genome:
 
     output: temp("host/{host_acc}/PE_{sample}.bam")
 
-    threads: 30
+    threads: config["num_cores"]
 
     log: logging_folder + "host-filtering/{host_acc}/alignment-{sample}.log"
 
@@ -44,7 +44,7 @@ rule align_PE_reads_to_host_genome:
         bwa mem -M -t {threads} {input.host_fa} {input.r1} {input.r2} 2>> {log} | samtools sort -@ {threads} -n -O BAM -o {output} 2>> {log}
         """
 
-rule align_SE_reads_to_host_genome:
+rule map_SE_reads_to_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
     input: r1="samples/{sample}/reads/trimmed/single.fastq",
@@ -52,7 +52,7 @@ rule align_SE_reads_to_host_genome:
 
     output: temp("host/{host_acc}/SE_{sample}.bam")
 
-    threads: 30
+    threads: config["num_cores"]
 
     log: logging_folder + "host-filtering/{host_acc}/alignment-{sample}.log"
 
@@ -82,7 +82,8 @@ rule get_unmapped_reads:
     shell: "samtools view -@ {threads} -b -f 4 {input} > {output}"
 
 
-rule PE_bam_to_fastq:
+
+rule decontaminated_PE_bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
 
     input: "unmapped/{host_acc}/{sample}.bam"
@@ -94,7 +95,7 @@ rule PE_bam_to_fastq:
 
     shell: "bedtools bamtofastq -i {input} -fq {output[0]} -fq2 {output[1]} &>> {log}"
 
-rule SE_bam_to_fastq:
+rule decontaminated_SE_bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
 
     input: "unmapped/{host_acc}/{sample}.bam"
@@ -104,8 +105,6 @@ rule SE_bam_to_fastq:
     log: logging_folder + "host-filtering/{host_acc}/bam-to-fq-{sample}.log"
 
     shell: "bedtools bamtofastq -i {input} -fq {output} &>> {log}"
-
-
 
 
 rule all_deconatam_with_Pathseq:
