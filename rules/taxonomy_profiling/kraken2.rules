@@ -1,25 +1,27 @@
 
+
+
 rule all_kraken2:
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
 def paired(wildcards):
     fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
+    if len(fastq_list)==2:
         return True
     else:
         return False
 
-
-if paired:
-
-    rule kraken2_on_reads:
+if paired==True:
+    rule kraken2_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
                expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-        output: classified="kraken2/{sample}/reads/classified_reads_1.fq",
-                unclassified="kraken2/{sample}/reads/unclassified_reads_1.fq",
+        output: classified_r1="kraken2/{sample}/reads/classified_reads_1.fq",
+                classified_r2="kraken2/{sample}/reads/classified_reads_2.fq",
+                unclassified_r1="kraken2/{sample}/reads/unclassified_reads_1.fq",
+                unclassified_r2="kraken2/{sample}/reads/unclassified_reads_2.fq",
                 all="kraken2/{sample}/output.txt",
                 report="kraken2/{sample}/report.txt"
 
@@ -34,9 +36,9 @@ if paired:
         shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
                 --classified-out kraken2/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2/{wildcards.sample}/reads/unclassified_reads#.fq \
                 --report {output.report} {input[0]} {input[1]} &>> {log}"
-else:
 
-    rule kraken2_on_reads:
+else:
+    rule kraken2_SE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
