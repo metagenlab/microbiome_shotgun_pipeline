@@ -12,8 +12,8 @@ def paired(wildcards):
     else:
         return False
 
-if paired:
-    rule classify_reads_ganon_bacteriea:
+if paired==True:
+    rule ganon_PE_reads_ganon_bacteriea:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -38,7 +38,7 @@ if paired:
              ganon classify -d {params.bacteria_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/bacteria/classified \
              -n {output.unclassified} --verbose &>> {log}
              """
-    rule classify_reads_ganon_viruses:
+    rule ganon_PE_reads_ganon_viruses:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -63,7 +63,7 @@ if paired:
              ganon classify -d {params.viral_db} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/viruses/classified \
              -n {output.unclassified} --verbose &>> {log}
              """
-    rule classify_reads_ganon_human:
+    rule ganon_PE_reads_ganon_human:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -88,7 +88,7 @@ if paired:
              """
 
 else:
-    rule classify_reads_ganon_bacteria:
+    rule ganon_SE_reads_bacteria:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
@@ -114,7 +114,7 @@ else:
              -n {output.unclassified} --verbose &>> {log}
              """
 
-    rule classify_reads_ganon_viruses:
+    rule ganon_SE_reads_ganon_viruses:
             conda: pipeline_path + "envs/ganon.yml"
 
             input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
@@ -139,7 +139,7 @@ else:
                  -n {output.unclassified} --verbose &>> {log}
                  """
 
-    rule classify_reads_ganon_human:
+    rule ganon_SE_reads_ganon_human:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
