@@ -1,6 +1,8 @@
 channels:
  - bioconda
+ - conda-forge
 dependencies:
-- genome_updater
-- ganon
+- genome_updater = 0.2.0
+- ganon = 0.1.4
 - parallel
+- seqan-library = 2.4.0
