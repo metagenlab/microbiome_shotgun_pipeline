@@ -5,18 +5,11 @@ ncbi = NCBITaxa()
 
 
 
-virus_input=snakemake.input['vir']
-bacteria_input=snakemake.input['bac']
-
-vir_dic={}
-for path in virus_input:
+input_file_list=snakemake.input
+dic={}
+for path in input_file_list:
     sample=path.split('/')[1]
-    vir_dic[sample]=path
-
-bac_dic={}
-for path in bacteria_input:
-    sample=path.split('/')[1]
-    bac_dic[sample]=path
+    dic[sample]=path
 
 
 def get_lin_tax(tab, ncbi, target_ranks):
@@ -67,13 +60,10 @@ tables_list=[]
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 split_path=snakemake.output[0].split('/')
 tool_path='/'.join(split_path[0:len(split_path)-1])
-for sample in vir_dic.keys():
-    vir_tb_input=pd.read_csv(vir_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
-    vir_tb_linear_tax=get_lin_tax(vir_tb_input,ncbi,target_ranks)
-    bac_tb_input=pd.read_csv(bac_dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
-    bac_tb_linear_tax=get_lin_tax(bac_tb_input,ncbi,target_ranks)
-    all_tb=pd.concat([bac_tb_linear_tax, vir_tb_linear_tax], sort=False)
-    all_grouped=all_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
+for sample in dic.keys():
+    tb_input=pd.read_csv(dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
+    tb_linear_tax=get_lin_tax(tb_input,ncbi,target_ranks)
+    all_grouped=tb_linear_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     all_grouped=all_grouped.rename(columns={'read_counts':f'{sample}_counts','read_percent': f'{sample}_percent'})
     all_grouped.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(all_grouped)
