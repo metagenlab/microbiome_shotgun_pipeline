@@ -43,7 +43,7 @@ rule rename_fastq_headers:
 
     shell:
         """
-        awk '{{print (NR%4 == 1) ? "@SRR_" ++i "#{wildcards.sample}" : $0}}' {input} > {output[0]}
+        awk '{{print (NR%4 == 1) ? "@SRR_" ++i : $0}}' {input} > {output}
         """
 
 
@@ -62,7 +62,7 @@ rule generate_preprocessed_files:
 rule generate_config_file_surpi:
         input: "SURPI/{sample}/{sample}.cutadapt.fastq"
 
-        output: "SURPI/{sample}/{sample}.config"
+        output: temp("SURPI/{sample}/{sample}.config")
 
         params: surpi_db_path=config["surpi_database"],
                 adapter_set=config["adapter_set"],
@@ -77,9 +77,17 @@ rule run_surpi:
 
     input:  "SURPI/{sample}/{sample}.config"
 
-    output: "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated",
-            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.1.time.log",
-            "SURPI/{sample}/TRASH_{sample}/{sample}.cutadapt.fastq",
+    output: temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated"),
+            temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.human.snap.unmatched.NT.tax.sam.alignment.db"),
+            temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.nonPrimMammal.annotated"),
+            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.4.snap.log",
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.cutadapt.fastq"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.tax.matched.sam"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.preprocessed.fastq"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.matched.fulllength.fastq"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp1"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp2"),
             "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",
             "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable"
 
@@ -97,5 +105,5 @@ rule run_surpi:
     shell:
         """
         cd SURPI/{wildcards.sample}
-        bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder} 
+        bash /scif/apps/SURPI/SURPI/SURPI.sh -f {wildcards.sample}.config &> ../../{params.logging_folder}
         """
