@@ -19,7 +19,7 @@ rule sra_convert_to_fastq_paired:
     conda:
         pipeline_path + "envs/sra-tools.yml"
     input:
-        temp("%s/ncbi/public/sra/{sample}.sra" % os.getenv("HOME")),
+        "%s/ncbi/public/sra/{sample}.sra" % os.getenv("HOME")
     output:
         temp(link_directory + "{sample,[A-Za-z0-9]+}_1.fastq.gz"),
         temp(link_directory + "{sample,[A-Za-z0-9]+}_2.fastq.gz"),
@@ -34,7 +34,7 @@ rule sra_convert_to_fastq_single:
     conda:
         pipeline_path + "envs/sra-tools.yml"
     input:
-        temp("%s/ncbi/public/sra/{sample}.sra" % os.getenv("HOME")),
+        "%s/ncbi/public/sra/{sample}.sra" % os.getenv("HOME")
     output:
         temp(link_directory + "{sample,[A-Za-z0-9]+}.fastq.gz"),
     log:
