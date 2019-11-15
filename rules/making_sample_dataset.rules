@@ -1,7 +1,3 @@
-include:
-    "logging.rules"
-
-import sys
 import pandas
 import re
 
