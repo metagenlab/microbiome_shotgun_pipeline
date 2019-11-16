@@ -88,7 +88,7 @@ rule pathseq_on_reads:
 
     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
-    benchmark: "benchmarks/resources_usage/{sample}/pathseq.benchmark.txt"
+    benchmark: "compare_tools/resources_usage/{sample}/pathseq.benchmark.txt"
 
     shell:
         """
