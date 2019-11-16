@@ -7,20 +7,26 @@ rule all_tools:
            bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
            barplots=expand("plots/barplots/all_tools/{superkingdom}/{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
            heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
-           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria'])
+           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
+           tab="compare_tools/resources_usage/resources.tsv",
+           memo="compare_tools/resources_usage/memory.pdf",
+           time="compare_tools/resources_usage/time.pdf"
 
 rule all_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
             vir_read_counts_heatmaps=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
             bac_read_counts_heatmaps=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
             gold_standard=f"gold_standard/tables/gs_{community}.tsv",
-            all_vir_scores=f"benchmarks/{community}/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
-            all_vir_presence=f"benchmarks/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
-            all_bac_scores=f"benchmarks/{community}/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
-            all_bac_presence=f"benchmarks/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv",
-            vir_presence_heatmap=f"benchmarks/{community}/classification/heatmaps/all_tools/virus_{rank}_level.pdf",
-            bac_presence_heatmap=f"benchmarks/{community}/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf",
-            barplots=expand("benchmarks/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank)
+            all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
+            all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
+            all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
+            all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv",
+            vir_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/virus_{rank}_level.pdf",
+            bac_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf",
+            barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
+            tab="compare_tools/resources_usage/resources.tsv",
+            memo="compare_tools/resources_usage/memory.pdf",
+            time="compare_tools/resources_usage/time.pdf"
 
 rule merge_Kraken2_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
@@ -56,7 +62,7 @@ rule merge_kaiju_outputs:
 
     output: f"taxonomy-tables/kaiju/all_kaiju.tsv"
 
-    log: logging_folder + f"benchmarks/{community}/classification/kaiju.log"
+    log: logging_folder + f"compare_tools/{community}/classification/kaiju.log"
 
     script: "scripts/kaiju-merge.py"
 
@@ -69,7 +75,7 @@ rule merge_SURPI_outputs:
 
     output: f"taxonomy-tables/surpi/all_surpi.tsv"
 
-    log: logging_folder + f"benchmarks/{community}/classification/surpi.log"
+    log: logging_folder + f"compare_tools/{community}/classification/surpi.log"
 
     script: "scripts/surpi-merge.py"
 
@@ -160,11 +166,11 @@ rule visualize_bacteria_tools_output:
 rule visualize_resource_usage:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("benchmarks/resources_usage/{sample}/{tool}.benchmark.txt",sample=list(read_naming.keys()),tool=tools)
+    input: expand("compare_tools/resources_usage/{sample}/{tool}.benchmark.txt",sample=list(read_naming.keys()),tool=tools)
 
-    output: tab="benchmarks/resources_usage/resources.tsv",
-            memo="benchmarks/resources_usage/memory.pdf",
-            time="benchmarks/resources_usage/time.pdf"
+    output: tab="compare_tools/resources_usage/resources.tsv",
+            memo="compare_tools/resources_usage/memory.pdf",
+            time="compare_tools/resources_usage/time.pdf"
 
     script: "scripts/resources-usage.py"
 
@@ -185,10 +191,10 @@ rule calculate_precision_recall_f1_score:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
 
-    output: vir_scores=f"benchmarks/{community}/classification/stats/{{tool}}/vir_scores_{rank}_level.tsv",
-            vir_presence=f"benchmarks/{community}/classification/stats/{{tool}}/vir_presence_{rank}_level.tsv",
-            bac_scores=f"benchmarks/{community}/classification/stats/{{tool}}/bac_scores_{rank}_level.tsv",
-            bac_presence=f"benchmarks/{community}/classification/stats/{{tool}}/bac_presence_{rank}_level.tsv"
+    output: vir_scores=f"compare_tools/{community}/classification/stats/{{tool}}/vir_scores_{rank}_level.tsv",
+            vir_presence=f"compare_tools/{community}/classification/stats/{{tool}}/vir_presence_{rank}_level.tsv",
+            bac_scores=f"compare_tools/{community}/classification/stats/{{tool}}/bac_scores_{rank}_level.tsv",
+            bac_presence=f"compare_tools/{community}/classification/stats/{{tool}}/bac_presence_{rank}_level.tsv"
 
     script: "scripts/stats.py"
 
@@ -196,15 +202,15 @@ rule calculate_precision_recall_f1_score:
 rule regroup_scores_and_presence:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: vir_scores=expand("benchmarks/{community}/classification/stats/{tool}/vir_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank),
-           vir_presence=expand("benchmarks/{community}/classification/stats/{tool}/vir_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank),
-           bac_scores=expand("benchmarks/{community}/classification/stats/{tool}/bac_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank),
-           bac_presence=expand("benchmarks/{community}/classification/stats/{tool}/bac_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank)
+    input: vir_scores=expand("compare_tools/{community}/classification/stats/{tool}/vir_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank),
+           vir_presence=expand("compare_tools/{community}/classification/stats/{tool}/vir_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank),
+           bac_scores=expand("compare_tools/{community}/classification/stats/{tool}/bac_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank),
+           bac_presence=expand("compare_tools/{community}/classification/stats/{tool}/bac_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank)
 
-    output: all_vir_scores=f"benchmarks/{community}/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
-            all_vir_presence=f"benchmarks/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
-            all_bac_scores=f"benchmarks/{community}/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
-            all_bac_presence=f"benchmarks/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
+    output: all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/vir_scores_{rank}_level.tsv",
+            all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv",
+            all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/bac_scores_{rank}_level.tsv",
+            all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
 
     script: "scripts/concat.py"
 
@@ -212,9 +218,9 @@ rule regroup_scores_and_presence:
 rule bacteria_presence_hetamap:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: f"benchmarks/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
+    input: f"compare_tools/{community}/classification/stats/all_tools/bac_presence_{rank}_level.tsv"
 
-    output: f"benchmarks/{community}/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf"
+    output: f"compare_tools/{community}/classification/heatmaps/all_tools/bacteria_{rank}_level.pdf"
 
     params: rank=config["target_rank"]
 
@@ -223,9 +229,9 @@ rule bacteria_presence_hetamap:
 rule virus_presence_hetamap:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: f"benchmarks/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv"
+    input: f"compare_tools/{community}/classification/stats/all_tools/vir_presence_{rank}_level.tsv"
 
-    output: f"benchmarks/{community}/classification/heatmaps/all_tools/virus_{rank}_level.pdf"
+    output: f"compare_tools/{community}/classification/heatmaps/all_tools/virus_{rank}_level.pdf"
 
     params: rank=config["target_rank"]
 
@@ -235,11 +241,11 @@ rule barplot_counts_gold_standard:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
-           tool_out=f"benchmarks/{community}/classification/tables/{{tool}}/all_{{tool}}.tsv"
+           tool_out=f"compare_tools/{community}/classification/tables/{{tool}}/all_{{tool}}.tsv"
 
     params: rank=config["target_rank"]
 
-    output: f"benchmarks/{community}/classification/plots/{{tool}}/barplot_{rank}_level.pdf"
+    output: f"compare_tools/{community}/classification/plots/{{tool}}/barplot_{rank}_level.pdf"
 
     script: "scripts/barplot.py"
 
