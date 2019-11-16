@@ -40,8 +40,13 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
     for taxid in taxid_list:
         tax[taxid] = {'taxid':str(taxid)}
         if int(taxid) > 0:
-            scientific_name = ncbi.translate_to_names([taxid])[0]
-            tax[taxid]['scientific_name'] = scientific_name
+
+            scientific_name = list(ncbi.get_taxid_translator([taxid]).values())
+            if len(scientific_name) == 0:
+                tax[taxid]['scientific_name'] = 'NA'
+            else:
+                tax[taxid]['scientific_name'] = str(scientific_name[0])
+
             lineage = ncbi.get_lineage(taxid)
             names = ncbi.get_taxid_translator(lineage)
             ranks = ncbi.get_rank(lineage)
@@ -49,10 +54,17 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
             name_list = list(names.values())
             rank2names = dict(zip(rank_list, name_list))
 
+            ranks_found=[]
             for sub_taxid in lineage:
                 rank = ranks[sub_taxid]
+                ranks_found.append(rank)
                 if rank in target_ranks:
                     tax[taxid][f"{rank}_taxid"] = sub_taxid
+            missing_ranks=[x for x in target_ranks if x not in ranks_found]
+            for m_rank in missing_ranks:
+                tax[taxid][f"{m_rank}_taxid"]= 'NA'
+
+
             for n, rank in enumerate(target_ranks):
                 if rank in rank2names.keys():
                     tax[taxid][rank] = rank2names[rank]
@@ -90,10 +102,11 @@ for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
     ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb=ezvir_parsed_tb.rename(columns={'read_counts': f'{i}_counts'})
+    samples_ezvir_tb=ezvir_parsed_tb
     samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
     samples_ezvir_tb[f'{i}_percent'] = samples_ezvir_tb[f'{i}_counts'].div(sum(samples_ezvir_tb[f'{i}_counts'])).mul(100)
     samples_ezvir_tb.to_csv(f"{tool_path}/{i}.tsv", sep='\t')
     tables_list.append(samples_ezvir_tb)
 
-all_ezvir_tab = pd.concat(tables_list, sort=False, axis=1)
+all_ezvir_tab = pd.concat(tables_list, sort=False, axis=0)
 all_ezvir_tab.to_csv(snakemake.output[0],sep='\t')
