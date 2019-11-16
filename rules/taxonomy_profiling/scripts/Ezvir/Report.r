@@ -113,7 +113,7 @@ opt <- parse_args(OptionParser(option_list = option_list))
 ### Global ###
 RL  = opt$read_len  # read length (used to calculate total mapped reads)
 RWK = 50          # size of rolling window for depth maximum value
-MCL = 400         # minimum covered length (bp), below this, virus not plotted
+MCL = 100         # minimum covered length (bp), below this, virus not plotted
 DBA = 4000        # dot bin size cutoff "A"
 DBB = 20000       # dot bin size cutoff "B"
 DBC = 40000       # dot bin size cutoff "C"
@@ -200,6 +200,7 @@ for (file in FN) {
   covered = length(data$coverage) # bases that are covered
   percent_covered = (covered / genome_len) * 100   # % of genome covered at least once
   mapped_reads = floor(sum(data$coverage) / RL)
+
 
   ### get depth as maximum of rolling window of size k
   win_depth <- max(rollmean(data$coverage, RWK))
