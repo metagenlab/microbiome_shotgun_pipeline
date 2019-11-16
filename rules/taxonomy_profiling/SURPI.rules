@@ -100,7 +100,7 @@ rule run_surpi:
 
     log: logging_folder+"SURPI/{sample}.log"
 
-    benchmark: "benchmarks/resources_usage/{sample}/surpi.benchmark.txt"
+    benchmark: "compare_tools/resources_usage/{sample}/surpi.benchmark.txt"
 
     shell:
         """
