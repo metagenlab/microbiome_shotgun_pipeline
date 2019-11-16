@@ -7,8 +7,8 @@ rule all_ezvir_db:
                 f"{db_path_ezvir}/EZV0.1-database.4.bt2",
                 f"{db_path_ezvir}/EZV0.1-database.rev.1.bt2",
                 f"{db_path_ezvir}/EZV0.1-database.rev.2.bt2",
-                "Ezvir/genome_lengths.csv",
-                "Ezvir/genome_names.csv"
+                f"{db_path_ezvir}/genome_lengths.csv",
+                f"{db_path_ezvir}/genome_names.csv"
 
 
 rule decompress_database:
@@ -20,13 +20,13 @@ rule decompress_database:
 
 
 
-checkpoint genrate_required_files:
+rule genrate_required_files:
     conda: pipeline_path + "envs/biopython-pandas.yml"
 
     input: f"{db_path_ezvir}/EZV0.1-database.fa"
 
-    output: "Ezvir/genome_lengths.csv",
-            "Ezvir/genome_names.csv"
+    output: f"{db_path_ezvir}/genome_lengths.csv",
+            f"{db_path_ezvir}/genome_names.csv"
 
     script: "required_files.py"
 
