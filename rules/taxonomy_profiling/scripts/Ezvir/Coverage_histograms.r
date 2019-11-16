@@ -49,7 +49,7 @@ option_list <- list(
        help="[required ] one virus shortname to plot"),
    make_option(c("-n", "--table_names"),
        help="[required ] table regrouping virus names"),
-    make_option(c("-g", "--genome_lengths"),
+    make_option(c("-g", "--genome_length"),
        help="[required] table regrouping genome lengths")
 )
 
@@ -97,7 +97,7 @@ bcol = toString(common$DCN) # color name for this virus family
 
 
 names_tab=read.csv(opt$table_names,sep='\t',header=T)
-
+genome_lengths=read.csv(opt$genome_length,header=TRUE, sep="\t")
 # make outfile
 pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, width=10, height=5)
 
