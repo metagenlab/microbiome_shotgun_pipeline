@@ -4,7 +4,6 @@ if config["virus_family"]=='NA':
     rule all_ezvir:
         input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
 else:
-
     rule all_ezvir:
         input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
@@ -30,7 +29,7 @@ if paired==True:
 
         log: logging_folder + "Ezvir/mapping/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/ezvir.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
 
         shell:
             """
@@ -51,7 +50,7 @@ else:
 
         log:  logging_folder + "Ezvir/mapping/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/ezvir.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
 
         shell:
             """
@@ -105,12 +104,14 @@ rule phase_1_report:
     params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Report.r",
             csv_dir="../coverage",
             read_len=config["samples_read_length"],
-            genome_len="../../genome_lengths.csv"
+            genome_len=f"{db_path_ezvir}/genome_lengths.csv",
+            colors=f"{db_path_ezvir}/COLORS.ezv",
+            db_names=f"{db_path_ezvir}/Ezvir_names_db.ezv"
 
     shell:
         """
         cd Ezvir/{wildcards.sample}/report
-        Rscript {params.report_script_path} -c ../../COLORS.ezv -r {params.read_len} -g {params.genome_len} -j ../../Ezvir_names_db.ezv -i {params.csv_dir} -o {wildcards.sample}
+        Rscript {params.report_script_path} -c {params.colors} -r {params.read_len} -g {params.genome_len} -j {params.db_names} -i {params.csv_dir} -o {wildcards.sample}
         """
 rule generate_coverage_histograms:
     conda: pipeline_path + "envs/ezvir.yml"
@@ -122,8 +123,8 @@ rule generate_coverage_histograms:
     params: cov_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Coverage_histograms.r",
             csv_dir="../coverage",
             target_family=config["virus_family"],
-            names_tab="../../genome_names.csv",
-            genome_len="../../genome_lengths.csv"
+            names_tab=f"{db_path_ezvir}/genome_names.csv",
+            genome_len=f"{db_path_ezvir}/genome_lengths.csv"
 
     shell:
          """
