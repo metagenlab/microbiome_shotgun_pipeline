@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from numpy import mean
 resources=snakemake.input
 
-all_tools=[]
+tb_list=[]
 tool_type={'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kaiju':'k-mer','bracken':'k-mer'}
 for file in resources:
     tool=file.split('/')[3].split('.')[0]
@@ -14,8 +14,9 @@ for file in resources:
     tb['tool']=[tool]*len(tb)
     tb['type']=tool_type[tool]
     tb['sample']=[name]*len(tb)
-    all_tools.append(tb)
+    tb_list.append(tb)
 
+all_tools=pd.concat(tb_list)
 all_tools=all_tools.replace('-',0)
 
 
@@ -29,11 +30,11 @@ bpm=sns.catplot(data=all_tools,y='tool',x='max_mem_gb',col='type',kind='bar',est
 bpm.set(xlabel='GB')
 for ax in bpm.axes.flat:
     ax.set_ylabel(ax.get_ylabel(), rotation=0)
-bpm.get_figure().savefig(snakemake.output.memo)
+bpm.savefig(snakemake.output.memo)
 
 plt.figure(figsize=(11.7,8.27))
 bpt=sns.catplot(data=all_tools,y='tool',x='minutes',col='type',kind='bar',estimator=mean)
 bpt.set(xlabel='minutes')
 for ax in bpt.axes.flat:
     ax.set_ylabel(ax.get_ylabel(), rotation=0)
-bpt.get_figure().savefig(snakemake.output.time)
+bpt.savefig(snakemake.output.time)
