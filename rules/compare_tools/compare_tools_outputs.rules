@@ -1,12 +1,16 @@
 rank=config["target_rank"]
 community=config['community_name']
 tools=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']
+vir_threshold=config["vir_reads_threshold"]
+bac_threshold=config["bac_reads_threshold"]
+
 rule all_tools:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
            bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
            barplots=expand("plots/barplots/all_tools/{superkingdom}/{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
-           heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
+           vir_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='viruses',threshold=vir_threshold),
+           bac_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',threshold=bac_threshold),
            heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
@@ -129,19 +133,20 @@ rule bacteria_read_count_heatmaps:
     script: "scripts/heatmap-read-counts.py"
 
 
+
 rule visualize_viruses_tools_output:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("taxonomy-tables/{tool}/all_{tool}.tsv",community=community,tool=tools)
+    input: expand("taxonomy-tables/{tool}/{sample}.tsv",tool=tools,sample=list(read_naming.keys()))
 
     output: barplot=f"plots/barplots/all_tools/viruses/{rank}_level.pdf",
-            heatmap_counts=f"plots/heatmaps/all_tools/viruses/counts_{rank}_level.pdf",
+            heatmap_counts=f"plots/heatmaps/all_tools/viruses/counts_{vir_threshold}_{rank}_level.pdf",
             heatmap_presence=f"plots/heatmaps/all_tools/viruses/presence_{rank}_level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
             superkingdom="Viruses",
-            threshold=config["vir_reads_threshold"]
+            threshold=vir_threshold
 
     script: "scripts/visualize-tool-output.py"
 
@@ -149,16 +154,16 @@ rule visualize_viruses_tools_output:
 rule visualize_bacteria_tools_output:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("taxonomy-tables/{tool}/all_{tool}.tsv",community=community,tool=tools)
+    input: expand("taxonomy-tables/{tool}/{sample}.tsv",tool=tools,sample=list(read_naming.keys()))
 
     output: barplot=f"plots/barplots/all_tools/bacteria/{rank}_level.pdf",
-            heatmap_counts=f"plots/heatmaps/all_tools/bacteria/counts_{rank}_level.pdf",
+            heatmap_counts=f"plots/heatmaps/all_tools/bacteria/counts_{bac_threshold}_{rank}_level.pdf",
             heatmap_presence=f"plots/heatmaps/all_tools/bacteria/presence_{rank}_level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
             superkingdom="Bacteria",
-            threshold=config["bac_reads_threshold"]
+            threshold=bac_threshold
 
     script: "scripts/visualize-tool-output.py"
 
