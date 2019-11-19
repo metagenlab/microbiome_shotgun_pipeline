@@ -3,12 +3,13 @@ rule all_ganon:
 
 ganon_db_path=config["ganon_db_path"]
 
-def paired(wildcards):
-    fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
-        return True
-    else:
-        return False
+
+
+pattern=list(read_naming.values())
+if len(pattern[0])==2:
+    paired=True
+else:
+    paired=False
 
 if paired==True:
     rule ganon_PE_reads:
