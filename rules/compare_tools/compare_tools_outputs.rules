@@ -4,6 +4,8 @@ tools=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']
 vir_threshold=config["vir_reads_threshold"]
 bac_threshold=config["bac_reads_threshold"]
 
+
+
 rule all_tools:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
@@ -246,7 +248,7 @@ rule barplot_counts_gold_standard:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
-           tool_out=f"compare_tools/{community}/classification/tables/{{tool}}/all_{{tool}}.tsv"
+           tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
 
     params: rank=config["target_rank"]
 
