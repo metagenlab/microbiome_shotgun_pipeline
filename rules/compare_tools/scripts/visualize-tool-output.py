@@ -2,10 +2,11 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy import mean
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.backends.backend_pdf import PdfPages
 
-
-def concat_sample_counts(file, rank, tool_name, superkingdom, threshold):
+def concat_sample_counts(file, sample_name, rank, tool_name, superkingdom, threshold):
     tb_list = []
     col_sel = []
     tool_tb = pd.read_csv(file, sep='\t')
@@ -21,59 +22,101 @@ def concat_sample_counts(file, rank, tool_name, superkingdom, threshold):
         tb = subset[[col]]
         tb = tb[tb > threshold].dropna()
         type_list = [f'{tool_name}'] * len(tb)
+        sample_name_list = [f'{sample_name}'] * len(tb)
         tb.insert(loc=1, column='tool', value=type_list)
+        tb.insert(loc=2, column='sample', value=sample_name_list)
         tb = tb.rename(columns={f"{col}": "read_counts"})
         tb_list.append(tb)
 
-    all_samples = pd.concat(tb_list, axis=0, sort=False)
-    all_samples = all_samples.replace(np.nan, 0)
-    all_samples.index.name = f'{rank}'
-    return all_samples
+    all_replicates = pd.concat(tb_list, axis=0, sort=False)
+    all_replicates = all_replicates.replace(np.nan, 0)
+    all_replicates.index.name = f'{rank}'
+    return all_replicates
 
-tool2file={}
 outputs=snakemake.input
 rank=snakemake.params.rank
 value=snakemake.params.value
-threshold=snakemake.params.threshold
+bp_threshold=snakemake.params.threshold
 superkingdom=snakemake.params.superkingdom
+threshold=10
+sample_list=[]
+tables=[]
+
 for file in outputs:
     tool=file.split('/')[1]
-    tool2file[tool]=file
-tables=[]
-for tool in tool2file.keys():
-    tb=concat_sample_counts(tool2file[tool],rank,tool,superkingdom,threshold)
+    sample=file.split('/')[2].split('.tsv')[0]
+    tb=concat_sample_counts(file,sample,rank,tool,superkingdom,threshold)
     tables.append(tb)
+
 all_tools = pd.concat(tables, axis=0, sort=False)
 all_tools=all_tools.sort_values(by='read_counts',ascending=False)
 all_tools=all_tools.reset_index()
+bp_table=all_tools[all_tools.read_counts>bp_threshold].dropna()
+
+
+unique_sample_list=list(set(bp_table['sample']))
+unique_names=list(set(bp_table[f'{rank}']))
+
+fontsize=10
+square=True
+fraction=0.6#For the presence heatmap: only consider hits identified by 60% of the tools
+if len(unique_names)>=150:
+    fontsize=2
+    square=False
+    fraction=0.9#High number of hits = heatmap is not visible
+if len(unique_names)<=150 and len(unique_names)>100:
+    fontsize=3
+    square=False
+elif len(unique_names)<100:
+    fontsize=7
+    square=True
+
+
+
 
 plt.figure(figsize=(11.7,8.27))
-bp=sns.catplot(data=all_tools,x='read_counts',y=f'{rank}',col='tool',col_wrap=3,kind='bar')
+plt.subplots_adjust(left=0.2,top=0.8)
+bp=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean)
+bp.fig.suptitle(f'top 10 read counts>={bp_threshold}')
+bp.set(xlabel='log(read counts)',xscale='log')
+
 for ax in bp.axes.flat:
     for ylab in ax.get_yticklabels():
-        ylab.set_size(6)
+        ylab.set_size(fontsize)
     for xlab in ax.get_xticklabels():
-        xlab.set_size(6)
-        xlab.set_rotation(45)
+        xlab.set_size(10)
+
 bp.savefig(snakemake.output.barplot)
-pivot=all_tools.pivot_table(all_tools,index=f'{rank}',columns='tool')
-pivot=pivot.replace(np.nan,0)
-pivot.columns=pivot.columns.droplevel()
-pivot=pivot.sort_values(by=list(pivot.columns),ascending=False)
 
 
-plt.figure(figsize=(11.7,8.27))
-plt.subplots_adjust(left=0.4, bottom=0.4)
-hmc = sns.heatmap(
-    pivot,
-    square=False,
-    cbar_kws={'fraction' : 0.01},
-    cmap='OrRd',
-    linewidth=1
-)
-hmc.get_figure().savefig(snakemake.output.heatmap_counts)
+def draw_heatmap_counts(data,sample,rank,squared):
+    subset=data[data['sample']==sample]
+    pivot=subset.pivot_table(subset,index=f'{rank}',columns='tool')
+    pivot=pivot.replace(np.nan,0)
+    pivot.columns=pivot.columns.droplevel()
+    pivot['sum']=pivot.sum(axis=1)
+    pivot=pivot.sort_values(by='sum',ascending=False)
+    pivot=pivot.drop('sum',axis=1)
+    pivot=pivot.replace(0,1)
+    logp=np.log10(pivot)
+    g=sns.heatmap(logp,square=squared,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1)
+    return g
 
-def get_presence(table,rank,tool):
+
+
+with PdfPages(snakemake.output.heatmap_counts) as pdf:
+    for sample in unique_sample_list:
+        plt.figure(figsize=(11.7, 8.27))
+        plt.subplots_adjust(left=0.3, bottom=0.3)
+        plt.title(sample)
+        fig=draw_heatmap_counts(bp_table,sample,rank,square)
+        pdf.savefig()
+        plt.close()
+
+
+
+def get_presence_table(table,rank,tool,sample):
+    table=table[table['sample']==sample]
     all_found=list(set(table[f'{rank}']))
     tool_found=list(set(table[table['tool']==f'{tool}'][f'{rank}']))
     dic={}
@@ -87,29 +130,40 @@ def get_presence(table,rank,tool):
     df.index.name=f'{rank}'
     return df
 
-tool_list=list(set(all_tools['tool']))
-tb_list=[]
-for tool in tool_list:
-    tb_list.append(get_presence(all_tools,rank,tool))
-matrix=pd.concat(tb_list,axis=1,sort=False)
-matrix=matrix.sort_values(by=list(matrix.columns),ascending=False)
+def draw_presence_heatmap(table,rank,sample,fraction,squared):
+    tool_list=list(set(table['tool']))
+    tb_list=[]
+    for tool in tool_list:
+        tb_list.append(get_presence_table(all_tools,rank,tool,sample))
+    matrix=pd.concat(tb_list,axis=1,sort=False)
+    matrix['sum']=matrix.sum(axis=1)
+    matrix=matrix.sort_values(by='sum',ascending=False)
+    max_hits_per_tool=max(matrix['sum'])
+    frac=fraction
+    min_hits_to_consider=int(np.floor(max_hits_per_tool*frac))
+    subset=matrix[matrix['sum'].isin(range(min_hits_to_consider,max_hits_per_tool+1))]#Consider only the genomes identified by 4 out of 7 tools
+    subset=subset.drop('sum',axis=1)
+    categories=sorted(np.unique(matrix))
+    if len(categories)==1 and categories[0]==True:
+        myColors = [(0.3, 0.6, 0.1, 1.0),(0.0, 0.0, 0.0, 0.9)]
+    else:
+        myColors = [(0.0, 0.0, 0.0, 0.9), (0.3, 0.6, 0.1, 1.0)]#RGB color palette
+    cmap = LinearSegmentedColormap.from_list('Custom', myColors, len(myColors))
+    g = sns.heatmap(subset, square=squared, cbar_kws={'fraction' : 0.01},cmap=cmap,linecolor='white',linewidths='0.1')
+    colorbar = g.collections[0].colorbar
+    colorbar.set_ticks([0,1.0])
+    colorbar.set_ticklabels(['absent', 'present'])
+    return g
 
-plt.figure(figsize=(11.7,8.27))
-plt.subplots_adjust(left=0.4, bottom=0.4)
-categories=sorted(np.unique(matrix))
-if len(categories)==1 and categories[0]==True:
-    myColors = [(0.3, 0.6, 0.1, 1.0),(0.0, 0.0, 0.0, 0.9)]
-else:
-    myColors = [(0.0, 0.0, 0.0, 0.9), (0.3, 0.6, 0.1, 1.0)]#RGB color palette
-cmap = LinearSegmentedColormap.from_list('Custom', myColors, len(myColors))
-hmb = sns.heatmap(
-    matrix,
-    square=False,
-    cbar_kws={'fraction' : 0.01},
-    cmap=cmap,
-    linecolor='black',linewidths='0.1'
-)
-colorbar = hmb.collections[0].colorbar
-colorbar.set_ticks([0,1.0])
-colorbar.set_ticklabels(['absent', 'present'])
-hmb.get_figure().savefig(snakemake.output.heatmap_presence)
+
+with PdfPages(snakemake.output.heatmap_presence) as pdf:
+    for sample in unique_sample_list:
+        plt.figure(figsize=(11.7, 8.27))
+        plt.subplots_adjust(left=0.3, bottom=0.3)
+        plt.title(sample)
+        fig=draw_presence_heatmap(all_tools,rank,sample,fraction,square)
+        pdf.savefig()
+        plt.close()
+
+
+
