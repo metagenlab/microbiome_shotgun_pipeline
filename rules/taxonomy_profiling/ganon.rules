@@ -5,8 +5,8 @@ ganon_db_path=config["ganon_db_path"]
 
 
 
-pattern=list(read_naming.values())
-if len(pattern[0])==2:
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
     paired=True
 else:
     paired=False
@@ -28,11 +28,11 @@ if paired==True:
 
         log: logging_folder + "ganon/classify/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/ganon.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/ganon.benchmark.txt"
 
         shell:
              """
-             ganon classify -d {params} -r {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/classified \
+             ganon classify -d {params} -p {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/classified \
              -n {output.unclassified} --verbose &>> {log}
              """
 
@@ -52,7 +52,7 @@ else:
 
         log: logging_folder + "ganon/classify/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/ganon.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/ganon.benchmark.txt"
 
         shell:
              """

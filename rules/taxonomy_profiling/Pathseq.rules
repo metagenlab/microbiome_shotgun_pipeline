@@ -50,11 +50,11 @@ rule build_host_kmer:
     shell: 'gatk PathSeqBuildKmers -R {input} -O {output} -P 0.0001 --java-options "-Xmx60g"'
 
 def get_bam_input(wildcards):
-    fastq_list = read_naming[wildcards.sample]
+    sample_suffix=list(read_naming.values())
     decontaminated=config["filter_with_Pathseq"]
-    if len(fastq_list) == 2 and not decontaminated :
+    if len(sample_suffix[0]) == 2 and not decontaminated :
         return "Pathseq/{sample}/PE_input_reads.bam"
-    if len(fastq_list) == 1 and not decontaminated:
+    if len(sample_suffix[0]) == 1 and not decontaminated:
         return "Pathseq/{sample}/SE_input_reads.bam"
     if decontaminated:
         return expand("Pathseq/{sample}/filtered_reads/Paired_reads.bam","Pathseq/{sample}/filtered_reads/Unpaired_reads.bam")

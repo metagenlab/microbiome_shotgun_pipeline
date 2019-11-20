@@ -1,15 +1,13 @@
 
 
-
 rule all_kraken2:
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-def paired(wildcards):
-    fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list)==2:
-        return True
-    else:
-        return False
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
 
 if paired==True:
     rule kraken2_PE_reads:
