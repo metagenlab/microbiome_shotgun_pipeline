@@ -5,6 +5,8 @@ vir_threshold=config["vir_reads_threshold"]
 bac_threshold=config["bac_reads_threshold"]
 
 
+rule all_tax:
+    input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
 rule all_tools:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
