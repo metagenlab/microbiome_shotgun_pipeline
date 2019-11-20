@@ -58,7 +58,8 @@ unique_sample_list=list(set(bp_table['sample']))
 unique_names=list(set(bp_table[f'{rank}']))
 
 fontsize=10
-square=True
+square=False
+annot=True
 fraction=0.6#For the presence heatmap: only consider hits identified by 60% of the tools
 if len(unique_names)>=150:
     fontsize=2
@@ -74,9 +75,10 @@ elif len(unique_names)<100:
 
 
 
-plt.figure(figsize=(11.7,8.27))
+sns.set(font_scale=1.0)
+plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
 plt.subplots_adjust(left=0.2,top=0.8)
-bp=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean)
+bp=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
 bp.fig.suptitle(f'top 10 read counts>={bp_threshold}')
 bp.set(xlabel='log(read counts)',xscale='log')
 
@@ -89,7 +91,7 @@ for ax in bp.axes.flat:
 bp.savefig(snakemake.output.barplot)
 
 
-def draw_heatmap_counts(data,sample,rank,squared):
+def draw_heatmap_counts(data,sample,rank,square,annot):
     subset=data[data['sample']==sample]
     pivot=subset.pivot_table(subset,index=f'{rank}',columns='tool')
     pivot=pivot.replace(np.nan,0)
@@ -99,17 +101,22 @@ def draw_heatmap_counts(data,sample,rank,squared):
     pivot=pivot.drop('sum',axis=1)
     pivot=pivot.replace(0,1)
     logp=np.log10(pivot)
-    g=sns.heatmap(logp,square=squared,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1)
+    g=sns.heatmap(logp,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
     return g
 
-
+fonstscale=1.0
+if len(bp_table)>100:
+    fonstscale=5.0
+if len(bp_table)>=50 and len(bp_table)<=100:
+    fonstscale=2.0
 
 with PdfPages(snakemake.output.heatmap_counts) as pdf:
     for sample in unique_sample_list:
-        plt.figure(figsize=(11.7, 8.27))
+        plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
+        sns.set(font_scale=fonstscale)
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
-        fig=draw_heatmap_counts(bp_table,sample,rank,square)
+        fig=draw_heatmap_counts(bp_table,sample,rank,square,annot)
         pdf.savefig()
         plt.close()
 
@@ -158,7 +165,8 @@ def draw_presence_heatmap(table,rank,sample,fraction,squared):
 
 with PdfPages(snakemake.output.heatmap_presence) as pdf:
     for sample in unique_sample_list:
-        plt.figure(figsize=(11.7, 8.27))
+        plt.figure(figsize=(len(bp_table),len(bp_table)/2))
+        sns.set(font_scale=fonstscale)
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
         fig=draw_presence_heatmap(all_tools,rank,sample,fraction,square)
