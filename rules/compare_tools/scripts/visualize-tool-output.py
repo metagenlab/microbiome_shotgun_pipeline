@@ -79,8 +79,7 @@ sns.set(font_scale=1.0)
 plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
 plt.subplots_adjust(left=0.2,top=0.8)
 bp=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
-bp.fig.suptitle(f'top 10 read counts>={bp_threshold}')
-bp.set(xlabel='log(read counts)',xscale='log')
+bp.set(xscale='log')
 
 for ax in bp.axes.flat:
     for ylab in ax.get_yticklabels():
@@ -88,7 +87,24 @@ for ax in bp.axes.flat:
     for xlab in ax.get_xticklabels():
         xlab.set_size(10)
 
-bp.savefig(snakemake.output.barplot)
+bp.savefig(snakemake.output.barplot_samples)
+
+
+sns.set(font_scale=1.0)
+plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
+plt.subplots_adjust(left=0.2,top=0.8)
+bpt=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',hue='sample',col='tool',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
+bpt.set(xscale='log')
+
+for ax in bpt.axes.flat:
+    for ylab in ax.get_yticklabels():
+        ylab.set_size(fontsize)
+    for xlab in ax.get_xticklabels():
+        xlab.set_size(10)
+
+bpt.savefig(snakemake.output.barplot_tools)
+
+
 
 
 def draw_heatmap_counts(data,sample,rank,square,annot):
