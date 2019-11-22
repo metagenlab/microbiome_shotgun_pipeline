@@ -74,13 +74,13 @@ for sample in dic.keys():
     pathseq_tb.columns = ['taxid', 'taxonomy', 'rank', 'name', 'kingdom', 'score', 'score_normalized', 'reads','reads_assigned', 'refence_length']
     lin_tax_tb = get_lin_tax(pathseq_tb,ncbi,target_ranks)
 
-    lin_tax_tb=lin_tax_tb.rename(columns={'read_counts': f'{sample}_counts'})
+    lin_tax_tb['sample']=[sample]*len(lin_tax_tb)
 
-    lin_tax_tb[f'{sample}_percent'] = lin_tax_tb[f'{sample}_counts'].div(sum(lin_tax_tb[f'{sample}_counts'])).mul(100)
+    lin_tax_tb['read_percent'] = lin_tax_tb['read_counts'].div(sum(lin_tax_tb['read_counts'])).mul(100)
 
-    lin_tax_tb = lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
+    lin_tax_tb = lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
     lin_tax_tb.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(lin_tax_tb)
 
-concatDf=pd.concat(tables_list,sort=False,axis=1)
+concatDf=pd.concat(tables_list,sort=False,axis=0)
 concatDf.to_csv(snakemake.output[0],sep='\t')

@@ -56,10 +56,10 @@ for sample in dic.keys():
     tb=pd.read_csv(dic[sample],sep='\t')
     tb.columns=['name','taxid','taxonomy_lvl','kraken_assigned_reads','added_reads','reads_assigned','read_percent']
     lin_tax_tb=get_lin_tax(tb,ncbi,target_ranks)
-    lin_tax_tb=lin_tax_tb.rename(columns={'read_counts': f'{sample}_counts','read_percent': f'{sample}_percent'})
-    lin_tax_tb=lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
+    lin_tax_tb['sample']=[sample]*len(lin_tax_tb)
+    lin_tax_tb=lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
     lin_tax_tb.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(lin_tax_tb)
 
-concatDf=pd.concat(tables_list,sort=False,axis=1)
+concatDf=pd.concat(tables_list,sort=False,axis=0)
 concatDf.to_csv(snakemake.output[0],sep='\t')

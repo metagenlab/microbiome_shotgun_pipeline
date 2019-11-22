@@ -81,11 +81,11 @@ tool_path='/'.join(split_path[0:len(split_path)-1])
 for sample in dic.keys():
     tb_input=pd.read_csv(dic[sample],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
     tb_linear_tax=get_lin_tax(tb_input,ncbi,target_ranks)
-    all_grouped=tb_linear_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
-    all_grouped=all_grouped.rename(columns={'read_counts':f'{sample}_counts','read_percent': f'{sample}_percent'})
+    tb_linear_tax['sample']=[sample]*len(tb_linear_tax)
+    all_grouped=tb_linear_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
     all_grouped.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
     tables_list.append(all_grouped)
 
-all_ganon=pd.concat(tables_list,sort=False,axis=1)
+all_ganon=pd.concat(tables_list,sort=False,axis=0)
 
 all_ganon.to_csv(snakemake.output[0],sep='\t')

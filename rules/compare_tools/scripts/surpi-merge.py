@@ -124,13 +124,13 @@ for sample in vir_dic.keys():
    bac_f=parse_surpi_table(b_tab, ncbi, 5, 0)
    full_tab = pd.concat([vir_f, bac_f],sort=False)
    full_tab = full_tab.replace(np.nan,'NA')
-   full_tab=full_tab.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
-   full_tab=full_tab.rename(columns={'read_counts':f'{sample}_counts'})
-   full_tab[f'{sample}_percent'] = full_tab[f'{sample}_counts'].div(sum(full_tab[f'{sample}_counts'])).mul(100)
+   full_tab['sample'] = [sample] * len(full_tab)
+   full_tab=full_tab.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
+   full_tab['read_percent'] = full_tab['read_counts'].div(sum(full_tab['read_counts'])).mul(100)
    full_tab.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
    list_tables.append(full_tab)
 
-all_surpi_tab=pd.concat(list_tables,sort=False,axis=1)
+all_surpi_tab=pd.concat(list_tables,sort=False,axis=0)
 all_surpi_tab.to_csv(snakemake.output[0],sep='\t')
 
 
