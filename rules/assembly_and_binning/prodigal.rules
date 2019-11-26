@@ -6,8 +6,8 @@ rule orfing_with_prodigal:
     input:
         contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
     output:
-        "samples/{sample}/gene_call/{sample}.faa",
-        "samples/{sample}/gene_call/{sample}.gbk",
+        "samples/{sample}/gene_call/prodigal/{sample}.faa",
+        "samples/{sample}/gene_call/prodigal/{sample}.gbk",
     log:
         "samples/{sample}/gene_call/prodigal/{sample}.log",
     shell:
