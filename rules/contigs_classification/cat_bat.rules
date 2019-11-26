@@ -8,10 +8,10 @@ rule cat_bat_contigs:
         50
     input:
         "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
-        "samples/{sample}/gene_call/{sample}.faa",
+        "samples/{sample}/gene_call/{tool}/{sample}.faa",
     output:
-        "samples/{sample}/contigs_classification/cat_bat/out.CAT.ORF2LCA.txt",
-        "samples/{sample}/contigs_classification/cat_bat/out.CAT.contig2classification.txt",
+        "samples/{sample}/contigs_classification/cat_bat/{tool}_ORFs_out.CAT.ORF2LCA.txt",
+        "samples/{sample}/contigs_classification/cat_bat/{tool}_ORFs_out.CAT.contig2classification.txt",
     shell:
         '''
         mkdir $(dirname output[0])

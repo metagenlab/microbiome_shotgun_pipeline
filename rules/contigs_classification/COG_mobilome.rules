@@ -4,11 +4,11 @@ rule rpsblast_COG_mobilome:
     singularity:
         "docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4"
     input:
-        "samples/{sample}/gene_call/{sample}.faa"
+        "samples/{sample}/gene_call/{tool}/{sample}.faa"
     threads:
         8
     output:
-        "samples/{sample}/contigs_classification/COG_mobilome/{sample}.tsv"
+        "samples/{sample}/contigs_classification/COG_mobilome/{tool}_ORFs_{sample}.tsv"
     shell:
         """
         rpsblast -db databases/cdd/COG_mobilome/Cog_mobilome -query {input[0]} -outfmt 6 -evalue 0.001 -num_threads {threads} > {output[0]}

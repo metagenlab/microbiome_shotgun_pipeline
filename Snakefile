@@ -58,6 +58,7 @@ include: "rules/logging.rules"
 # read manipulation
 include: "rules/read_manipulation/get_reads.rules"
 include: "rules/read_manipulation/get_sras.rules"
+include: "rules/read_manipulation/merge_reads.rules"
 
 # quality check
 include: "rules/QC/multiqc.rules"
@@ -69,6 +70,7 @@ include: "rules/QC/trimmomatic.rules"
 # metagenomic assembly
 include: "rules/assembly_and_binning/gc_cov_plots.rules"
 include: "rules/assembly_and_binning/prodigal.rules"
+include: "rules/assembly_and_binning/plass.rules"
 include: "rules/assembly_and_binning/bwa.rules"
 include: "rules/assembly_and_binning/assembly.rules"
 include: "rules/assembly_and_binning/binning.rules"
@@ -78,6 +80,11 @@ include: "rules/assembly_and_binning/checkm.rules"
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/resistance/CARD.smk"
 include: "rules/databases/mmseqs2.smk"
+include: "rules/databases/diamond.smk"
+include: "rules/databases/plast.smk"
+include: "rules/databases/filter_hits.smk"
+include: "rules/databases/genes_statistics.smk"
+include: "rules/databases/shortbred.smk"
 
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
@@ -89,6 +96,7 @@ include: "rules/anvio/anvio.rules"
 
 # annotation
 include: "rules/annotation/rgi.rules"
+include: "rules/annotation/resfam.rules"
 
 # contig classification
 include: "rules/contigs_classification/deepvirfinder.rules"
@@ -98,3 +106,4 @@ include: "rules/contigs_classification/COG_mobilome.rules"
 include: "rules/contigs_classification/kaiju.rules"
 include: "rules/contigs_classification/cat_bat.rules"
 include: "rules/contigs_classification/contigs_statistics.rules"
+include: "rules/contigs_classification/combine.rules"

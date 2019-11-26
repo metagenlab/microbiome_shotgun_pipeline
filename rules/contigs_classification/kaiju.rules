@@ -7,9 +7,9 @@ rule execute_kaiju_proteins:
     params:
         database_dir = config["kaju_database"],
     input:
-        "samples/{sample}/gene_call/{sample}.faa"
+        "samples/{sample}/gene_call/{tool}/{sample}.faa"
     output:
-         "samples/{sample}/binning/kaiju/kaiju_output.txt",
+         "samples/{sample}/binning/kaiju/{tool}_ORFs_kaiju_output.txt",
     shell:
         '''
          kaiju -t {params[database_dir]}nodes.dmp -f {params[database_dir]}kaiju_db.fmi -i {input[0]} -p -v -o {output[0]}
@@ -22,9 +22,9 @@ rule kaiju_add_phylum_names:
     singularity:
         "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
     input:
-        "samples/{sample}/binning/kaiju/kaiju_output.txt",
+        "samples/{sample}/binning/kaiju/{tool}_ORFs_kaiju_output.txt",
     output:
-        "samples/{sample}/binning/kaiju/locus_phylum_taxonomy.tab",
+        "samples/{sample}/binning/kaiju/{tool}_ORFs_locus_phylum_taxonomy.tab",
     shell:
         '''
          addTaxonNames -i {input[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum -o {output[0]}
@@ -37,9 +37,9 @@ rule kaiju_report_phylum:
     singularity:
         "docker://quay.io/biocontainers/kaiju:1.7.2--hdbcaa40_0"
     input:
-        "samples/{sample}/binning/kaiju/kaiju_output.txt",
+        "samples/{sample}/binning/kaiju/{tool}_ORFs_kaiju_output.txt",
     output:
-        "samples/{sample}/binning/kaiju/report_phylum.txt",
+        "samples/{sample}/binning/kaiju/{tool}_ORFs_report_phylum.txt",
     shell:
         '''
         #kaiju2table -i {input[0]} -o {output[0]} -t {config[kaju_database]}nodes.dmp -n {config[kaju_database]}names.dmp -r phylum

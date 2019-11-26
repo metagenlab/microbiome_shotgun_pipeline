@@ -33,12 +33,19 @@ sql = 'select distinct accession from sequence_counts'
 cursor.execute(sql)
 card_accession_list = [i[0] for i in cursor.fetchall()]
 
-sql1 = 'create table accession2aro (protein_accession varchar(200), aro_accession varchar(200), aro_name varchar(200), aro_description TEXT, resistance_mechanism TEXT, AMR_family TEXT)'
+sql1 = 'create table accession2aro (protein_accession varchar(200), aro_accession varchar(200), aro_name varchar(200), aro_description TEXT)'
 cursor.execute(sql1)
 sql2 = 'create table aro_accession2drug_class (aro_accession varchar(200), drug_class TEXT)'
 cursor.execute(sql2)
+sql3 = 'create table aro_accession2AMR_family (aro_accession varchar(200), drug_class TEXT)'
+cursor.execute(sql3)
+sql4 = 'create table aro_accession2resistance_mechanism (aro_accession varchar(200), mechanism TEXT)'
+cursor.execute(sql4)
+
 
 aro_accession2drug_class_list = {}
+aro_accession2AMR_family_list = {}
+aro_accession2resistance_mechanism_list = {}
 
 sql_template = 'insert into accession2aro values (?, ?, ?, ?, ?, ?)'
 for accession in card_accession_list:
@@ -57,24 +64,30 @@ for accession in card_accession_list:
         # some missing sequences in aro_categories_index
         # use another seq to retrieve aro annotation
         alternative_sequences = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index.index != accession)].index.tolist()
-        resistance_mechanism = aro_categories_index.loc[alternative_sequences[0], "Resistance Mechanism"]
+        resistance_mechanism_list = aro_categories_index.loc[alternative_sequences[0], "Resistance Mechanism"]
         AMR_family = aro_categories_index.loc[alternative_sequences[0], "AMR Gene Family"]
         drug_class = aro_categories_index.loc[alternative_sequences[0], "Drug Class"]
     if aro_accession not in aro_accession2drug_class_list:
         aro_accession2drug_class_list[aro_accession] = drug_class.split(";")
-    
+        aro_accession2AMR_family_list[aro_accession] = AMR_family.split(";")
+        aro_accession2resistance_mechanism_list[aro_accession] = resistance_mechanism.split(";")
+
     cursor.execute(sql_template, (accession,
                                   aro_accession,
                                   aro_name,
-                                  aro_description,
-                                  resistance_mechanism,
-                                  AMR_family))
+                                  aro_description))
 
 sql_template_2 = 'insert into aro_accession2drug_class values (?, ?)'
+sql_template_3 = 'insert into aro_accession2AMR_family values (?, ?)'
+sql_template_4 = 'insert into aro_accession2resistance_mechanism values (?, ?)'
 
 for aro in aro_accession2drug_class_list:
     for drug_class in aro_accession2drug_class_list[aro]:
         cursor.execute(sql_template_2, (aro, drug_class))
+    for family in aro_accession2AMR_family_list[aro]:
+        cursor.execute(sql_template_3, (aro, family))
+    for mechanism in aro_accession2resistance_mechanism_list[aro]:
+        cursor.execute(sql_template_4, (aro, mechanism))
 
 conn.commit()   
 o.write("ok")

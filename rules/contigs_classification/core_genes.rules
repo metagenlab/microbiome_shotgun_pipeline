@@ -6,11 +6,11 @@ rule hmmsearch_core_genes:
     singularity:
         "docker://quay.io/biocontainers/hmmer:3.2.1--hf484d3e_1"
     input:
-        "samples/{sample}/gene_call/{sample}.faa"
+        "samples/{sample}/gene_call/{tool}/{sample}.faa"
     threads:
         8
     output:
-        "samples/{sample}/contigs_classification/core_genes/{sample}.tsv"
+        "samples/{sample}/contigs_classification/core_genes/{tool}_ORFs_{sample}.tsv"
     shell:
         """
         hmmsearch --cut_tc --tblout {output} --noali databases/core_genes/checkm_bacteria_hmm_core.hmm {input[0]} > /dev/null

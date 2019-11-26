@@ -17,14 +17,13 @@ rule calculate_RPKM:
     singularity:
         "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     params:
-        config["local_samples"]
+        config["local_samples"],
     input:
-        sample_list = expand("samples/{sample}/mmseq_search/{{data_type}}/{{db_name}}/best_hits.m8", sample=read_naming.keys()),
-        R1_counts = expand("samples/{sample}/reads/trimmed/fastqc/R1_paired_fastqc/R1_reads_count.txt", sample=read_naming.keys()),
-        R2_counts = expand("samples/{sample}/reads/trimmed/fastqc/R2_paired_fastqc/R2_reads_count.txt", sample=read_naming.keys()),
+        sample_list = expand("samples/{sample}/{{data_type}}/{{db_name}}/{{search_tool}}_best_hits_{{identity}}.m8", sample=read_naming.keys()),
+        flash_log = expand("samples/{sample}/reads/raw/{sample}.log", sample=read_naming.keys()),
         reference_fasta = "reference_databases/{data_type}/{db_name}.faa",
     output:
-        "report/mmseq_search/{data_type}/{db_name}/RPKM.db"
+        "report/{data_type}/{db_name}/{search_tool}_RPKM_{identity}.db"
     script: "scripts/calculate_RPKM.py"
 
 
@@ -35,9 +34,9 @@ rule add_annotation_virulence:
         "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
         virulence_database = "databases/virulence/sqlite_db/virulence.db",
-        RPKM_database = "report/mmseq_search/virulence/VF_db/RPKM.db",
+        RPKM_database = "report/{search_tool}/virulence/VF_db/RPKM.db",
     output:
-        "report/mmseq_search/virulence/VF_db/annotation.log"
+        "report/{search_tool}/virulence/VF_db/annotation.log"
     script: "scripts/virulence_annotation.py"
 
 
@@ -50,7 +49,7 @@ rule add_annotation_resistance:
         aro_index = "reference_databases/resistance/aro_index.tsv",
         aro = "reference_databases/resistance/aro.tsv",
         aro_categories_index = "reference_databases/resistance/aro_categories_index.tsv",
-        RPKM_database = "report/mmseq_search/resistance/CARD_protein_homolog_model/RPKM.db",
+        RPKM_database = "report/{search_tool}/resistance/CARD_protein_homolog_model/RPKM.db",
     output:
-        "report/mmseq_search/resistance/CARD_protein_homolog_model/annotation.log"
+        "report/{search_tool}/resistance/CARD_protein_homolog_model/annotation.log"
     script: "scripts/resistance_annotation.py"
