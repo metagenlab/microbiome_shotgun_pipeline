@@ -5,15 +5,16 @@ rule execute_rgi_proteins:
     singularity:
         "docker://metagenlab/rgi:5.0.0-v3.0.4"
     input:
-        "samples/{sample}/gene_call/{sample}.faa",
+        "samples/{sample}/gene_call/{tool}/{sample}.faa",
     threads:
         8
     output:
-        "samples/{sample}/annotation/rgi/rgi_proteins.json",
-        "samples/{sample}/annotation/rgi/rgi_proteins.txt"
+        "samples/{sample}/annotation/rgi/{tool}_ORFs_rgi.json",
+        "samples/{sample}/annotation/rgi/{tool}_ORFs_rgi.txt",
     shell:
         """
-        rgi main -t protein -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi_proteins
+        rgi main -t protein -i {input[0]} -n {threads} -o $(dirname {output[0]})/{wildcards.tool}_ORFs_rgi
+        rm $(dirname {output[0]})/*temp*
         """
 
 rule execute_rgi_contigs:
@@ -26,9 +27,26 @@ rule execute_rgi_contigs:
     threads:
         8
     output:
-        "samples/{sample}/annotation/rgi/rgi_contigs.json",
-        "samples/{sample}/annotation/rgi/rgi_contigs.txt"
+        "samples/{sample}/annotation/rgi/contigs_rgi.json",
+        "samples/{sample}/annotation/rgi/contigs_rgi.txt"
     shell:
         """
         rgi main -t contig -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi_contigs
         """
+
+rule merge_rgi_data:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        expand("samples/{sample}/annotation/rgi/{{contigs_or_proteins}}_rgi.txt", sample=list(read_naming.keys()))
+    params:
+        sample_table = config["local_samples"]
+    output:
+        "report/annotations/rgi/{contigs_or_proteins}_rgi.tab",
+        "report/annotations/rgi/{contigs_or_proteins}_aro2mechanism.tab",
+        "report/annotations/rgi/{contigs_or_proteins}_aro2gene_family.tab",
+        "report/annotations/rgi/{contigs_or_proteins}_aro2drug_class.tab",
+
+    script: "scripts/merge_rgi.py"
