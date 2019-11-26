@@ -1,0 +1,48 @@
+
+
+rule merge_reads_with_flash:
+    conda:
+        "../../envs/flash.yml"
+    singularity:
+        "docker://quay.io/biocontainers/flash:1.2.11--hed695b0_5"
+    input:
+        "samples/{sample}/reads/raw/{sample}_R1.fastq.gz",
+        "samples/{sample}/reads/raw/{sample}_R2.fastq.gz"
+    output:
+        temp("samples/{sample}/reads/raw/{sample}.extendedFrags.fastq"),
+        temp("samples/{sample}/reads/raw/{sample}.notCombined_1.fastq"),
+        temp("samples/{sample}/reads/raw/{sample}.notCombined_2.fastq"),
+        "samples/{sample}/reads/raw/{sample}.hist",
+        "samples/{sample}/reads/raw/{sample}.histogram",
+        "samples/{sample}/reads/raw/{sample}.log",
+    shell:
+        """
+        flash -O {input[0]} {input[1]} -o samples/{wildcards.sample}/reads/raw/{wildcards.sample} >> {output[5]}
+        """
+
+rule concat_merged_reads:
+    input:
+        "samples/{sample}/reads/raw/{sample}.extendedFrags.fastq",
+        "samples/{sample}/reads/raw/{sample}.notCombined_1.fastq",
+        "samples/{sample}/reads/raw/{sample}.notCombined_2.fastq",
+    output:
+        "samples/{sample}/reads/raw/merged_combined.fastq"
+    shell:
+        """
+        cat {input[0]} {input[1]} {input[1]} > {output[0]}
+        """
+
+rule convert_fastq_to_fasta:
+    conda:
+        "../../envs/seqtk.yml"
+    singularity:
+        "docker://quay.io/biocontainers/seqtk:1.3--hed695b0_2"
+
+    input:
+        "samples/{sample}/reads/raw/merged_combined.fastq"
+    output:
+        "samples/{sample}/reads/raw/merged_combined.fasta"
+    shell:
+        """
+        seqtk seq -a {input[0]} > {output[0]} 
+        """
