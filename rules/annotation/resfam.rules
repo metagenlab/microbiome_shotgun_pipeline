@@ -1,0 +1,32 @@
+
+
+rule execute_hmmer_resfams:
+    conda: 
+        "envs/hmmer.yml"
+    singularity:
+        "docker://quay.io/biocontainers/hmmer:3.2.1--he1b5a44_2"
+    input:
+        "samples/{sample}/gene_call/{tool}/{sample}.faa",
+    threads:
+        8
+    output:
+        "samples/{sample}/annotation/resfams/{tool}_ORFs.tab",
+    log:
+        "samples/{sample}/annotation/resfams/{tool}_ORFs.log",
+    shell:
+        """
+        hmmsearch --cut_ga --cpu {threads} --tblout {output[0]} --noali reference_databases/resistance/resfam/Resfams.hmm {input[0]} >> {log}
+        """
+
+rule merge_resfams_data:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        expand("samples/{sample}/annotation/resfams/{{tool}}_ORFs.log", sample=list(read_naming.keys()))
+    params:
+        sample_table = config["local_samples"]
+    output:
+        "report/annotations/resfams/{tool}_ORFs.tab",
+    script: "scripts/merge_resfams.py"
