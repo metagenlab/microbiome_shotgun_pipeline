@@ -1,0 +1,37 @@
+
+
+
+rule assemble_metagenome_paired_reads_with_plass:
+    conda:
+        "../../envs/plass.yml"
+    singularity:
+        "docker://quay.io/biocontainers/plass:2.c7e35--h21aa3a5_1"
+    threads:
+        16
+    resources:
+        mem_gb=120
+    input:
+        R1_trimmed = "samples/{sample}/reads/trimmed/R1_paired.fastq",
+        R2_trimmed = "samples/{sample}/reads/trimmed/R2_paired.fastq",
+    output:
+        proteins = "samples/{sample}/gene_call/plass/{sample}_raw.faa"
+    log:
+        logging_folder + "samples/{sample}/gene_call/plass.log"
+    shell:
+         """
+         mkdir -p $(dirname $(dirname {output[0]}))
+         plass assemble --threads {threads} --min-seq-id 1 {input[R1_trimmed]} {input[R2_trimmed]} {output[0]} $(dirname {output[0]})/tmp > {log}
+         sed -i 's/*$//g' {output[0]}
+         sed -i 's/^*//g' {output[0]}
+         """
+
+
+rule plass_rename_ORFs:
+    input:
+        proteins = "samples/{sample}/gene_call/plass/{sample}_raw.faa"
+    output:
+        proteins = "samples/{sample}/gene_call/plass/{sample}.faa"
+    shell:
+         """
+         cat {input[0]} | sed 's/.* \[/>/' | sed 's/: /_/' | sed 's/\,.*//' >> {output[0]}
+         """
