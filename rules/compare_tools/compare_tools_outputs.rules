@@ -273,16 +273,17 @@ rule barplot_counts_gold_standard:
 #
 #     script: "scripts/l1-distance.py"
 
-# rule roc_curves:
-#     conda: pipeline_path + "envs/compare-tools.yml"
-#
-#     input: expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
-#
-#     output: roc_vir=f"compare_tools/classification/plots/all_tools/roc-vir.pdf",
-#             stats_vir=f"compare_tools/classification/stats/all_tools/roc-vir.tsv",
-#             roc_bac=f"compare_tools/classification/plots/all_tools/roc-bac.pdf",
-#             stats_bac=f"compare_tools/classification/stats/all_tools/roc-bac.tsv"
-#
-#     params: rank=rank
-#
-#     script: "scripts/roc.py"
+rule precision_recall_curves_viruses:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+
+    output: curve=f"compare_tools/classification/plots/all_tools/precision-recall-viruses.pdf",
+            table=f"compare_tools/classification/stats/all_tools/optimal-params-viruses.tsv"
+
+    params: rank=rank,
+            superkingdom="Viruses",
+            read_step=10
+
+    script: "scripts/precsion-recall.py"
