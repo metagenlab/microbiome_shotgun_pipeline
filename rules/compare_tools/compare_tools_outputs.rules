@@ -286,4 +286,4 @@ rule precision_recall_curves_viruses:
             superkingdom="Viruses",
             read_step=10
 
-    script: "scripts/precsion-recall.py"
+    script: "scripts/precision-recall.py"
