@@ -1,6 +1,6 @@
 rank=config["target_rank"]
 community=config['community_name']
-tools=['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']
+tools=sorted(['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
 vir_threshold=config["vir_reads_threshold"]
 bac_threshold=config["bac_reads_threshold"]
 
@@ -8,33 +8,64 @@ bac_threshold=config["bac_reads_threshold"]
 rule all_tax:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-rule all_tools:
+
+rule all_vir_out:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
            bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
-           barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria'],variable=['tools','samples']),
+           barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom='viruses',variable=['tools','samples']),
            vir_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='viruses',threshold=vir_threshold),
            bac_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',threshold=bac_threshold),
-           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom=['viruses','bacteria']),
+           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='viruses'),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
            time="compare_tools/resources_usage/time.pdf"
 
-rule all_benchmark:
+
+rule all_bac_out:
+    input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+           bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
+           barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',variable=['tools','samples']),
+           bac_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',threshold=bac_threshold),
+           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='bacteria'),
+           tab="compare_tools/resources_usage/resources.tsv",
+           memo="compare_tools/resources_usage/memory.pdf",
+           time="compare_tools/resources_usage/time.pdf"
+
+
+rule all_vir_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
             vir_read_counts_heatmaps=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
             bac_read_counts_heatmaps=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
             gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_scores_{rank}_level.tsv",
             all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_presence_{rank}_level.tsv",
-            all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
-            all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv",
             vir_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{vir_threshold}_virus_{rank}_level.pdf",
-            bac_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{bac_threshold}_bacteria_{rank}_level.pdf",
+            curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-viruses.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-viruses.tsv",
+            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-vir.pdf",
             barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
             time="compare_tools/resources_usage/time.pdf"
+
+
+rule all_bac_benchmark:
+    input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+            bac_read_counts_heatmaps=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
+            gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+            all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
+            all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv",
+            bac_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{bac_threshold}_bacteria_{rank}_level.pdf",
+            curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-bacteria.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-bacteria.tsv",
+            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-bacteria.pdf",
+            barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
+            tab="compare_tools/resources_usage/resources.tsv",
+            memo="compare_tools/resources_usage/memory.pdf",
+            time="compare_tools/resources_usage/time.pdf"
+
+
 
 rule merge_Kraken2_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
@@ -196,37 +227,62 @@ rule genereate_gold_standard_profile:
 
 
 
-rule calculate_precision_recall_f1_score:
+rule calculate_precision_recall_f1_score_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
 
-    output: vir_scores=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_vir_scores_{rank}_level.tsv",
-            vir_presence=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_vir_presence_{rank}_level.tsv",
-            bac_scores=f"compare_tools/{community}/classification/stats/{{tool}}/{bac_threshold}_bac_scores_{rank}_level.tsv",
-            bac_presence=f"compare_tools/{community}/classification/stats/{{tool}}/{bac_threshold}_bac_presence_{rank}_level.tsv"
+    output: scores=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_vir_scores_{rank}_level.tsv",
+            presence=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_vir_presence_{rank}_level.tsv"
 
-    params: bac_threshold=bac_threshold,
-            vir_threshold=vir_threshold
+    params: threshold=vir_threshold,
+            superkingdom="Viruses"
 
     script: "scripts/stats.py"
 
 
-rule regroup_scores_and_presence:
+
+rule calculate_precision_recall_f1_score_bacteria:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: vir_scores=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_vir_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
-           vir_presence=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_vir_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
-           bac_scores=expand("compare_tools/{community}/classification/stats/{tool}/{bac_threshold}_bac_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold),
-           bac_presence=expand("compare_tools/{community}/classification/stats/{tool}/{bac_threshold}_bac_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold)
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+            tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
 
-    output: all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_scores_{rank}_level.tsv",
-            all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_presence_{rank}_level.tsv",
-            all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
-            all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv"
+    output: scores=f"compare_tools/{community}/classification/stats/{{tool}}/{bac_threshold}_bac_scores_{rank}_level.tsv",
+            presence=f"compare_tools/{community}/classification/stats/{{tool}}/{bac_threshold}_bac_presence_{rank}_level.tsv"
+
+    params: threshold=bac_threshold,
+            superkingdom="Bacteria"
+
+    script: "scripts/stats.py"
+
+
+
+rule regroup_scores_and_presence_viruses:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: scores=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_vir_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
+           presence=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_vir_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
+
+    output: all_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_scores_{rank}_level.tsv",
+            all_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_presence_{rank}_level.tsv"
 
     script: "scripts/concat.py"
+
+
+rule regroup_scores_and_presence_bacteria:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: scores=expand("compare_tools/{community}/classification/stats/{tool}/{bac_threshold}_bac_scores_{rank}_level.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold),
+           presence=expand("compare_tools/{community}/classification/stats/{tool}/{bac_threshold}_bac_presence_{rank}_level.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold)
+
+    output: all_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
+            all_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv"
+
+    script: "scripts/concat.py"
+
+
 
 
 rule bacteria_presence_heatmap:
@@ -263,15 +319,18 @@ rule barplot_counts_gold_standard:
 
     script: "scripts/barplot.py"
 
-# rule l1_distance:
-#     conda: pipeline_path + "envs/compare-tools.yml"
-#
-#     input: expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
-#
-#     output: f"compare_tools/classification/plots/all_tools/l1-distance-vir.pdf",
-#             f"compare_tools/classification/plots/all_tools/l1-distance-bac.pdf"
-#
-#     script: "scripts/l1-distance.py"
+rule l1_distance_viruses:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+
+    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-vir.pdf"
+
+    params: rank=rank,
+            superkingdom="Viruses"
+
+    script: "scripts/l1-distance.py"
 
 rule precision_recall_curves_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
@@ -279,11 +338,40 @@ rule precision_recall_curves_viruses:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: curve=f"compare_tools/classification/plots/all_tools/precision-recall-viruses.pdf",
-            table=f"compare_tools/classification/stats/all_tools/optimal-params-viruses.tsv"
+    output: curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-viruses.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-viruses.tsv"
 
     params: rank=rank,
             superkingdom="Viruses",
+            read_step=10
+
+    script: "scripts/precision-recall.py"
+
+rule l1_distance_bacteria:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+
+    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-bacteria.pdf"
+
+    params: rank=rank,
+            superkingdom="Bacteria"
+
+    script: "scripts/l1-distance.py"
+
+
+rule precision_recall_curves_bacteria:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+
+    output: curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-bacteria.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-bacteria.tsv"
+
+    params: rank=rank,
+            superkingdom="Bacteria",
             read_step=10
 
     script: "scripts/precision-recall.py"
