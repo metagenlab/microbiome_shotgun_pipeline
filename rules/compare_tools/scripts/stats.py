@@ -4,8 +4,8 @@ import pandas as pd
 rank=snakemake.config["target_rank"]
 tool_name=snakemake.wildcards.tool
 
-bac_threshold=snakemake.params.bac_threshold
-vir_threshold=snakemake.params.vir_threshold
+threshold=snakemake.params.threshold
+superkingdom=snakemake.params.superkingdom
 
 def get_precision_recall_f1(true_tb, tool_tb, rank, tool_name):
     if rank=='scientific_name':
@@ -70,23 +70,17 @@ def get_presence(true_tb,tool_tb,rank,tool_name):
 gold_standard=pd.read_csv(snakemake.input.gold_standard,sep='\t')
 tool_output=pd.read_csv(snakemake.input.tool_out,sep='\t')
 
-true_vir=gold_standard[gold_standard.superkingdom=='Viruses']
-true_bac=gold_standard[gold_standard.superkingdom=='Bacteria']
+true_superkingdom=gold_standard[gold_standard.superkingdom==superkingdom]
 
-tool_vir=tool_output[tool_output.superkingdom=='Viruses']
-tool_vir=tool_vir[tool_vir.read_counts>vir_threshold]
-tool_vir=tool_vir.replace(np.nan,'NA')
-tool_bac=tool_output[tool_output.superkingdom=='Bacteria']
-tool_bac=tool_bac[tool_bac.read_counts>bac_threshold]
-tool_bac=tool_bac.replace(np.nan,'NA')
+true_superkingdom = true_superkingdom.replace(np.nan, 'NA')
 
-gold_standard = gold_standard.replace(np.nan, 'NA')
+tool_superkingdom=tool_output[tool_output.superkingdom==superkingdom]
+tool_superkingdom=tool_superkingdom[tool_superkingdom.read_counts>=threshold]
+tool_superkingdom=tool_superkingdom.replace(np.nan,'NA')
 
-virus_scores=get_precision_recall_f1(true_vir,tool_vir,rank,tool_name)
-virus_presence=get_presence(true_vir,tool_vir,rank,tool_name)
-virus_scores.to_csv(snakemake.output.vir_scores,sep='\t',index=None)
-virus_presence.to_csv(snakemake.output.vir_presence,sep='\t',index=None)
-bacteria_scores=get_precision_recall_f1(true_bac,tool_bac,rank,tool_name)
-bacteria_presence=get_presence(true_bac,tool_bac,rank,tool_name)
-bacteria_presence.to_csv(snakemake.output.bac_presence,sep='\t',index=None)
-bacteria_scores.to_csv(snakemake.output.bac_scores,sep='\t',index=None)
+
+
+scores=get_precision_recall_f1(true_superkingdom,tool_superkingdom,rank,tool_name)
+presence=get_presence(true_superkingdom,tool_superkingdom,rank,tool_name)
+scores.to_csv(snakemake.output.scores,sep='\t',index=None)
+presence.to_csv(snakemake.output.presence,sep='\t',index=None)
