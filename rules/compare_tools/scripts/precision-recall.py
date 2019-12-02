@@ -2,15 +2,17 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-
 tables=snakemake.input.all_tools
 rank=snakemake.params.rank
 superkingdom=snakemake.params.superkingdom
-gold_standard=snakemake.input.gold_standard
+gold_standard_file=snakemake.input.gold_standard
+read_step=snakemake.params.read_step
 
+
+gold_standard=pd.read_csv(gold_standard_file,sep='\t')
 true_superkingdom=gold_standard[gold_standard['superkingdom']==superkingdom]
 max_threshold=max(true_superkingdom.read_counts)
-read_step=snakemake.params.read_step
+
 
 tb_list=[]
 for file in tables:
@@ -60,7 +62,7 @@ def get_threshold_table(true_tb, all_tools, max_read, step, rank):
         for tool_name in tool_list:
             tool_tb = all_tools[all_tools['tool'] == tool_name]
             tb = get_precision_recall_f1(true_tb, tool_tb[tool_tb['read_counts'] >= threshold], rank, tool_name)
-            tb['threshold'] = threshold
+            tb['threshold'] = [threshold]*len(tb)
             tables.append(tb)
     pr_tb = pd.concat(tables)
     return pr_tb
