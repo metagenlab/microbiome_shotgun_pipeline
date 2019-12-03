@@ -22,7 +22,7 @@ if paired==True:
                 unclassified="ganon/{sample}/unclassified.txt",
                 report="ganon/{sample}/classified.rep"
 
-        params: f"{ganon_db_path}/refseqCG/refseqCG"
+        params: f"{ganon_db_path}"
 
         threads: config["num_cores"]
 
@@ -46,7 +46,7 @@ else:
                 unclassified="ganon/{sample}/unclassified.txt",
                 report="ganon/{sample}/classified.rep"
 
-        params: f"{ganon_db_path}/refseqCG/refseqCG"
+        params: f"{ganon_db_path}"
 
         threads: config["num_cores"]
 
