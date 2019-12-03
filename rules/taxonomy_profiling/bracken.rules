@@ -19,7 +19,7 @@ rule run_bracken:
 
     log: logging_folder + "braken/{sample}.log"
 
-    benchmark: "benchmarks/resources_usage/{sample}/bracken.benchmark.txt"
+    benchmark: "compare_tools/resources_usage/{sample}/bracken.benchmark.txt"
 
     shell:
          """
