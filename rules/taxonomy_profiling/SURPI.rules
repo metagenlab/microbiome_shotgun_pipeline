@@ -76,17 +76,17 @@ rule run_surpi:
 
     input:  "SURPI/{sample}/{sample}.config"
 
-    output: #temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated"),
-            #temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.human.snap.unmatched.NT.tax.sam.alignment.db"),
-            #temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.nonPrimMammal.annotated"),
-            #"SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.4.snap.log",
-            #temp("SURPI/{sample}/TRASH_{sample}/{sample}.cutadapt.fastq"),
-            #temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.tax.matched.sam"),
-            #temp("SURPI/{sample}/TRASH_{sample}/{sample}.preprocessed.fastq"),
-            #temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.matched.fulllength.fastq"),
-            #temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam"),
-            #temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp1"),
-            #temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp2"),
+    output: temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.all.annotated"),
+            temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.human.snap.unmatched.NT.tax.sam.alignment.db"),
+            temp("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.nonPrimMammal.annotated"),
+            "SURPI/{sample}/LOG_{sample}/{sample}.human.snap.unmatched.snap_index_nt_curated_primate_subtracted.FASTA.4.snap.log",
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.cutadapt.fastq"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.tax.matched.sam"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.preprocessed.fastq"),
+            temp("SURPI/{sample}/TRASH_{sample}/{sample}.NT.snap.matched.fulllength.fastq"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp1"),
+            temp("SURPI/{sample}/{sample}.NT.snap.tax.matched.sorted.sam.tmp2"),
             "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",
             "SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable"
 
