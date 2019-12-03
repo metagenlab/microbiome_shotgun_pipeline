@@ -1,6 +1,7 @@
 rank=config["target_rank"]
 community=config['community_name']
-tools=sorted(['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon'])
+
+tools=sorted(config["tool_list"])
 vir_threshold=config["vir_reads_threshold"]
 bac_threshold=config["bac_reads_threshold"]
 
