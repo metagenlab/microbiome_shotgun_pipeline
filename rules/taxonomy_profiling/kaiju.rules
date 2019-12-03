@@ -26,7 +26,7 @@ if paired==True:
 
         log: logging_folder + "kaiju/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/kaiju.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/kaiju.benchmark.txt"
 
         shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input[0]} -j {input[1]} -o {output} -v &> {log}"
 else:
@@ -44,7 +44,7 @@ else:
 
         log: logging_folder + "kaiju/{sample}.log"
 
-        benchmark: "benchmarks/resources_usage/{sample}/kaiju.benchmark.txt"
+        benchmark: "compare_tools/resources_usage/{sample}/kaiju.benchmark.txt"
 
         shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input} -o {output} -v &> {log}"
 
