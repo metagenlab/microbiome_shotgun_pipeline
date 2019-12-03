@@ -22,6 +22,11 @@ cov_cutoff: 5
 spades_kmer_sizes: 21,33,55,77,99,111,127
 minimum_contig_size: 500
 
+
+#Common rvdb database
+common: True
+fasta_name: U-RVDBv16.0.fasta
+
 #taxonomy profiling
 ##Kaiju
 kaiju_database: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/progenomes
@@ -55,7 +60,7 @@ quality: Illumina
 num_cores: 55
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 ##ganon
-ganon_db_path: /media/data/databases/ganon_db
+ganon_db_path: /media/data/databases/ganon_db/rvdb #Include the database prefix in the path
 ##rkmh
 rkmh_reference: /media/data/databases/rkmh_db/reference.fa
 rkmh_kmer_size: 15
@@ -71,6 +76,7 @@ api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
 
 
 ###Tool_comparison
+tool_list: ['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']
 target_rank: species
 target_value: counts
 community_name: CF-metagenome-1
