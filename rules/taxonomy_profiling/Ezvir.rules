@@ -1,5 +1,15 @@
 db_path_ezvir=config["ezvir_database"]
 
+common=config["common"]
+if common==True:
+    fasta_name=config["fasta_name"]
+
+else:
+    fasta_name='EZV0.1-database'
+
+
+
+
 if config["virus_family"]=='NA':
     rule all_ezvir:
         input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
@@ -20,7 +30,7 @@ if paired==True:
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
                 r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-        params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
+        params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
         threads: config["num_cores"]
 
@@ -41,7 +51,7 @@ else:
 
         input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
-        params: genome_path=f"{db_path_ezvir}/EZV0.1-database"
+        params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
         threads: config["num_cores"]
 
@@ -104,8 +114,8 @@ rule phase_1_report:
             csv_dir="../coverage",
             read_len=config["samples_read_length"],
             genome_len=f"{db_path_ezvir}/genome_lengths.csv",
-            colors=f"{db_path_ezvir}/COLORS.ezv",
-            db_names=f"{db_path_ezvir}/Ezvir_names_db.ezv"
+            colors=f"{db_path_ezvir}/colours.csv",
+            db_names=f"{db_path_ezvir}/genom_names.csv"
 
     shell:
         """
