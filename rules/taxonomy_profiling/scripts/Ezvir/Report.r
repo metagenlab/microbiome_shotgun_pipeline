@@ -160,7 +160,7 @@ if (opt$min_coverage > 100) {
 
 ### load virus GROUP names and COLORS ###
 colors <- read.csv(opt$color_list, header=TRUE, sep=",")
-genomes <- read.csv(opt$genome_list, header=TRUE, sep=",")
+genomes <- read.csv(opt$genome_list, header=FALSE, sep=",")
 genome_lengths=read.csv(opt$genome_length,header=TRUE, sep="\t")
 ### load blacklist if supplied ###
 blacklist = data.frame()
