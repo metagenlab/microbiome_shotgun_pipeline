@@ -96,7 +96,8 @@ bval = as.integer(common$DC)
 bcol = toString(common$DCN) # color name for this virus family
 
 
-names_tab=read.csv(opt$table_names,sep='\t',header=T)
+names_tab=read.csv(opt$table_names,sep='\t',header=F)
+colnames(names_tab) <- c("gid","gname","vgroup","shortname")
 genome_lengths=read.csv(opt$genome_length,header=TRUE, sep="\t")
 # make outfile
 pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, width=10, height=5)
@@ -122,8 +123,11 @@ for (file in FN) {
 
   ### make plot title from this file name ###
   # get rid of linking characters for nicer titles
-  name=as.character(names_tab[names_tab$X==genname,"genome_names"])
-  cleanname = gsub("_", " ", name)
+  name=as.character(names_tab[names_tab$gid==genname,"gname"])
+  shortname=as.character(names_tab[names_tab$gid==genname,"shortname"])
+  family=as.character(names_tab[names_tab$gid==genname,"vgroup"])
+  title=paste(name,shortname,family,sep=', ')
+  cleanname = gsub("_", " ", title)
 
 
   plot.title = paste("reads mapped to:", cleanname, sep=" ")
