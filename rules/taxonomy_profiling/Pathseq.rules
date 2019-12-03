@@ -1,3 +1,15 @@
+
+common=config["common"]
+if common==True:
+    fasta_name=config["fasta_name"]
+    taxonomy=fasta_name.replace('.fasta','').replace('.fa','')
+
+else:
+    fasta_name='pathseq_microbe.fa'
+    taxonomy='pathseq_taxonomy.db'
+
+basename=fasta_name.replace('.fasta','').replace('.fa','')
+
 rule all_pathseq:
     input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
            #expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
@@ -67,10 +79,10 @@ rule pathseq_on_reads:
     input: bam=get_bam_input,
            host_kmer=f"{db_path}/pathseq_host.bfi",
            host_bwa=f"{db_path}/pathseq_host.fa.img",
-           microbe_fa=f"{db_path}/pathseq_microbe.fa",
-           microbe_bwa=f"{db_path}/pathseq_microbe.fa.img",
-           microbe_dict=f"{db_path}/pathseq_microbe.dict",
-           tax_db=f"{db_path}/pathseq_taxonomy.db"
+           microbe_fa=f"{db_path}/{fasta_name}",
+           microbe_bwa=f"{db_path}/{basename}.img",
+           microbe_dict=f"{db_path}/{basename}.dict",
+           tax_db=f"{db_path}/{taxonomy}.db"
 
     output: score_out="Pathseq/{sample}/output/scores.txt",
             bam_out="Pathseq/{sample}/output/output_reads.bam",
