@@ -1,0 +1,37 @@
+rule format_db:
+    singularity:
+        "docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4"
+    input:
+        "{path}.faa"
+    output:
+        dbphr = "{path}.faa.phr",
+    shell:
+        """
+        makeblastdb -in {input[0]} -dbtype prot
+        """
+
+rule blast_all_vs_all:
+    singularity:
+        "docker://quay.io/biocontainers/blast:2.9.0--pl526h3066fca_4"
+    input:
+        "{path}.faa",
+        "{path}.faa.phr",
+    output:
+        "{path}_blastall.out",
+    shell:
+        """
+        blastp -db {input[0]} -query {input[0]} -outfmt 6 -num_threads 6 -out {output[0]}
+        """
+
+rule execute_silix:
+    singularity:
+        "docker://pveber/silix:1.2.11"
+    input:
+        "{path}.faa",
+        "{path}_blastall.out"
+    output:
+        "{path}_{identity}_{overlap}.fnodes",
+    shell:
+        """
+        silix  {input[0]} {input[1]} -f FAM -i {wildcards.identity} -r {wildcards.overlap} --net 1> {output[0]} || true;
+        """
