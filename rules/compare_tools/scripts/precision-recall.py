@@ -62,7 +62,8 @@ def get_threshold_table(true_tb, all_tools, max_read, step, rank):
         for tool_name in tool_list:
             tool_tb = all_tools[all_tools['tool'] == tool_name]
             tb = get_precision_recall_f1(true_tb, tool_tb[tool_tb['read_counts'] >= threshold], rank, tool_name)
-            tb['threshold'] = [threshold]*len(tb)
+            threshold_list=[threshold] * len(tb)
+            tb.insert(len(tb.columns),'threshold',threshold_list)
             tables.append(tb)
     pr_tb = pd.concat(tables)
     return pr_tb
@@ -85,7 +86,8 @@ tool_list=list(set(pos_val_tb['tool']))
 for tool in tool_list:
         table=pos_val_tb[pos_val_tb['tool']==tool]
         auc=get_auprc(table)
-        table['AUC']=[auc]*len(table)
+        auc_list=[auc]*len(table)
+        table.insert(len(table.columns),'AUC',auc_list)
         subset.append(table)
 subset=pd.concat(subset,sort=False)
 sorted_subset=subset.sort_values(by=['AUC','tool'],ascending=False)
