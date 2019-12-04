@@ -33,5 +33,6 @@ rule plass_rename_ORFs:
         proteins = "samples/{sample}/gene_call/plass/{sample}.faa"
     shell:
          """
-         cat {input[0]} | sed 's/.* \[/>/' | sed 's/: /_/' | sed 's/\,.*//' >> {output[0]}
+         #cat {input[0]} | sed 's/.* \[/>/' | sed 's/: /_/' | sed 's/\,.*//' >> {output[0]}
+         awk '/^>/{{print ">ORF_" ++i; next}}{{print}}' < {input[0]} > {output[0]}
          """
