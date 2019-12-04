@@ -18,11 +18,16 @@ gold_standard['type'] = ['gold_standard'] * len(gold_standard)# add a column to 
 
 tool_out = pd.read_csv(snakemake.input.tool_out,sep='\t')
 
+replicate_list=list(set(list(tool_out['sample'])))
+gb_rep=[]
+for replicate in replicate_list:
+    rep_tb=tool_out[tool_out['sample']==replicate]
+    rep_tb=rep_tb.groupby([f'{rank}','superkingdom'],as_index=False)['read_counts'].sum()
+    rep_tb['type'] = [tool_name] * len(rep_tb)
+    gb_rep.append(rep_tb)
 
-
-tool_out=tool_out.groupby([f'{rank}','superkingdom'],as_index=False)['read_counts'].sum()
-tool_out['type']=[tool_name]*len(tool_out)
-cat = pd.concat([gold_standard, tool_out], axis=0, sort=False)
+all_replicates=pd.concat(gb_rep,sort=False)
+cat = pd.concat([gold_standard, all_replicates], axis=0, sort=False)
 
 cat.set_index(f'{rank}',inplace=True)
 true_genomes_list=list(cat.loc[cat['type']=='gold_standard'].index)
