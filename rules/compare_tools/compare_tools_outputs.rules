@@ -119,11 +119,12 @@ rule merge_SURPI_outputs:
 
     script: "scripts/surpi-merge.py"
 
-
+ezvir_db=config["ezvir_database"]
 rule merge_ezvir_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+    input: hits=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
+           gen_taxids=f'{ezvir_db}/genome_taxids.csv'
 
     output: f"taxonomy-tables/ezvir/all_ezvir.tsv"
 
