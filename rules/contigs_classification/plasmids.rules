@@ -12,5 +12,5 @@ rule blastn_plsdb:
         "samples/{sample}/contigs_classification/plsdb/{sample}.tsv"
     shell:
         """
-        blastn -evalue 1e-5 -soft_masking false -query {input[0]} -db databases/plasmids/plsdb.fna -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs" > {output[0]}
+        blastn -task dc-megablast -evalue 1e-5 -soft_masking false -query {input[0]} -db databases/plasmids/plsdb.fna -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore qcovs" > {output[0]}
         """
