@@ -34,3 +34,14 @@ rule extract_CARD:
         tar -xvf {input[1]} -C reference_databases/resistance
         mv reference_databases/resistance/protein_fasta_protein_homolog_model.fasta reference_databases/resistance/CARD_protein_homolog_model.faa
         """
+
+rule format_aro:
+    input:
+        "reference_databases/resistance/aro_index.tsv",
+        "reference_databases/resistance/aro_categories_index.tsv",
+    output:
+        "reference_databases/resistance/accession2AMR_family.tab",
+        "reference_databases/resistance/accession2drug_class.tab",
+        "reference_databases/resistance/accession2resistance_mechanism.tab",
+    script:
+        "scripts/aro2data.py"
