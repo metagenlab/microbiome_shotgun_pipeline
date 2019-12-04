@@ -1,14 +1,13 @@
 import pandas as pd
-import re
 import math
 import copy
 from ete3 import NCBITaxa
 import numpy as np
-from Bio import Entrez
+
 ncbi = NCBITaxa()
-Entrez.email=snakemake.config["email"]
-Entrez.api_key=snakemake.config["api_key"]
-input_file_list=snakemake.input
+
+input_file_list=snakemake.input.hits
+genome_taxids_path=snakemake.input.gen_taxids
 sample_names=[name.split("/")[1] for name in input_file_list]
 dic=dict(zip(sample_names,input_file_list))
 
@@ -23,15 +22,15 @@ def get_filtered_read_counts(table,read_len,threshold):
             read_counts[genome_name] = read_num #dictionary with accessions id as keys and read counts as values
     return read_counts
 
-def get_taxid_from_accession(acc_read_counts_dic):
+
+
+
+def get_taxid_from_accession(acc_read_counts_dic,taxid_tb):
     acc_id = list(acc_read_counts_dic.keys())
-    ids = [re.split(r'_[0-9+]$', acc)[0] for acc in acc_id]#For the EZvir rules, files were named after accession IDs with underscores replacing points. To search for the accession in NCBI we split the underscore and the version number at the end
-    uid_list = Entrez.read(Entrez.esearch(db='nucleotide', term=','.join(ids), retmax=100000))['IdList']
-    nuc_tax_link = Entrez.read(Entrez.elink(dbfrom='nucleotide', db='taxonomy', id=uid_list))
     acc_id_tax_dic = {}
-    for j, name in enumerate(acc_id):
-        taxid = nuc_tax_link[j]['LinkSetDb'][0]['Link'][0]['Id']
-        acc_id_tax_dic[name] = taxid #dictionary with accessions as keys and taxid as values. Its purpose is to link accessions with read counts to their taxid and taxonomy
+    for acc in acc_id:
+        taxid = taxid_tb.loc[acc]['taxid']
+        acc_id_tax_dic[acc] = taxid #dictionary with accessions as keys and taxid as values. Its purpose is to link accessions with read counts to their taxid and taxonomy
     return acc_id_tax_dic
 
 def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
@@ -80,9 +79,9 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
                     tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
     return tax
 
-def get_tax_table(table,read_len,threshold,target_ranks):
+def get_tax_table(table,taxid_tb,read_len,threshold,target_ranks):
     read_counts_dic=get_filtered_read_counts(table,read_len,threshold)
-    acc_taxid_dic=get_taxid_from_accession(read_counts_dic)
+    acc_taxid_dic=get_taxid_from_accession(read_counts_dic,taxid_tb)
     tax=get_taxonomy_from_taxid(target_ranks,acc_taxid_dic)
     dico = {}
     for genome in acc_taxid_dic.keys():
@@ -98,11 +97,13 @@ tables_list=[]
 split_path=snakemake.output[0].split('/')
 tool_path='/'.join(split_path[0:len(split_path)-1])
 
+genome_taxids_tb=pd.read_csv(genome_taxids_path,sep=',')
+genome_taxids_tb.columns=['acc','taxid']
+genome_taxids_tb.set_index('acc',inplace=True)
 for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
-    ezvir_parsed_tb=get_tax_table(ezvir_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
+    ezvir_parsed_tb=get_tax_table(ezvir_tb,genome_taxids_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb['sample']=[i]*len(ezvir_parsed_tb)
-    samples_ezvir_tb=ezvir_parsed_tb
     samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
     samples_ezvir_tb[f'read_percent'] = samples_ezvir_tb[f'read_counts'].div(sum(samples_ezvir_tb[f'read_counts'])).mul(100)
     samples_ezvir_tb.to_csv(f"{tool_path}/{i}.tsv", sep='\t')
