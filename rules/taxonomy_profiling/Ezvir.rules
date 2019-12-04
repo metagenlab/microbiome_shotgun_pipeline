@@ -115,7 +115,7 @@ rule phase_1_report:
             read_len=config["samples_read_length"],
             genome_len=f"{db_path_ezvir}/genome_lengths.csv",
             colors=f"{db_path_ezvir}/colours.csv",
-            db_names=f"{db_path_ezvir}/genom_names.csv"
+            db_names=f"{db_path_ezvir}/genome_names.csv"
 
     shell:
         """
