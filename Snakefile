@@ -55,6 +55,10 @@ multiqc_configfile = "../../data/configuration_files/multiqc/config.yaml"
 # general
 include: "rules/logging.rules"
 
+# db clustering 
+
+include: "rules/clustering/silix.rules"
+
 # read manipulation
 include: "rules/read_manipulation/get_reads.rules"
 include: "rules/read_manipulation/get_sras.rules"
