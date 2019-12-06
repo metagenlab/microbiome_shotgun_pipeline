@@ -7,11 +7,11 @@ import numpy as np
 ncbi = NCBITaxa()
 
 input_file_list=snakemake.input.hits
-genome_taxids_path=snakemake.input.gen_taxids
+genome_taxids_path=snakemake.params.gen_taxids
 sample_names=[name.split("/")[1] for name in input_file_list]
 dic=dict(zip(sample_names,input_file_list))
 
-read_length=snakemake.params["read_len"]
+read_length=snakemake.params.read_len
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
 def get_filtered_read_counts(table,read_len,threshold):
