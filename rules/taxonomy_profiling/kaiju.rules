@@ -48,7 +48,7 @@ else:
 
         shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input} -o {output} -v &> {log}"
 
-rule add_taxa_names_to_output:
+rule kaiju_add_taxa_names_to_output:
     conda: pipeline_path + "envs/kaiju.yml"
 
     input: "kaiju/{sample}/kaiju.out"
@@ -61,7 +61,7 @@ rule add_taxa_names_to_output:
     shell: "kaiju-addTaxonNames -t {params.nodes} -n {params.names} -r superkingdom,phylum,class,order,family,genus,species -i {input} -o {output}"
 
 
-rule classification_summary:
+rule kaiju_classification_summary:
     conda: pipeline_path + "envs/kaiju.yml"
 
     input: "kaiju/{sample}/kaiju.out"
