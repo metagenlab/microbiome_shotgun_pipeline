@@ -42,9 +42,9 @@ rule all_vir_benchmark:
             all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_scores_{rank}_level.tsv",
             all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_presence_{rank}_level.tsv",
             vir_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{vir_threshold}_virus_{rank}_level.pdf",
-            curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-viruses.pdf",
-            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-viruses.tsv",
-            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-vir.pdf",
+            curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv",
+            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.pdf",
             barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
@@ -58,9 +58,9 @@ rule all_bac_benchmark:
             all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
             all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv",
             bac_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{bac_threshold}_bacteria_{rank}_level.pdf",
-            curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-bacteria.pdf",
-            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-bacteria.tsv",
-            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-bacteria.pdf",
+            curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv",
+            l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.pdf",
             barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
@@ -86,10 +86,21 @@ rule merge_Bracken_outputs:
 
     script: "scripts/bracken-merge.py"
 
+
+rule correct_Pathseq_counts:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: "Pathseq/{sample}/output/scores.txt"
+
+    output: "Pathseq/{sample}/output/correct-scores.txt"
+
+    script: "scripts/pathseq-correct-counts.py"
+
+
 rule merge_Pathseq_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
+    input: expand("Pathseq/{sample}/output/correct-scores.txt",sample=list(read_naming.keys()))
 
     output: f"taxonomy-tables/pathseq/all_pathseq.tsv"
 
@@ -123,12 +134,13 @@ ezvir_db=config["ezvir_database"]
 rule merge_ezvir_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: hits=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
-           gen_taxids=f'{ezvir_db}/genome_taxids.csv'
+    input: hits=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+
 
     output: f"taxonomy-tables/ezvir/all_ezvir.tsv"
 
-    params: read_len=config["samples_read_length"]
+    params: read_len=config["samples_read_length"],
+            gen_taxids=f'{ezvir_db}/genome_taxids.csv'
 
     script: "scripts/Ezvir-merge.py"
 
@@ -327,7 +339,7 @@ rule l1_distance_viruses:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-vir.pdf"
+    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.pdf"
 
     params: rank=rank,
             superkingdom="Viruses"
@@ -340,8 +352,8 @@ rule precision_recall_curves_viruses:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-viruses.pdf",
-            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-viruses.tsv"
+    output: curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv"
 
     params: rank=rank,
             superkingdom="Viruses",
@@ -355,7 +367,7 @@ rule l1_distance_bacteria:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
             all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/l1-distance-bacteria.pdf"
+    output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.pdf"
 
     params: rank=rank,
             superkingdom="Bacteria"
@@ -369,8 +381,8 @@ rule precision_recall_curves_bacteria:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: curve=f"compare_tools/{community}/classification/plots/all_tools/precision-recall-bacteria.pdf",
-            table=f"compare_tools/{community}/classification/stats/all_tools/optimal-params-bacteria.tsv"
+    output: curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+            table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv"
 
     params: rank=rank,
             superkingdom="Bacteria",
