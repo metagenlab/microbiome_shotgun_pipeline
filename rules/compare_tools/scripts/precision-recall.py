@@ -91,12 +91,13 @@ for tool in tool_list:
         subset.append(table)
 subset=pd.concat(subset,sort=False)
 sorted_subset=subset.sort_values(by=['AUC','tool'],ascending=False)
+sorted_subset.to_csv(snakemake.output.curve_table,sep='\t',index=False)
 
-roc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=4,hue='AUC')
-roc.map(plt.step,'recall','precision',where='pre',label='AUC')
-roc.map(plt.fill_between,'recall','precision',alpha=0.4,step='pre')
-roc.add_legend()
-roc.savefig(snakemake.output.curve)
+prc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3,hue='AUC')
+prc.map(plt.step,'recall','precision',where='pre',label='AUC')
+prc.map(plt.fill_between,'recall','precision',alpha=0.4,step='pre')
+prc.add_legend()
+prc.savefig(snakemake.output.curve)
 
 indexed_subset=sorted_subset.set_index('threshold')
 opt_read_thresh={}
