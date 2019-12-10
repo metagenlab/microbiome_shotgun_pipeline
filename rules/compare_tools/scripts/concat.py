@@ -1,18 +1,21 @@
 import pandas as pd
 
-def concat_tables(file_list):
-    table_list = []
-    for file in file_list:
-        table=pd.read_csv(file,sep='\t',index_col=0)
-        table.index.name = 'tool'
-        table_list.append(table)
-    all_tools = pd.concat(table_list, sort=False, axis=0)
-    if 'F1_score' in all_tools.columns:
-        all_tools=all_tools.sort_values(by='F1_score',ascending=False)
-    return all_tools
+scores_files=snakemake.input.scores
+presence_files=snakemake.input.presence
 
-scores=concat_tables(snakemake.input.scores)
-scores.to_csv(snakemake.output.all_scores,sep='\t')
-presence=concat_tables(snakemake.input.presence)
-presence.to_csv(snakemake.output.all_presence,sep='\t')
+
+def concat_tables(files):
+    tb_list=[]
+    for file in files:
+        tb=pd.read_csv(file,sep='\t')
+        tb_list.append(tb)
+    all_tables=pd.concat(tb_list,sort=False,axis=0)
+    return all_tables
+
+
+scores=concat_tables(scores_files)
+scores=scores.sort_values(by='F1_score',ascending=False)
+scores.to_csv(snakemake.output.all_scores,sep='\t',index=None)
+presence=concat_tables(presence_files)
+presence.to_csv(snakemake.output.all_presence,sep='\t',index=None)
 
