@@ -49,6 +49,10 @@ min_score_identity : 0.9
 identity_margin: 0.02
 skip_host_align: true
 divide_by_gen_len: true
+#Pathseq outputs cumulated reads at each taxonomic level instead of assigning exact counts which are corrected by default (only works with an updated pathseq database)
+#Taxa entries that are outdated and have more than 0 read counts are kept but not corrected
+#When merging taxonomy tables for pathseq, read counts for outdated taxids are attributed to the previous taxonomic level
+
 ##EZvir
 ezvir_database: /media/data/databases/EZvir
 virus_family: Hepatitis_E
