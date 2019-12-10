@@ -15,8 +15,14 @@ taxid_set = set(taxid2count.keys())
 keep = []
 for taxid in taxid_set:
     conv = ncbi.translate_to_names([taxid])[0]
-    if str(conv) == str(taxid):
-        print("problem with",taxid, taxid2name[taxid])
+    if str(conv) == str(taxid) and taxid2count[taxid]==0:
+        print(f"problem with {taxid}: {taxid2name[taxid]}")
+        print(f'read counts: {taxid2count[taxid]}')
+        print('Discarding entry')
+    elif str(conv) == str(taxid) and taxid2count[taxid]>0:
+        print(f"problem with {taxid}: {taxid2name[taxid]}")
+        print(f'read counts: {taxid2count[taxid]}')
+        print('keeping entry, not correcting counts')
     else:
         keep.append(taxid)
 
@@ -45,6 +51,12 @@ new_scores=copy.deepcopy(taxid_info)
 
 for taxid in new_scores.keys():
     if taxid!=1:
-        new_scores[taxid]['unambiguous']=taxid2corrected_counts[f'{taxid}']
+        try:
+            new_scores[taxid]['unambiguous']=taxid2corrected_counts[f'{taxid}']
+        except KeyError:
+            new_scores[taxid]['unambiguous']=taxid_info[taxid]['unambiguous']
     elif taxid==1:
         new_scores[taxid]['unambiguous'] = 0
+
+tb=pd.DataFrame.from_dict(new_scores,orient='index')
+tb.to_csv(snakemake.output[0],sep='\t')
