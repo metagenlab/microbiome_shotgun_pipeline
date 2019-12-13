@@ -1,0 +1,52 @@
+
+
+rule execute_amrfinderplus_proteins:
+    singularity:
+        "docker://staphb/ncbi-amrfinderplus:3.1.1b"
+    input:
+        "samples/{sample}/gene_call/{tool}/{sample}.faa",
+    threads:
+        8
+    output:
+        "samples/{sample}/annotation/amrfinderplus/{tool}_ORFs_amrfinderplus.txt",
+    params:
+        db_path = config["amerfinder_database_path"]
+    shell:
+        """
+        amrfinder --protein {input[0]} --threads {threads} -o {output[0]} --database {params[0]}
+        """
+
+
+rule execute_amrfinderplus_contigs:
+    conda: 
+        "envs/anvio.yml"
+    singularity:
+        "docker://staphb/ncbi-amrfinderplus:3.1.1b"
+    input:
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    threads:
+        8
+    params:
+        db_path = config["amerfinder_database_path"]
+    output:
+        "samples/{sample}/annotation/rgi/contigs_amrfinderplus.txt"
+    shell:
+        """
+        amrfinder --nucleotide {input[0]} --threads {threads} -o {output[0]} --database {params[0]} 
+        """
+
+
+rule merge_amrfinderplus_data:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        expand("samples/{sample}/annotation/amrfinderplus/{{contigs_or_proteins}}_amrfinderplus.txt", sample=list(read_naming.keys()))
+    params:
+        sample_table = config["local_samples"]
+    output:
+        "report/annotations/rgi/{contigs_or_proteins}_amrfinderplus.tab",
+
+    script: "scripts/merge_amrfinder.py"
+
