@@ -37,3 +37,17 @@ rule extract_contig_coverage:
         """
         sed -ne '/Coverage per contig/,$ p'  {input[genome_cov]} | grep NODE_ | sed "s/^[ \\t]*//" > {output[extract]}
         """
+
+
+rule count_contigs_ORFs:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        "samples/{sample}/gene_call/prodigal/{sample}.faa",
+    threads:
+        1
+    output:
+        "samples/{sample}/contigs_classification/{sample}_ORFs_counts.tsv"
+    script: "scripts/count_ORFs.py"
