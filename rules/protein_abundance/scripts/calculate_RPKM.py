@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 
 from Bio import SeqIO
-import sqlite3
+
 import pandas
 import re
 
-conn = sqlite3.connect(snakemake.output[0])
-cursor = conn.cursor()
+o = open(snakemake.output[0], 'w')
+o.write("sample\tsequence_accession\tn_hits\tRPKM\tgroup_1\tgroup_2\n")
 
 sample_table = snakemake.params[0]
-
 all_samples = pandas.read_csv(sample_table, sep="\t", index_col=0)
 
 sample2read_count={}
@@ -27,7 +26,7 @@ for flash_log in snakemake.input["flash_log"]:
 #        sample_id = R2_count.split("/")[1]
 #        sample2read_count[sample_id] += int(f.readline().rstrip().split("\t")[1])
 
-print(sample2read_count)
+
 # get sequence length for normalization by sequence length
 records = SeqIO.parse(snakemake.input["reference_fasta"], 'fasta')
 record2aa_sequence_length = {}
@@ -58,11 +57,7 @@ for sample in snakemake.input["sample_list"]:
             else:
                 sample2sequence_accession2count[sample_id][hit_accession] += 1
 
-sql = 'create table sequence_counts (sample varchar(300), accession varchar(300), n_hits INTEGER, RPKM FLOAT, group_1 varchar(300), group_2 varchar (300))'
-cursor.execute(sql)
 
-# load data into database
-sql_template = 'insert into sequence_counts values (?, ?, ?, ?, ?, ?)'
 acc2genus_ok = []
 for sample in sample2sequence_accession2count:
     for sequence_accession in sample2sequence_accession2count[sample]:
@@ -86,16 +81,4 @@ for sample in sample2sequence_accession2count:
         group_2 = all_samples.loc[sample, "group_2"]
         # print("RPKM", RPKM)
         # print("groups", group_1, group_2)
-        cursor.execute(sql_template, (sample,
-                                      sequence_accession,
-                                      n_hits,
-                                      RPKM,
-                                      group_1,
-                                      group_2))
-    conn.commit()
-
-# index sequence accession
-sql_index_1 = 'create index acc on sequence_counts (accession);'
-cursor.execute(sql_index_1,)
-
-conn.commit()
+        o.write(f"{sample}\t{sequence_accession}\t{n_hits}\t{RPKM}\t{group_1}\t{group_2}\n")
