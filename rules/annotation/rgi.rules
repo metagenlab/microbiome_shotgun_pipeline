@@ -3,7 +3,7 @@ rule execute_rgi_proteins:
     conda: 
         "envs/anvio.yml"
     singularity:
-        "docker://metagenlab/rgi:5.0.0-v3.0.4"
+        "docker://metagenlab/rgi:5.1.0-v3.0.7"
     input:
         "samples/{sample}/gene_call/{tool}/{sample}.faa",
     threads:
@@ -21,7 +21,7 @@ rule execute_rgi_contigs:
     conda: 
         "envs/anvio.yml"
     singularity:
-        "docker://metagenlab/rgi:5.0.0-v3.0.4"
+        "docker://metagenlab/rgi:5.1.0-v3.0.7"
     input:
         "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
     threads:
@@ -31,7 +31,7 @@ rule execute_rgi_contigs:
         "samples/{sample}/annotation/rgi/contigs_rgi.txt"
     shell:
         """
-        rgi main -t contig -i {input[0]} -n {threads} -o $(dirname {output[0]})/rgi_contigs
+        rgi main -t contig --low_quality -i {input[0]} -n {threads} -o $(dirname {output[0]})/contigs_rgi
         """
 
 rule merge_rgi_data:
@@ -40,13 +40,20 @@ rule merge_rgi_data:
     singularity:
         "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
-        expand("samples/{sample}/annotation/rgi/{{contigs_or_proteins}}_rgi.txt", sample=list(read_naming.keys()))
+        rgi_output = expand("samples/{sample}/annotation/rgi/{{contigs_or_proteins}}_rgi.txt", sample=list(read_naming.keys())),
+        card_annotation = "reference_databases/resistance/accession2AMR_family.tab",
+        silix_98 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.98_0.6.fnodes",
+        silix_95 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.95_0.6.fnodes",
+        silix_90 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.90_0.6.fnodes",
+        silix_80 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.80_0.6.fnodes",
+        silix_98_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.98_0.6_annotation.tsv",
+        silix_95_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.95_0.6_annotation.tsv",
+        silix_90_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.90_0.6_annotation.tsv",
+        silix_80_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.80_0.6_annotation.tsv",
+
     params:
         sample_table = config["local_samples"]
     output:
         "report/annotations/rgi/{contigs_or_proteins}_rgi.tab",
-        "report/annotations/rgi/{contigs_or_proteins}_aro2mechanism.tab",
-        "report/annotations/rgi/{contigs_or_proteins}_aro2gene_family.tab",
-        "report/annotations/rgi/{contigs_or_proteins}_aro2drug_class.tab",
 
     script: "scripts/merge_rgi.py"
