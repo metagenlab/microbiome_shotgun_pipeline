@@ -111,7 +111,7 @@ header1 = ["tool",
            "group_1",
            "group_2", 
            "contig_id",
-           "contig_id_uniq"
+           "contig_id_uniq",
            "ORF_id",
            "cut_Off",
            "pass_bitscore",
