@@ -53,6 +53,7 @@ header1 = ["tool",
            "group_1",
            "group_2", 
            "contig_id",
+           "contig_id_uniq",
            "ORF_id",
            "profile_id",
            "profile_length",
@@ -79,16 +80,19 @@ for resfams_file in resfams_files:
         if "plass" in resfams_file:
             tool = "plass"
             contig_id = None
+            contig_id_uniq = None
             orf_number = hsp["best_hit_id"] #.split("[Orf: ")[1].split(",")[0]
         if "prodigal" in resfams_file:
             tool = "prodigal"
             contig_prefix, contig_number, orf_number = hsp["best_hit_id"].split(" ")[0].split("_")
             contig_id = "%s_%s" % (contig_prefix, contig_number)
-        o_resfams_hits.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (tool,
+            contig_id = "%s_%s" % (sample_name, contig_id)
+        o_resfams_hits.write("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (tool,
                                                                                                    sample_name,
                                                                                                    group_1,
                                                                                                    group_2,
                                                                                                    contig_id,
+                                                                                                   contig_id_uniq,
                                                                                                    orf_number,
                                                                                                    hsp["profile_id"],
                                                                                                    hsp["profile_length"],
