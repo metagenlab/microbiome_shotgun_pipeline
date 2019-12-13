@@ -1,0 +1,29 @@
+
+
+
+rule align_with_nucmer:
+    singularity:
+        "docker://quay.io/biocontainers/mummer:3.23--pl526he1b5a44_10"
+    input:
+        "samples/{sample_1}/assembly/spades/large_contigs_edit.fasta",
+        "samples/{sample_2}/assembly/spades/large_contigs_edit.fasta"
+    output:
+        "report/alignments/mummer/nucmer_{sample_1}_vs_{sample_2}.delta"
+    shell:
+        """
+        nucmer {input[0]} {input[1]} -p report/alignments/mummer/nucmer_{wildcards.sample_1}_vs_{wildcards.sample_2}
+        """
+
+
+rule align_with_promer:
+    singularity:
+        "docker://quay.io/biocontainers/mummer:3.23--pl526he1b5a44_10"
+    input:
+        "samples/{sample_1}/assembly/spades/large_contigs_edit.fasta",
+        "samples/{sample_2}/assembly/spades/large_contigs_edit.fasta"
+    output:
+        "report/alignments/mummer/promer_{sample_1}_vs_{sample_2}.delta"
+    shell:
+        """
+        promer {input[0]} {input[1]} -p report/alignments/mummer/promer_{wildcards.sample_1}_vs_{wildcards.sample_2}
+        """
