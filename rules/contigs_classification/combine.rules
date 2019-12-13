@@ -6,7 +6,7 @@ rule combine_contig_annotations:
     singularity:
         "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
-        rgi = expand("samples/{sample}/annotation/rgi/rgi_proteins.txt", sample = list(read_naming.keys())),
+        rgi = expand("samples/{sample}/annotation/rgi/prodigal_ORFs_rgi.txt", sample = list(read_naming.keys())),
         core_genes = expand("samples/{sample}/contigs_classification/core_genes/prodigal_ORFs_{sample}.tsv", sample = list(read_naming.keys())),
         plsdb = expand("samples/{sample}/contigs_classification/plsdb/{sample}.tsv", sample = list(read_naming.keys())),
         COG_mobilome = expand("samples/{sample}/contigs_classification/COG_mobilome/prodigal_ORFs_{sample}.tsv", sample = list(read_naming.keys())),
@@ -14,6 +14,7 @@ rule combine_contig_annotations:
         depth = expand("samples/{sample}/bwa/{sample}_assembled/{sample}_metabat2_depth.txt", sample = list(read_naming.keys())),
         # cat_taxonomy = expand("samples/{sample}/contigs_classification/cat_bat/out.CAT.ORF2LCA.txt", sample = list(read_naming.keys())),
         GC = expand("samples/{sample}/contigs_classification/{sample}_GC.tsv", sample = list(read_naming.keys())),
+        n_ORFs = expand("samples/{sample}/contigs_classification/{sample}_ORFs_counts.tsv", sample = list(read_naming.keys()))
     params:
         plasmid_table = "databases/plasmids/plsdb.tsv",
         sample_table = config["local_samples"]
