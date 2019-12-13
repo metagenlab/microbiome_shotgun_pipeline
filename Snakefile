@@ -64,26 +64,26 @@ rule annotation:
         expand("samples/{sample}/contigs_classification/cat_bat/contigs.CAT.summary", sample = list(read_naming.keys())),
 
 
-        "report/resistance/CARD_protein_homolog_model/diamond_RPKM_98_annotated.tsv",
+        "report/resistance/CARD_protein_homolog_model_edit/diamond_RPKM_98_annotated.tsv",
         "report/resistance/CARD_protein_homolog_model_edit/mmseqs_RPKM_98_annotated.tsv",
         "report/resistance/CARD_protein_homolog_model_edit/plast_RPKM_98_annotated.tsv",
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_98_depth_plots.pdf", sample = list(read_naming.keys())),      
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/plast_best_hits_98_depth_plots.pdf", sample = list(read_naming.keys())),
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/plast_best_hits_98_depth_plots.pdf", sample = list(read_naming.keys())),
-        "report/resistance/CARD_protein_homolog_model/diamond_best_hits_98_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/mmseqs_best_hits_98_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/plast_best_hits_98_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_98_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/mmseqs_best_hits_98_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/plast_best_hits_98_statistics_per_gene.tab",
         
 
         "report/resistance/CARD_protein_homolog_model_edit/diamond_RPKM_90_annotated.tsv",
         "report/resistance/CARD_protein_homolog_model_edit/mmseqs_RPKM_90_annotated.tsv",
         "report/resistance/CARD_protein_homolog_model_edit/plast_RPKM_90_annotated.tsv",
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_90_depth_plots.pdf", sample = list(read_naming.keys())),
-        expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit//mmseqs_best_hits_90_depth_plots.pdf", sample = list(read_naming.keys())),
+        expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/mmseqs_best_hits_90_depth_plots.pdf", sample = list(read_naming.keys())),
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/plast_best_hits_90_depth_plots.pdf", sample = list(read_naming.keys())),
-        "report/resistance/CARD_protein_homolog_model/diamond_best_hits_90_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/mmseqs_best_hits_90_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/plast_best_hits_90_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_90_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/mmseqs_best_hits_90_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/plast_best_hits_90_statistics_per_gene.tab",
 
         "report/resistance/CARD_protein_homolog_model_edit/diamond_RPKM_80_annotated.tsv",
         "report/resistance/CARD_protein_homolog_model_edit/mmseqs_RPKM_80_annotated.tsv",
@@ -91,9 +91,9 @@ rule annotation:
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_80_depth_plots.pdf", sample = list(read_naming.keys())),
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/plast_best_hits_80_depth_plots.pdf", sample = list(read_naming.keys())),
         expand("samples/{sample}/resistance/CARD_protein_homolog_model_edit/plast_best_hits_80_depth_plots.pdf", sample = list(read_naming.keys())),
-        "report/resistance/CARD_protein_homolog_model/diamond_best_hits_80_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/mmseqs_best_hits_80_statistics_per_gene.tab",
-        "report/resistance/CARD_protein_homolog_model/plast_best_hits_80_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/diamond_best_hits_80_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/mmseqs_best_hits_80_statistics_per_gene.tab",
+        "report/resistance/CARD_protein_homolog_model_edit/plast_best_hits_80_statistics_per_gene.tab",
 
 
         "report/annotations/rgi/prodigal_ORFs_rgi.tab",
@@ -102,9 +102,13 @@ rule annotation:
         "reference_databases/resistance/accession2AMR_family.tab",
         "report/annotations/rgi/contigs_rgi.tab",
 
-        # "report/resistance/CARD_shortbred_markers/shortbred.tab",
-        # "report/annotations/rgi/prodigal_ORFs_amrfinderplus.tab",
-        # "report/annotations/rgi/plass_ORFs_amrfinderplus.tab",
+        "report/resistance/CARD_shortbred_markers/shortbred_annotated.tab",
+        "report/annotations/rgi/prodigal_ORFs_amrfinderplus.tab",
+        "report/annotations/rgi/plass_ORFs_amrfinderplus.tab",
+
+        "report/annotations/resfams/plass_ORFs.tab",
+        "report/annotations/resfams/prodigal_ORFs.tab",
+
         get_mummer_lst(),
         #expand("samples/{sample}/contigs_classification/{sample}_GC.tsv", sample = list(read_naming.keys())),
 
