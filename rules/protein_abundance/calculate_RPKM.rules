@@ -23,7 +23,7 @@ rule calculate_RPKM:
         flash_log = expand("samples/{sample}/reads/raw/{sample}.log", sample=read_naming.keys()),
         reference_fasta = "reference_databases/{data_type}/{db_name}.faa",
     output:
-        "report/{data_type}/{db_name}/{search_tool}_RPKM_{identity}.tsv"
+        "report/{data_type}/{db_name}/{search_tool}_RPKM_{identity,[0-9]+}.tsv"
     script: "scripts/calculate_RPKM.py"
 
 
@@ -57,5 +57,6 @@ rule RPKM_table_add_annotation_rgi:
         silix_90_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.90_0.6_annotation.tsv",
         silix_80_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.80_0.6_annotation.tsv",
     output:
-        "report/resistance/CARD_protein_homolog_model/{search_tool}_RPKM_{identity}_annotated.tsv"
+        # report/resistance/CARD_protein_homolog_model_edit/diamond_RPKM_90_annotated.tsv
+        "report/resistance/CARD_protein_homolog_model_edit/{search_tool}_RPKM_{identity,[0-9]+}_annotated.tsv"
     script: "scripts/resistance_annotation.py"
