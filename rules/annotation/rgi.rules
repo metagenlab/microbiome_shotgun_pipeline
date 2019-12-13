@@ -14,7 +14,6 @@ rule execute_rgi_proteins:
     shell:
         """
         rgi main -t protein -i {input[0]} -n {threads} -o $(dirname {output[0]})/{wildcards.tool}_ORFs_rgi
-        rm $(dirname {output[0]})/*temp*
         """
 
 rule execute_rgi_contigs:
