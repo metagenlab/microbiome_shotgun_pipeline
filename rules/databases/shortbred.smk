@@ -31,7 +31,11 @@ rule all_shortbred:
     params:
         sample_table = config["local_samples"]
     input:
-        expand("samples/{sample}/{{data_type}}/{{db_name}}/shortbred_merged_combined.txt", sample=list(read_naming.keys()))
+        expand("samples/{sample}/{{data_type}}/{{db_name}}/shortbred_merged_combined.txt", sample=list(read_naming.keys())),
+        silix_98 = "reference_databases/{data_type}/{db_name}_0.98_0.6.fnodes",
+        silix_95 = "reference_databases/{data_type}/{db_name}_0.95_0.6.fnodes",
+        silix_90 = "reference_databases/{data_type}/{db_name}_0.90_0.6.fnodes",
+        silix_80 = "reference_databases/{data_type}/{db_name}_0.80_0.6.fnodes",
     output:
         "report/{data_type}/{db_name}/shortbred.tab",
     script:
