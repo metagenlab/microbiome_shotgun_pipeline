@@ -23,11 +23,11 @@ rule calculate_RPKM:
         flash_log = expand("samples/{sample}/reads/raw/{sample}.log", sample=read_naming.keys()),
         reference_fasta = "reference_databases/{data_type}/{db_name}.faa",
     output:
-        "report/{data_type}/{db_name}/{search_tool}_RPKM_{identity}.db"
+        "report/{data_type}/{db_name}/{search_tool}_RPKM_{identity}.tsv"
     script: "scripts/calculate_RPKM.py"
 
 
-rule add_annotation_virulence:
+rule RPKM_table_add_annotation_virulence:
     conda:
         "../../envs/python-r.yml"
     singularity:
@@ -40,16 +40,22 @@ rule add_annotation_virulence:
     script: "scripts/virulence_annotation.py"
 
 
-rule add_annotation_resistance:
+rule RPKM_table_add_annotation_rgi:
     conda:
         "../../envs/python-r.yml"
     singularity:
         "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
     input:
-        aro_index = "reference_databases/resistance/aro_index.tsv",
-        aro = "reference_databases/resistance/aro.tsv",
-        aro_categories_index = "reference_databases/resistance/aro_categories_index.tsv",
-        RPKM_database = "report/{search_tool}/resistance/CARD_protein_homolog_model/RPKM.db",
+        RPKM_table = "report/resistance/CARD_protein_homolog_model_edit/{search_tool}_RPKM_{identity}.tsv",
+        card_annotation = "reference_databases/resistance/accession2AMR_family.tab",
+        silix_98 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.98_0.6.fnodes",
+        silix_95 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.95_0.6.fnodes",
+        silix_90 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.90_0.6.fnodes",
+        silix_80 = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.80_0.6.fnodes",
+        silix_98_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.98_0.6_annotation.tsv",
+        silix_95_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.95_0.6_annotation.tsv",
+        silix_90_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.90_0.6_annotation.tsv",
+        silix_80_annotation = "reference_databases/resistance/CARD_protein_homolog_model_edit_0.80_0.6_annotation.tsv",
     output:
-        "report/{search_tool}/resistance/CARD_protein_homolog_model/annotation.log"
+        "report/resistance/CARD_protein_homolog_model/{search_tool}_RPKM_{identity}_annotated.tsv"
     script: "scripts/resistance_annotation.py"
