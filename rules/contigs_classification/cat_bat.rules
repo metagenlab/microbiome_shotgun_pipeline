@@ -1,11 +1,11 @@
 
-rule cat_bat_contigs:
+rule cat_bat_proteins:
     conda:
         "../../envs/cat_bat.yml"
     singularity:
         "docker://quay.io/biocontainers/cat:5.0.3--0"
     threads:
-        50
+        12
     input:
         "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
         "samples/{sample}/gene_call/{tool}/{sample}.faa",
@@ -15,5 +15,54 @@ rule cat_bat_contigs:
     shell:
         '''
         mkdir $(dirname output[0])
-        CAT contigs -c {input[0]} -d databases/cat_bat/CAT_database/ -t databases/cat_bat/CAT_taxonomy/ -p {input[1]} --tmpdir $(dirname {output[0]}) --nproc {threads} -o $(dirname {output[0]})/out.CAT
+        CAT contigs --force -c {input[0]} -d databases/cat_bat/CAT_database/ -t databases/cat_bat/CAT_taxonomy/ -p {input[1]} --tmpdir $(dirname {output[0]}) --nproc {threads} -o $(dirname {output[0]})/{wildcards.tool}_ORFs_out.CAT
         '''
+
+rule cat_bat_contigs:
+    conda:
+        "../../envs/cat_bat.yml"
+    singularity:
+        "docker://quay.io/biocontainers/cat:5.0.3--0"
+    threads:
+        12
+    input:
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+    output:
+        "samples/{sample}/contigs_classification/cat_bat/contigs_out.CAT.ORF2LCA.txt",
+        "samples/{sample}/contigs_classification/cat_bat/contigs_out.CAT.contig2classification.txt",
+    shell:
+        '''
+        mkdir $(dirname output[0])
+        CAT contigs --force -c {input[0]} -d databases/cat_bat/CAT_database/ -t databases/cat_bat/CAT_taxonomy/ --tmpdir $(dirname {output[0]}) --nproc {threads} -o $(dirname {output[0]})/contigs_out.CAT
+        '''
+
+
+rule cat_add_names:
+    conda:
+        "../../envs/cat_bat.yml"
+    singularity:
+        "docker://quay.io/biocontainers/cat:5.0.3--0"
+    input:
+        "samples/{sample}/contigs_classification/cat_bat/{tool}_out.CAT.contig2classification.txt",
+    output:
+        "samples/{sample}/contigs_classification/cat_bat/{tool}.CAT.contig2classification_names.txt",
+    shell:
+        """
+        CAT add_names -i {input[0]} -o {output[0]} -t databases/cat_bat/CAT_taxonomy/ --only_official --exclude_scores
+        """
+
+rule cat_summarise:
+    conda:
+        "../../envs/cat_bat.yml"
+    singularity:
+        "docker://quay.io/biocontainers/cat:5.0.3--0"
+    input:
+        "samples/{sample}/assembly/spades/large_contigs_edit.fasta",
+        "samples/{sample}/contigs_classification/cat_bat/{ORFs_or_contig}.CAT.contig2classification_names.txt",
+    output:
+        # samples/Gava_TREATED1_S2/contigs_classification/cat_bat/contigs_out.CAT.summary
+        "samples/{sample}/contigs_classification/cat_bat/{ORFs_or_contig}.CAT.summary"
+    shell:
+        """
+        CAT summarise -c {input[0]} -i {input[1]} -o {output[0]}
+        """
