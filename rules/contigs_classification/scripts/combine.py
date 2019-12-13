@@ -436,7 +436,9 @@ header =[
     "plasmid",
     "COG_mobilome",
     "core_genes",  
-    "rgi" 
+    "rgi",
+    "group_1",
+    "group_2" 
 ] 
 
 
