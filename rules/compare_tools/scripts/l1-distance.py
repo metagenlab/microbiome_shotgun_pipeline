@@ -9,7 +9,7 @@ gold_standard_file=snakemake.input.gold_standard
 
 gold_standard=pd.read_csv(gold_standard_file,sep='\t')
 true_superkingdom=gold_standard[gold_standard['superkingdom']==superkingdom]
-
+true_superkingdom=true_superkingdom.groupby(f'{rank}',as_index=False).sum()
 
 
 def get_l1_distance(true_tb,tool_tb,tool_name,rank):
@@ -20,7 +20,7 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
         sample_tb=sample_tb.groupby(f'{rank}',as_index=False).sum()
         ljoin=pd.merge(true_tb,sample_tb,how='left',on=f'{rank}',suffixes=('_true','_found'))
         #ljoin.replace(np.nan,0,inplace=True)
-        ljoin['l1_distance']=ljoin['read_counts_true']-ljoin['read_counts_found']
+        ljoin['l1_distance']=abs(ljoin['read_counts_true']-ljoin['read_counts_found'])
         ljoin['tool']=[tool_name]*len(ljoin)
         ljoin['sample']=[sample]*len(ljoin)
         subset=ljoin[[f'{rank}','read_counts_true','read_counts_found','l1_distance','sample','tool']]
