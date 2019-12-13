@@ -12,6 +12,8 @@ COG_mobilome = snakemake.input["COG_mobilome"]
 deepvirfinder = snakemake.input["deepvirfinder"]
 depth = snakemake.input["depth"]
 GC = snakemake.input["GC"]
+n_ORFs = snakemake.input["n_ORFs"]
+
 plsdb_info_table = snakemake.params[0]
 all_samples = pandas.read_csv(snakemake.params[1], sep="\t", index_col=0)
 
@@ -28,6 +30,7 @@ class Contig:
                  deepvirfinder, 
                  depth, 
                  GC,
+                 n_ORFs,
                  plsdb_info_table):
 
         self.rgi = rgi # ok 
@@ -37,6 +40,7 @@ class Contig:
         self.deepvirfinder = deepvirfinder # ok
         self.depth = depth # ok
         self.GC = GC # ok
+        self.n_ORFs = n_ORFs
         self.plsdb_info_table = plsdb_info_table
         self.plsdb_entry2length = {} 
         self.sample2plsdb = {} 
@@ -85,6 +89,21 @@ class Contig:
                     if contig_name not in self.sample2contig[sample]:
                         self.sample2contig[sample][contig_name] = {}
                     self.sample2contig[sample][contig_name]["GC"] = gc
+
+
+    def parse_n_ORFs(self,):
+        for ORF_file in self.n_ORFs:
+            sample = ORF_file.split("/")[1]
+            if sample not in self.sample2contig:
+                self.sample2contig[sample] = {}
+            with open(ORF_file) as f:
+                for n, row in enumerate(f):
+                    data = row.rstrip().split("\t")
+                    contig_name = data[0]
+                    n_ORFs = data[1] 
+                    if contig_name not in self.sample2contig[sample]:
+                        self.sample2contig[sample][contig_name] = {}
+                    self.sample2contig[sample][contig_name]["n_ORFs"] = n_ORFs
 
 
     def parse_deepvirfinder(self,):
@@ -389,10 +408,12 @@ c = Contig(rgi,
            deepvirfinder, 
            depth, 
            GC,
+           n_ORFs,
            plsdb_info_table)
 
 c.parse_depth()
 c.parse_GC()
+c.parse_n_ORFs()
 c.parse_deepvirfinder()
 c.parse_cog_mobilome()
 c.parse_core_genes()
@@ -400,13 +421,16 @@ c.parse_plsdb()
 c.parse_rgi()
 
 o = open(snakemake.output[1], 'w')
+
 header =[
     "sample",
     "contig",
+    "unique_id",
     "contig_length",
     "average_depth",
     "var_depth",
     "GC",
+    "n_ORFs",
     "deepvirfinder_score",
     "deepvirfinder_pvalue",
     "plasmid",
@@ -416,22 +440,29 @@ header =[
 ] 
 
 
-sql = 'create table contig (sample varchar(200), contig_name varchar(200), contig_length INTEGER, average_depth FLOAT, ' \
-      ' var_depth FLOAT, GC FLOAT, deepvirfinder_score FLOAT, deepvirfinder_pvalue FLOAT, plasmid boolean, ' \
+sql = 'create table contig (sample varchar(200), contig_name varchar(200),unique_id varchar(200), contig_length INTEGER, average_depth FLOAT, ' \
+      ' var_depth FLOAT, GC FLOAT, n_ORFs INT, deepvirfinder_score FLOAT, deepvirfinder_pvalue FLOAT, plasmid boolean, ' \
       ' COG_mobilome INTEGER, CORE_genes INTEGER, rgi INTEGER, group_1 varchar(200), group_2 varchar(200))'
 
 cursor.execute(sql,)
 
-sql_template = 'insert into contig values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+sql_template = 'insert into contig values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
 
 o.write('\t'.join(header) + '\n')
 for sample in c.sample2contig:
     for contig in c.sample2contig[sample]: 
+
+        unique_name = f"{sample}_{contig}"
+
         # {'contig_length': '500', 'average_depth': '2.54571', 'var_depth': '1.93343', 'GC': '65.2', 'deepvirfinder': {'score': '0.0006834288360551', 'pvalue': '0.8429979867918493'}, 'plasmid': 'FALSE'}
         contig_length =  c.sample2contig[sample][contig]["contig_length"] 
         average_depth =  c.sample2contig[sample][contig]["average_depth"] 
         var_depth =  c.sample2contig[sample][contig]["var_depth"] 
         GC =  c.sample2contig[sample][contig]["GC"] 
+        try:
+            n_ORFs =  c.sample2contig[sample][contig]["n_ORFs"] 
+        except KeyError:
+            n_ORFs = 0
         deepvirfinder_score =  c.sample2contig[sample][contig]["deepvirfinder"]["score"] 
         deepvirfinder_pvalue =  c.sample2contig[sample][contig]["deepvirfinder"]["pvalue"] 
         try:
@@ -460,10 +491,12 @@ for sample in c.sample2contig:
 
         lst = [sample, 
                contig,
+               unique_name,
                contig_length,
                average_depth,
                var_depth,
                GC,
+               n_ORFs,
                deepvirfinder_score,
                deepvirfinder_pvalue,
                plasmid,
