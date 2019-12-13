@@ -9,86 +9,77 @@ import pandas
 
 o = open(snakemake.output[0], 'w')
 
-# ARO Accession
-# Model ID
-# Model Name
-aro_index = pandas.read_csv(snakemake.input["aro_index"], delimiter='\t').set_index("Protein Accession")
+RPKM_table = snakemake.input["RPKM_table]
 
-# Name
-# Description
-aro = pandas.read_csv(snakemake.input["aro"], delimiter='\t').set_index("Accession")
+card_annotation = snakemake.input["card_annotation"]
+silix_98 = snakemake.input["silix_98"]
+silix_95 = snakemake.input["silix_95"]
+silix_90 = snakemake.input["silix_90"]
+silix_80 = snakemake.input["silix_80"]
+silix_98_annotation = snakemake.input["silix_98_annotation"]
+silix_95_annotation = snakemake.input["silix_95_annotation"]
+silix_90_annotation = snakemake.input["silix_90_annotation"]
+silix_80_annotation = snakemake.input["silix_80_annotation"]
 
-# Resistance Mechanism
-# AMR Gene Family
-# Drug Class
-aro_categories_index = pandas.read_csv(snakemake.input["aro_categories_index"], delimiter='\t').set_index("Protein Accession")
+accession2silix_98 = pandas.read_csv(silix_98,
+                                     delimiter='\t',
+                                     names=["silix_name","accession"]).set_index("accession").to_dict()["silix_name"]
 
-RPKM_database = snakemake.input["RPKM_database"]
+accession2silix_95 = pandas.read_csv(silix_95,
+                                     delimiter='\t',
+                                     names=["silix_name","accession"]).set_index("accession").to_dict()["silix_name"]
 
-conn = sqlite3.connect(snakemake.input["RPKM_database"])
-cursor = conn.cursor()
+accession2silix_90 = pandas.read_csv(silix_90,
+                                     delimiter='\t',
+                                     names=["silix_name","accession"]).set_index("accession").to_dict()["silix_name"]
 
-# get uniparc accession list
-sql = 'select distinct accession from sequence_counts'
-cursor.execute(sql)
-card_accession_list = [i[0] for i in cursor.fetchall()]
+accession2silix_80 = pandas.read_csv(silix_80,
+                                     delimiter='\t',
+                                     names=["silix_name","accession"]).set_index("accession").to_dict()["silix_name"]
 
-sql1 = 'create table accession2aro (protein_accession varchar(200), aro_accession varchar(200), aro_name varchar(200), aro_description TEXT)'
-cursor.execute(sql1)
-sql2 = 'create table aro_accession2drug_class (aro_accession varchar(200), drug_class TEXT)'
-cursor.execute(sql2)
-sql3 = 'create table aro_accession2AMR_family (aro_accession varchar(200), drug_class TEXT)'
-cursor.execute(sql3)
-sql4 = 'create table aro_accession2resistance_mechanism (aro_accession varchar(200), mechanism TEXT)'
-cursor.execute(sql4)
+silix_98_2_annotation = pandas.read_csv(silix_98_annotation,
+                                     delimiter='\t',
+                                     names=["silix_name","description"]).set_index("silix_name").to_dict()["description"]
+
+silix_95_2_annotation = pandas.read_csv(silix_95_annotation,
+                                     delimiter='\t',
+                                     names=["silix_name","description"]).set_index("silix_name").to_dict()["description"]
+
+silix_90_2_annotation = pandas.read_csv(silix_90_annotation,
+                                     delimiter='\t',
+                                     names=["silix_name","description"]).set_index("silix_name").to_dict()["description"]
+
+silix_80_2_annotation = pandas.read_csv(silix_80_annotation,
+                                     delimiter='\t',
+                                     names=["silix_name","description"]).set_index("silix_name").to_dict()["description"]
+
+# ACT97415.1	ACT97415	ARO:3002999	CblA beta-lactamase
+accession2aro = pandas.read_csv(card_annotation,
+                                delimiter='\t',
+                                names=["accession","accession_no_version", "ARO", "description"]).set_index("accession").to_dict()["ARO"]
 
 
-aro_accession2drug_class_list = {}
-aro_accession2AMR_family_list = {}
-aro_accession2resistance_mechanism_list = {}
+with open(RPKM_table, 'r') as f:
+    for n, row in enumerate(f):
+        data = row.split("\t")
+        if n == 0:
+            # header 
+            # sample sequence_accession n_hits RPKM group_1 group_2
+            o.write(row.rstrip()+='\tARO\tsilix_98\tsilix_98_description\tsilix_95\tsilix_95_description\tsilix_90\tsilix_90_description\tsilix_80\tsilix_80_description\n')
+        else:
+            accession = data[1]
+            aro = accession2aro[accession]
 
-sql_template = 'insert into accession2aro values (?, ?, ?, ?, ?, ?)'
-for accession in card_accession_list:
-    aro_accession = aro_index.loc[accession, "ARO Accession"]
-    aro_name = aro.loc[aro_accession, "Name"]
-    aro_description = aro.loc[aro_accession, "Description"]
-    try:
-        resistance_mechanism = aro_categories_index.loc[accession, "Resistance Mechanism"]
-        AMR_family = aro_categories_index.loc[accession, "AMR Gene Family"]
-        drug_class = aro_categories_index.loc[accession, "Drug Class"]
-        #print(accession)
-        # macrolide antibiotic;fluoroquinolone antibiotic;aminoglycoside antibiotic;lincosamide antibiotic;carbapenem;fosfomycin;cephalosporin;glycylcycline;bicyclomycin;penam;nucleoside antibiotic;tetracycline antibiotic;peptide antibiotic;acridine dye;oxazolidinone antibiotic;rifamycin antibiotic;diaminopyrimidine antibiotic;phenicol antibiotic;isoniazid;penem;benzalkonium chloride;rhodamine;antibacterial free fatty acids;nitroimidazole antibiotic
-        #print(drug_class)
-        #print(resistance_mechanism)
-    except:
-        # some missing sequences in aro_categories_index
-        # use another seq to retrieve aro annotation
-        alternative_sequences = aro_index.loc[(aro_index["ARO Accession"] == aro_accession) & (aro_index.index != accession)].index.tolist()
-        resistance_mechanism_list = aro_categories_index.loc[alternative_sequences[0], "Resistance Mechanism"]
-        AMR_family = aro_categories_index.loc[alternative_sequences[0], "AMR Gene Family"]
-        drug_class = aro_categories_index.loc[alternative_sequences[0], "Drug Class"]
-    if aro_accession not in aro_accession2drug_class_list:
-        aro_accession2drug_class_list[aro_accession] = drug_class.split(";")
-        aro_accession2AMR_family_list[aro_accession] = AMR_family.split(";")
-        aro_accession2resistance_mechanism_list[aro_accession] = resistance_mechanism.split(";")
+            silix_98 = accession2silix_98[accession]
+            silix_98_description = silix_98_2_annotation[silix_98]
 
-    cursor.execute(sql_template, (accession,
-                                  aro_accession,
-                                  aro_name,
-                                  aro_description))
+            silix_95 = accession2silix_95[accession]
+            silix_95_description = silix_95_2_annotation[silix_95]
 
-sql_template_2 = 'insert into aro_accession2drug_class values (?, ?)'
-sql_template_3 = 'insert into aro_accession2AMR_family values (?, ?)'
-sql_template_4 = 'insert into aro_accession2resistance_mechanism values (?, ?)'
+            silix_90 = accession2silix_90[accession]
+            silix_90_description = silix_90_2_annotation[silix_90]
 
-for aro in aro_accession2drug_class_list:
-    for drug_class in aro_accession2drug_class_list[aro]:
-        cursor.execute(sql_template_2, (aro, drug_class))
-    for family in aro_accession2AMR_family_list[aro]:
-        cursor.execute(sql_template_3, (aro, family))
-    for mechanism in aro_accession2resistance_mechanism_list[aro]:
-        cursor.execute(sql_template_4, (aro, mechanism))
+            silix_80 = accession2silix_80[accession]
+            silix_80_description = silix_80_2_annotation[silix_80]
+            o.write(row.rstrip()+='\t{aro}\t{silix_98}\t{silix_98_description}\t{silix_95}\t{silix_95_description}\t{silix_90}\t{silix_90_description}\t{silix_80}\t{silix_80_description}\n')
 
-conn.commit()   
-o.write("ok")
-o.close()
