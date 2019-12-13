@@ -77,3 +77,21 @@ rule index_bam_file:
         """
         samtools index {input[0]}
         """
+
+
+rule execute_samtools_depth:
+    conda:
+        pipeline_path +  "envs/bwa-samtools.yml"
+    singularity:
+        "docker://metagenlab/bwa-samtools:1.0"
+    input:
+        "samples/{sample}/mapping/bwa/{ref}.bam"
+    output:
+        temp("samples/{sample}/mapping/bwa/{ref}.depth"),
+    shell:
+        """
+        # /samples/Gava_TREATED1_S1/mapping/bwa/Gava_TREATED1_S1.depth
+        samtools depth -a {input[0]} > {output[0]}
+        """
+
+

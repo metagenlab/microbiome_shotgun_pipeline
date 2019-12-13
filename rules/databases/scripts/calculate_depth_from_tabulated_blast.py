@@ -59,7 +59,7 @@ def get_depth_and_coverage(gene2depth,
         if n == 0:
             o.write("accession\tARO\tgene_name\tn_hits\tmedian_depth\tgene_length\tpercent_covered\n")
         # gb|ACJ41739.1|ARO:3000780|adeI
-        if "ARO" in gene:
+        if "ARO" in gene and "|" in gene:
             data = gene.split("|")
             accession = data[1]
             aro_accession = data[2]
