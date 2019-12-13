@@ -1,0 +1,16 @@
+
+
+rule assembly_and_reads_statistics:
+    conda:
+        "../../envs/python-r.yml"
+    singularity:
+        "docker://metagenlab/microbiome-shotgun-pipeline:1.0"
+    input:
+        depth = expand("samples/{sample}/mapping/bwa/{sample}.depth", sample=read_naming.keys()),
+        trimmed_reads_stats = expand("samples/{sample}/reads/trimmed/summary.txt", sample=read_naming.keys()),
+    params:
+        sample_table = config["local_samples"]
+    output:
+        "report/assembly_and_reads_statistsics.tsv",
+    script:
+        "scripts/assembly_statistics.py"
