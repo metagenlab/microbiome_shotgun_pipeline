@@ -1,7 +1,11 @@
 
 import pandas 
 
-genes_statistics_files = snakemake.input 
+genes_statistics_files = snakemake.input["statistic_files"]
+silix_98 = snakemake.input["silix_98"]
+silix_95 = snakemake.input["silix_95"]
+silix_90 = snakemake.input["silix_90"]
+silix_80 = snakemake.input["silix_80"]
 
 all_samples = pandas.read_csv(snakemake.params["sample_table"], sep="\t", index_col=0)
 
