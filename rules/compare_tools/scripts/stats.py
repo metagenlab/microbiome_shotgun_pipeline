@@ -12,8 +12,11 @@ def get_precision_recall_f1(true_tb, tool_tb, rank, tool_name):
         taxid_col='taxid'
     else:
         taxid_col=f'{rank}_taxid'
-    true_list = list(true_tb.groupby([taxid_col], as_index=False).sum()[taxid_col])
-    tool_list = list(tool_tb.groupby([taxid_col], as_index=False).sum()[taxid_col])
+    true_taxids = list(true_tb[taxid_col])
+    tool_taxids= list(tool_tb[taxid_col])
+
+    true_list=[str(int(float(taxid))) for taxid in true_taxids]
+    tool_list = [str(int(float(taxid))) for taxid in tool_taxids]
     tp_list = [i for i in true_list if i in true_list and i in tool_list]
     fp_list = [i for i in tool_list if i not in true_list and i in tool_list]
     fn_list = [i for i in true_list if i in true_list and i not in tool_list]
@@ -43,17 +46,19 @@ def get_presence(true_tb,tool_tb,rank,tool_name):
     else:
         taxid_col=f'{rank}_taxid'
 
-    true_names = list(true_tb[f'{rank}'])
     true_taxids = list(true_tb[taxid_col])
-    true_taxid_names = dict(zip(true_taxids, true_names))
+    true_names = list(true_tb[f'{rank}'])
     tool_taxids=list(tool_tb[taxid_col])
     tool_names=list(tool_tb[f'{rank}'])
-    tool_taxid_names=dict(zip(tool_taxids,tool_names))
-    true_list = list(true_tb.groupby([taxid_col], as_index=False).sum()[taxid_col])
-    tool_list = list(tool_tb.groupby([taxid_col], as_index=False).sum()[taxid_col])
+    true_list = [str(int(float(taxid))) for taxid in true_taxids]
+    tool_list = [str(int(float(taxid))) for taxid in tool_taxids]#some tools have taxids as floats, this transforms them to strings of integers
+    true_taxid_names = dict(zip(true_list, true_names))
+    tool_taxid_names = dict(zip(tool_list, tool_names))
+
     tp_list = [i for i in true_list if i in true_list and i in tool_list]
-    fn_list = [i for i in true_list if i in true_list and i not in tool_list]
     fp_list = [i for i in tool_list if i not in true_list and i in tool_list]
+    fn_list = [i for i in true_list if i in true_list and i not in tool_list]
+
     dic={}
     for taxid in true_taxid_names:
         dic[taxid]={}
@@ -67,14 +72,17 @@ def get_presence(true_tb,tool_tb,rank,tool_name):
     df=pd.DataFrame.from_dict(dic, orient='index')
     return df
 
-gold_standard=pd.read_csv(snakemake.input.gold_standard,sep='\t')
-tool_output=pd.read_csv(snakemake.input.tool_out,sep='\t')
+dtype={'taxid':'object','superkingdom_taxid':'object','phylum_taxid':'object','order_taxid':'object',
+       'family_taxid':'object','genus_taxid':'object','species_taxid':'object'}#Need to set all taxids to object, otherwise groupby will sum them
+gold_standard=pd.read_csv(snakemake.input.gold_standard,sep='\t',dtype=dtype)
+tool_output=pd.read_csv(snakemake.input.tool_out,sep='\t',dtype=dtype)
 
 true_superkingdom=gold_standard[gold_standard.superkingdom==superkingdom]
-
+true_superkingdom=true_superkingdom.groupby([f'{rank}_taxid',f'{rank}'],as_index=False).sum()
 true_superkingdom = true_superkingdom.replace(np.nan, 'NA')
 
 tool_superkingdom=tool_output[tool_output.superkingdom==superkingdom]
+tool_superkingdom=tool_superkingdom.groupby([f'{rank}_taxid',f'{rank}'],as_index=False).sum()
 tool_superkingdom=tool_superkingdom[tool_superkingdom.read_counts>=threshold]
 tool_superkingdom=tool_superkingdom.replace(np.nan,'NA')
 
