@@ -20,7 +20,8 @@ rule all_vir_out:
            heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='viruses'),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
-           time="compare_tools/resources_usage/time.pdf"
+           time="compare_tools/resources_usage/time.pdf",
+           mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
 
 rule all_bac_out:
@@ -31,7 +32,8 @@ rule all_bac_out:
            heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='bacteria'),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
-           time="compare_tools/resources_usage/time.pdf"
+           time="compare_tools/resources_usage/time.pdf",
+           mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
 
 rule all_vir_benchmark:
@@ -51,7 +53,8 @@ rule all_vir_benchmark:
             all_barplots=f"compare_tools/{community}/classification/plots/all_tools/{rank}_barplot-viruses.pdf",
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
-            time="compare_tools/resources_usage/time.pdf"
+            time="compare_tools/resources_usage/time.pdf",
+            mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
 
 rule all_bac_benchmark:
@@ -70,7 +73,8 @@ rule all_bac_benchmark:
             all_barplots=f"compare_tools/{community}/classification/plots/all_tools/{rank}_barplot-bacteria.pdf",
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
-            time="compare_tools/resources_usage/time.pdf"
+            time="compare_tools/resources_usage/time.pdf",
+            mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
 
 
@@ -232,7 +236,8 @@ rule visualize_resource_usage:
 
     output: tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
-            time="compare_tools/resources_usage/time.pdf"
+            time="compare_tools/resources_usage/time.pdf",
+            mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
     script: "scripts/resources-usage.py"
 
@@ -242,6 +247,8 @@ rule genereate_gold_standard_profile:
     input: f"gold_standard/tables/{community}.tsv"
 
     output: f"gold_standard/tables/gs_{community}.tsv"
+
+    params: community=community
 
     script: "scripts/gold-standard-tax.py"
 
