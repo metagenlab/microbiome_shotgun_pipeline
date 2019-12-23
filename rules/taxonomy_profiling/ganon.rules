@@ -3,7 +3,7 @@ rule all_ganon:
 
 ganon_db_path=config["ganon_db_path"]
 
-
+job_mem_alloc=config["job_memory_limit"]
 
 sample_suffix=list(read_naming.values())
 if len(sample_suffix[0])==2:
@@ -30,6 +30,8 @@ if paired==True:
 
         benchmark: "compare_tools/resources_usage/{sample}/ganon.benchmark.txt"
 
+        resources: mem_gb=job_mem_alloc
+
         shell:
              """
              ganon classify -d {params} -p {input.r1} {input.r2} -t {threads} -o ganon/{wildcards.sample}/classified \
@@ -53,6 +55,8 @@ else:
         log: logging_folder + "ganon/classify/{sample}.log"
 
         benchmark: "compare_tools/resources_usage/{sample}/ganon.benchmark.txt"
+
+        resources: mem_gb=job_mem_alloc
 
         shell:
              """
