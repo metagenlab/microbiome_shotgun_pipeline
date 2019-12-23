@@ -1,4 +1,8 @@
-#mandatory, one of them or both
+#Resources
+num_cores: 55
+job_memory_limit: 6 #If you expect your job to use 6 arbitrary units (Here in Gb)
+                    #Snakemake makes sure that the sum of all jobs memory do not exceed the total set by the flag 'resources' in the snakemake command
+#Path of sample names table
 local_samples: local_samples.tsv
 
 #Host filtering:
@@ -61,7 +65,7 @@ surpi_database: /media/data/databases/SURPI
 surpi_image: /scratch/master_students/Farid/
 adapter_set: Truseq
 quality: Illumina
-num_cores: 55
+
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 ##ganon
 ganon_db_path: /media/data/databases/ganon_db/rvdb #Include the database prefix in the path
