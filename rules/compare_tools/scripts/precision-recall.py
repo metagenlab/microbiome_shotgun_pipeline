@@ -79,22 +79,20 @@ def get_auprc(table):
 
 pr_table=get_threshold_table(true_superkingdom,tools_superkingdom,max_threshold+read_step,read_step,rank)
 
-pos_val_tb=pr_table[pr_table.F1_score!=0]
-
 subset=[]
-tool_list=list(set(pos_val_tb['tool']))
+tool_list=list(set(pr_table['tool']))
 for tool in tool_list:
-        table=pos_val_tb[pos_val_tb['tool']==tool]
-        auc=get_auprc(table)
-        auc_list=[auc]*len(table)
-        table.insert(len(table.columns),'AUC',auc_list)
+        table=pr_table[pr_table['tool']==tool]
+        aupr=get_auprc(table)
+        aupr_list=[aupr]*len(table)
+        table.insert(len(table.columns),'AUPR',aupr_list)
         subset.append(table)
 subset=pd.concat(subset,sort=False)
-sorted_subset=subset.sort_values(by=['AUC','tool'],ascending=False)
+sorted_subset=subset.sort_values(by=['AUPR','tool'],ascending=False)
 sorted_subset.to_csv(snakemake.output.curve_table,sep='\t',index=False)
 
-prc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3,hue='AUC')
-prc.map(plt.step,'recall','precision',where='pre',label='AUC')
+prc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3,hue='AUPR')
+prc.map(plt.step,'recall','precision',where='pre',label='AUPR')
 prc.map(plt.fill_between,'recall','precision',alpha=0.4,step='pre')
 prc.add_legend()
 prc.savefig(snakemake.output.curve)
