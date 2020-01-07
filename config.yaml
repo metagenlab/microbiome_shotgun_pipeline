@@ -90,6 +90,9 @@ target_value: counts
 community_name: CF-metagenome-1
 vir_reads_threshold: 100
 bac_reads_threshold: 10000
+##Parameters for calculating precision and recall
+read-step: 10
+max-read: 100000
 
 # virulence factor search
 virulence_database: databases/virulence/sqlite_db/virulence.db
