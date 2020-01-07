@@ -18,6 +18,8 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
     for sample in sample_list:
         sample_tb=tool_tb[tool_tb['sample']==sample]
         sample_tb=sample_tb.groupby(f'{rank}',as_index=False).sum()
+        if tool_name=='ezvir':
+            sample_tb['read_counts']=sample_tb['read_counts']/2
         ljoin=pd.merge(true_tb,sample_tb,how='left',on=f'{rank}',suffixes=('_true','_found'))
         #ljoin.replace(np.nan,0,inplace=True)
         ljoin['l1_distance']=abs(ljoin['read_counts_true']-ljoin['read_counts_found'])
