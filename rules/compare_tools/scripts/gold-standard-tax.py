@@ -53,6 +53,6 @@ rename_dic={'Taxid':'taxid','SimReads':'read_counts'}
 table.rename(rename_dic,axis='columns',inplace=True)
 
 lin_tax_tab=get_lin_tax(table,ncbi,target_ranks,community)
-column_order=['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']
+column_order=['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample','read_counts']
 lin_tax_tab=lin_tax_tab[column_order]
 lin_tax_tab.to_csv(snakemake.output[0],sep='\t',index=None)
