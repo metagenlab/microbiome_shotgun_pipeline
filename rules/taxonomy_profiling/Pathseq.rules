@@ -1,5 +1,6 @@
 
 common=config["common"]
+thread_num=config["num_cores"]
 if common==True:
     fasta_name=config["fasta_name"]
     taxonomy=fasta_name.replace('.fasta','').replace('.fa','')
@@ -21,15 +22,17 @@ rule pathseq_fastq_to_bam_PE_reads:
     input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
             r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
-    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
-
     output: "Pathseq/{sample}/PE_input_reads.bam"
 
-    threads: 10
+    params: mem_gb=config["job_memory_limit"]
+
+    threads: thread_num
+
+    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     shell:
         """
-        gatk --java-options "-Xmx32G -XX:ConcGCThreads=10" FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} &> {log}
+        gatk --java-options '-Xmx{params.mem_gb}G -XX:ConcGCThreads={threads}' FastqToSam -F1 {input.r1} -F2 {input.r2} -O {output} -SM {wildcards.sample} &> {log}
         """
 
 rule pathseq_fastq_to_bam_SE_reads:
@@ -37,15 +40,17 @@ rule pathseq_fastq_to_bam_SE_reads:
 
     input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
-    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
-
     output: "Pathseq/{sample}/SE_input_reads.bam"
 
-    threads: 10
+    params: mem_gb=config["job_memory_limit"]
+
+    threads: thread_num
+
+    log: logging_folder+"Pathseq/{sample}/FastqToSam.log"
 
     shell:
         """
-        gatk --java-options "-Xmx32G -XX:ConcGCThreads=10" FastqToSam -F1 {input.r1} -O {output} -SM {wildcards.sample} &> {log}
+        gatk --java-options '-Xmx{params.mem_gb}G -XX:ConcGCThreads={threads}' FastqToSam -F1 {input.r1} -O {output} -SM {wildcards.sample} &> {log}
         """
 
 db_path=config["pathseq_database"]
@@ -94,13 +99,13 @@ rule pathseq_on_reads:
             margin=config["identity_margin"],
             skip_host_filter=config["skip_host_align"],
             divide_by_gen_len=config["divide_by_gen_len"],
-            mem_limit="32G"
+            mem_limit=config["job_memory_limit"]
 
-    threads: config["num_cores"]
-
-    log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
+    threads: thread_num
 
     benchmark: "compare_tools/resources_usage/{sample}/pathseq.benchmark.txt"
+
+    log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 
     shell:
         """
