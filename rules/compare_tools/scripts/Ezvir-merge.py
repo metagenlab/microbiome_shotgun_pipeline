@@ -14,10 +14,10 @@ dic=dict(zip(sample_names,input_file_list))
 read_length=snakemake.params.read_len
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
-def get_filtered_read_counts(table,read_len,threshold):
+def get_filtered_read_counts(table,threshold):
     read_counts = {}
     for genome_name in table.index:
-        read_num = math.floor(table.loc[genome_name]['TNT'] / read_len)
+        read_num = table.loc[genome_name]['TMR']
         if read_num >= threshold:
             read_counts[genome_name] = read_num #dictionary with accessions id as keys and read counts as values
     return read_counts
@@ -79,8 +79,8 @@ def get_taxonomy_from_taxid(target_ranks,acc_taxid_dic):
                     tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
     return tax
 
-def get_tax_table(table,taxid_tb,read_len,threshold,target_ranks):
-    read_counts_dic=get_filtered_read_counts(table,read_len,threshold)
+def get_tax_table(table,taxid_tb,threshold,target_ranks):
+    read_counts_dic=get_filtered_read_counts(table,threshold)
     acc_taxid_dic=get_taxid_from_accession(read_counts_dic,taxid_tb)
     tax=get_taxonomy_from_taxid(target_ranks,acc_taxid_dic)
     dico = {}
@@ -102,7 +102,7 @@ genome_taxids_tb.columns=['acc','taxid']
 genome_taxids_tb.set_index('acc',inplace=True)
 for i in sample_names:
     ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
-    ezvir_parsed_tb=get_tax_table(ezvir_tb,genome_taxids_tb,read_length,1,target_ranks)#Threshold =1, get all hits with at least 1 read
+    ezvir_parsed_tb=get_tax_table(ezvir_tb,genome_taxids_tb,1,target_ranks)#Threshold =1, get all hits with at least 1 read
     ezvir_parsed_tb['sample']=[i]*len(ezvir_parsed_tb)
     samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
     samples_ezvir_tb[f'read_percent'] = samples_ezvir_tb[f'read_counts'].div(sum(samples_ezvir_tb[f'read_counts'])).mul(100)
