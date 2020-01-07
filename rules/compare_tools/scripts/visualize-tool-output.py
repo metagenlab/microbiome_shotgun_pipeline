@@ -38,7 +38,7 @@ rank=snakemake.params.rank
 value=snakemake.params.value
 bp_threshold=snakemake.params.threshold
 superkingdom=snakemake.params.superkingdom
-threshold=10
+threshold=0
 sample_list=[]
 tables=[]
 
