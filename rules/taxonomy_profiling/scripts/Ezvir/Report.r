@@ -513,7 +513,7 @@ if (is.null(opt$phase2)) {
     #  TNT = Total NT (nucleotides) of the genome that are covered (bp)
     #  DC  = Depth of Coverage
     #  DCN = Dot Color Name
-    allinfo = all_recs[,c("ID", "GN", "LN", "GL", "PC", "TNT", "DC", "DCN")]
+    allinfo = all_recs[,c("ID", "GN", "LN", "GL", "PC", "TNT", "DC", "DCN", "TMR")]
     write.table(allinfo,file="ALL-RESULTS.ezv", sep = ',', row.names=FALSE, quote=FALSE)
 }
 
