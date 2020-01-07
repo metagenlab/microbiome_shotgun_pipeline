@@ -13,10 +13,8 @@ rule all_tax:
 rule all_vir_out:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
-           bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
            barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom='viruses',variable=['tools','samples']),
            vir_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='viruses',threshold=vir_threshold),
-           bac_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',threshold=bac_threshold),
            heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='viruses'),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
@@ -49,7 +47,7 @@ rule all_vir_benchmark:
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv",
             l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.pdf",
             l1_dist_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.tsv",
-            barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
+            barplots=expand("compare_tools/{community}/classification/plots/{tool}/viruses-barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             all_barplots=f"compare_tools/{community}/classification/plots/all_tools/{rank}_barplot-viruses.pdf",
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
@@ -69,7 +67,7 @@ rule all_bac_benchmark:
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv",
             l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.pdf",
             l1_dist_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.tsv",
-            barplots=expand("compare_tools/{community}/classification/plots/{tool}/barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
+            barplots=expand("compare_tools/{community}/classification/plots/{tool}/bacteria-barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             all_barplots=f"compare_tools/{community}/classification/plots/all_tools/{rank}_barplot-bacteria.pdf",
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
@@ -334,19 +332,22 @@ rule virus_presence_heatmap:
     script: "scripts/heatmap-presence.py"
 
 
-rule barplot_counts_gold_standard:
+rule barplot_counts_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
 
-    params: rank=config["target_rank"]
+    output: f"compare_tools/{community}/classification/plots/{{tool}}/viruses-barplot_{rank}_level.pdf"
 
-    output: f"compare_tools/{community}/classification/plots/{{tool}}/barplot_{rank}_level.pdf"
+    params: rank=config["target_rank"],
+            superkingdom='Viruses'
 
     script: "scripts/barplot.py"
 
-rule barplot_counts_viruses:
+
+
+rule all_tools_barplot_counts_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
@@ -387,11 +388,27 @@ rule precision_recall_curves_viruses:
 
     params: rank=rank,
             superkingdom="Viruses",
-            read_step=10
+            read_step=config["read-step"],
+            max_read=config["max-read"]
 
     script: "scripts/precision-recall.py"
 
+
 rule barplot_counts_bacteria:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+           tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
+
+    output: f"compare_tools/{community}/classification/plots/{{tool}}/bacteria-barplot_{rank}_level.pdf"
+
+    params: rank=config["target_rank"],
+            superkingdom='Bacteria'
+
+    script: "scripts/barplot.py"
+
+
+rule all_tools_barplot_counts_bacteria:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
