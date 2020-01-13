@@ -7,27 +7,47 @@ tool_name=snakemake.wildcards.tool
 threshold=snakemake.params.threshold
 superkingdom=snakemake.params.superkingdom
 
-def get_precision_recall_f1(true_tb, tool_tb, rank, tool_name):
+
+def get_presence_per_sample(true_superkingdom, tool_superkingdom, tool_name, sample, rank):
+
+    target_col = f'{rank}_taxid'
     if rank=='scientific_name':
-        taxid_col='taxid'
+        target_col='taxid'
+
+    if len(list(set(true_superkingdom['sample']))) == 1:  # For the case of my simulated mock community all samples contain the same genomes
+        true_taxids = list(true_superkingdom[target_col])
+        true_names = list(true_superkingdom[f'{rank}'])
     else:
-        taxid_col=f'{rank}_taxid'
-    true_taxids = list(set(true_tb[taxid_col]))
-    tool_taxids= list(set(tool_tb[taxid_col]))
+        true_taxids = list(true_superkingdom[true_superkingdom['sample'] == sample][target_col])
+        true_names = list(true_superkingdom[true_superkingdom['sample'] == sample][f'{rank}'])
+    true_dic = dict(zip(true_taxids, true_names))
 
-    true_list=[str(int(float(taxid))) for taxid in true_taxids]
-    tool_list = [str(int(float(taxid))) for taxid in tool_taxids]
+    tool_taxids = list(tool_superkingdom[tool_superkingdom['sample'] == sample][target_col])
+    tool_taxids = [str(int(float(taxid))) for taxid in tool_taxids]#for converting float taxid to integers
+    tool_names = list(tool_superkingdom[tool_superkingdom['sample'] == sample][f'{rank}'])
+    tool_dic = dict(zip(tool_taxids, tool_names))
+    dic = {}
+    for taxid in list(set(true_taxids)):
+        dic[taxid] = {}
+        if taxid in tool_taxids:
+            dic[taxid] = {'tool': tool_name, 'sample': sample, f'{rank}': true_dic[taxid], 'taxid': taxid,
+                          'present': 'TP'}
+        if taxid not in tool_taxids:
+            dic[taxid] = {'tool': tool_name, 'sample': sample, f'{rank}': true_dic[taxid], 'taxid': taxid,
+                          'present': 'FN'}
+    for taxid in list(set(tool_taxids)):
+        if taxid not in true_taxids:
+            dic[taxid] = {'tool': tool_name, 'sample': sample, f'{rank}': tool_dic[taxid], 'taxid': taxid,
+                          'present': 'FP'}
+    df = pd.DataFrame.from_dict(dic, orient='index')
+    return df
 
-    tp=0
-    fn=0
-    for i in true_list:
-        if tp < len(true_list) and i in true_list and i in tool_list:
-            tp += 1
-        if tp < len(true_list) and i in true_list and i not in tool_list:
-            fn += 1
-        if tp + fn == len(true_list):
-            break
-    fp = len(tool_list) - tp
+
+def get_precision_recall_f1(tool,tool_tb,threshold):
+    matrix={}
+    tp=len(tool_tb[tool_tb.present=='TP'])
+    fn=len(tool_tb[tool_tb.present=='FN'])
+    fp=len(tool_tb[tool_tb.present=='FP'])
     try:
         precision = tp / (tp + fp)
         recall = tp / (tp + fn)
@@ -36,49 +56,11 @@ def get_precision_recall_f1(true_tb, tool_tb, rank, tool_name):
         precision = 0
         recall = 0
         f1 = 0
-    scores = {}
-    scores[tool_name] = {'tool':tool_name,'tp': tp, 'fp': fp, 'fn': fn, 'precision': precision, 'recall': recall,
-                            'F1_score': f1}
-    df = pd.DataFrame.from_dict(scores, orient='index')
-    return df
+    matrix[tool]={'tool':tool,'tp':tp,'fn':fn,'fp':fp,'precision': precision, 'recall': recall,
+                            'F1_score': f1,'threshold':threshold}
+    mt = pd.DataFrame.from_dict(matrix, orient='index')
+    return mt
 
-
-
-def get_presence(true_tb,tool_tb,rank,tool_name):
-
-    if rank=='scientific_name':
-        taxid_col='taxid'
-    else:
-        taxid_col=f'{rank}_taxid'
-
-    true_taxids = list(true_tb[taxid_col])
-    true_names = list(true_tb[f'{rank}'])
-    tool_taxids=list(tool_tb[taxid_col])
-    tool_names=list(tool_tb[f'{rank}'])
-    tool_samples=list(tool_tb['sample'])
-    true_samples=list(true_tb['sample'])
-    true_list = [str(int(float(taxid))) for taxid in true_taxids]
-    tool_list = [str(int(float(taxid))) for taxid in tool_taxids]#some tools have taxids as floats, this transforms them to strings of integers
-    true_taxid_names = dict(zip(true_list, true_names))
-    tool_taxid_names = dict(zip(tool_list, tool_names))
-    tool_taxid_samples=dict(zip(tool_list,tool_samples))
-    true_taxid_samples=dict(zip(true_list,true_samples))
-    tp_list = [i for i in true_list if i in true_list and i in tool_list]
-    fp_list = [i for i in tool_list if i not in true_list and i in tool_list]
-    fn_list = [i for i in true_list if i in true_list and i not in tool_list]
-
-    dic={}
-    for taxid in true_taxid_names:
-        dic[taxid]={}
-        if taxid in tp_list:
-            dic[taxid]={'tool':tool_name,'tool-sample':tool_taxid_samples[taxid],'true-sample':true_taxid_samples[taxid],'taxid':str(taxid),f'{rank}':true_taxid_names[taxid],'present':"TP"}
-        if taxid in fn_list:
-            dic[taxid]={'tool':tool_name,'tool-sample':'NA','true-sample':true_taxid_samples[taxid],'taxid':str(taxid),f'{rank}':true_taxid_names[taxid],'present':"FN"}
-    for taxid in fp_list:
-            dic[taxid]={'tool':tool_name,'tool-sample':tool_taxid_samples[taxid],'true-sample':'NA','taxid':str(taxid),f'{rank}':tool_taxid_names[taxid],'present':"FP"}
-
-    df=pd.DataFrame.from_dict(dic, orient='index')
-    return df
 
 dtype={'taxid':'object','superkingdom_taxid':'object','phylum_taxid':'object','order_taxid':'object',
        'family_taxid':'object','genus_taxid':'object','species_taxid':'object'}#Need to set all taxids to object, otherwise groupby will sum them
@@ -89,16 +71,29 @@ true_superkingdom=gold_standard[gold_standard.superkingdom==superkingdom]
 true_superkingdom=true_superkingdom.groupby(['sample',f'{rank}',f'{rank}_taxid'],as_index=False).sum()
 true_superkingdom = true_superkingdom.replace(np.nan, 'NA')
 
-tool_superkingdom=tool_output[tool_output.superkingdom==superkingdom]
 
+
+tool_superkingdom=tool_output[tool_output.superkingdom==superkingdom]
 tool_superkingdom.insert(loc=tool_superkingdom.shape[1],column='tool',value=[tool_name]*len(tool_superkingdom))
-tool_superkingdom=tool_superkingdom.groupby(['tool','sample',f'{rank}_taxid',f'{rank}'],as_index=False).sum()
+
+
+if tool_name=='ezvir':
+    tool_superkingdom=tool_superkingdom.groupby(['tool','sample',f'{rank}_taxid',f'{rank}'],as_index=False).sum()
+    tool_superkingdom['read_counts']=tool_superkingdom['read_counts']/2
+else:
+    tool_superkingdom = tool_superkingdom.groupby(['tool', 'sample', f'{rank}_taxid', f'{rank}'], as_index=False).sum()
+
 tool_superkingdom=tool_superkingdom[tool_superkingdom.read_counts>=threshold]
 tool_superkingdom=tool_superkingdom.replace(np.nan,'NA')
 
 
+all_samples=[]
+samples=list(set(tool_superkingdom['sample']))
+for sample in samples:
+    all_samples.append(get_presence_per_sample(true_superkingdom,tool_superkingdom,tool_name,sample,rank))
+presence=pd.concat(all_samples)
 
-scores=get_precision_recall_f1(true_superkingdom,tool_superkingdom,rank,tool_name)
-presence=get_presence(true_superkingdom,tool_superkingdom,rank,tool_name)
+scores=get_precision_recall_f1(tool_name,presence,threshold)
+
 scores.to_csv(snakemake.output.scores,sep='\t',index=None)
 presence.to_csv(snakemake.output.presence,sep='\t',index=None)
