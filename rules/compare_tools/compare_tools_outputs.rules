@@ -49,6 +49,8 @@ rule all_vir_benchmark:
             l1_dist_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.tsv",
             barplots=expand("compare_tools/{community}/classification/plots/{tool}/viruses-barplot_{rank}_level.pdf",community=community,tool=tools,rank=rank),
             all_barplots=f"compare_tools/{community}/classification/plots/all_tools/{rank}_barplot-viruses.pdf",
+            table_reads=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.tsv",
+            barplot_reads=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.pdf",
             tab="compare_tools/resources_usage/resources.tsv",
             memo="compare_tools/resources_usage/memory.pdf",
             time="compare_tools/resources_usage/time.pdf",
@@ -448,6 +450,55 @@ rule precision_recall_curves_bacteria:
 
     params: rank=rank,
             superkingdom="Bacteria",
-            read_step=10
+            read_step=10,
+            max_read=config["max-read"]
 
     script: "scripts/precision-recall.py"
+
+
+rule viral_classified_reads:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+
+    output: table=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.tsv",
+            barplot=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.pdf"
+
+    params: superkingdom="Viruses"
+
+    script: "scripts/classified-reads.py"
+
+
+
+
+if community=='qPCR':
+
+    rule all_PCR:
+        input: all_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_PCR_vir_scores.tsv",
+                all_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_PCR_vir_presence.tsv"
+
+    rule precision_recall_vs_qPCR_viruses:
+        conda: pipeline_path + "envs/compare-tools.yml"
+
+        input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
+                tool_out=f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
+
+        output: scores=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_PCR_vir_scores.tsv",
+                presence=f"compare_tools/{community}/classification/stats/{{tool}}/{vir_threshold}_PCR_vir_presence.tsv"
+
+        params: threshold=vir_threshold,
+                superkingdom="Viruses"
+
+        script: "scripts/qPCR.py"
+
+    rule concat_qPCR_results:
+        conda: pipeline_path + "envs/compare-tools.yml"
+
+        input: scores=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_PCR_vir_scores.tsv",community=community,tool=tools,vir_threshold=vir_threshold),
+               presence=expand("compare_tools/{community}/classification/stats/{tool}/{vir_threshold}_PCR_vir_presence.tsv",community=community,tool=tools,vir_threshold=vir_threshold)
+
+        output: all_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_PCR_vir_scores.tsv",
+                all_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_PCR_vir_presence.tsv"
+
+        script: "scripts/concat.py"
