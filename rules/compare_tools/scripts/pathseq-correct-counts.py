@@ -22,7 +22,7 @@ for taxid in taxid_set:
     elif str(conv) == str(taxid) and taxid2count[taxid]>0:
         print(f"problem with {taxid}: {taxid2name[taxid]}")
         print(f'read counts: {taxid2count[taxid]}')
-        print('keeping entry, not correcting counts')
+        print('Discarding entry')
     else:
         keep.append(taxid)
 
@@ -54,7 +54,7 @@ for taxid in new_scores.keys():
         try:
             new_scores[taxid]['unambiguous']=taxid2corrected_counts[f'{taxid}']
         except KeyError:
-            new_scores[taxid]['unambiguous']=taxid_info[taxid]['unambiguous']
+            new_scores[taxid]['unambiguous']=0#Discard entries for which we cannot correct cumulated counts
     elif taxid==1:
         new_scores[taxid]['unambiguous'] = 0
 
