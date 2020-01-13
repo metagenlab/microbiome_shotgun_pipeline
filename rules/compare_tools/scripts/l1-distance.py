@@ -17,6 +17,7 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
     tables=[]
     for sample in sample_list:
         sample_tb=tool_tb[tool_tb['sample']==sample]
+        true_tb=true_tb[true_tb['sample']==sample]
         sample_tb=sample_tb.groupby(f'{rank}',as_index=False).sum()
         if tool_name=='ezvir':
             sample_tb['read_counts']=sample_tb['read_counts']/2
@@ -46,6 +47,6 @@ all_tools.reset_index(drop=True,inplace=True)
 all_tools.to_csv(snakemake.output.l1_dist_table,sep='\t',index=False)
 plt.figure(figsize=(11.7,8.27))
 plt.subplots_adjust(right=0.81)
-vp=sns.violinplot(data=all_tools,x='tool',y='l1_distance',hue='type',dodge=False)
+vp=sns.violinplot(data=all_tools,x='tool',y='l1_distance',hue='type',dodge=False,cut=0)
 vp.legend(loc=2, bbox_to_anchor=(1.05, 1),borderaxespad=0.1)
 vp.get_figure().savefig(snakemake.output.l1_distance)
