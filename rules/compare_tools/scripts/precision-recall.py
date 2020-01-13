@@ -7,7 +7,7 @@ rank=snakemake.params.rank
 superkingdom=snakemake.params.superkingdom
 gold_standard_file=snakemake.input.gold_standard
 read_step=snakemake.params.read_step
-max_threshold=snakemake.params.max_read
+max_iter=snakemake.params.max_read
 
 gold_standard=pd.read_csv(gold_standard_file,sep='\t')
 true_superkingdom=gold_standard[gold_standard['superkingdom']==superkingdom]
@@ -73,8 +73,20 @@ def get_prc_table(true_tb, tool_tb, rank, tool_name, step, end):
     return tables
 
 gb_true=true_superkingdom.groupby(['tool','sample',f'{rank}_taxid'],as_index=False).sum()
-gb_tools=tools_superkingdom.groupby(['tool','sample',f'{rank}_taxid'],as_index=False).sum()
 
+tools_tables=[]
+for tool in sorted(tool_list):
+    if tool=='ezvir':
+        gb_tools=tools_superkingdom.groupby(['tool','sample',f'{rank}_taxid'],as_index=False).sum()
+        gb_tools['read_counts']=gb_tools['read_counts']/2
+    else:
+        gb_tools = tools_superkingdom.groupby(['tool', 'sample', f'{rank}_taxid'], as_index=False).sum()
+        tools_tables.append(gb_tools)
+gb_tools=pd.concat(tools_tables,sort=False)
+
+max_threshold=max(gb_tools['read_counts'])#set the max range of precision and recall curves
+if max_threshold>max_iter:#If the max number is too high, restrict it
+    max_threshold=max_iter
 subset=[]
 for tool in sorted(tool_list):
         tool_tax=gb_tools[gb_tools['tool']==tool]
