@@ -16,4 +16,4 @@ dependencies:
   - r-plyr
   - r-teachingdemos
   - r-zoo
-  - dask
+  - ete3 = 3.1.1
