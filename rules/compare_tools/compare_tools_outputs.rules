@@ -1,15 +1,60 @@
+
+#setup all tools native database
+surpi_db=config["surpi_database"]
+pathseq_db=config["pathseq_database"]
+kraken_db_path=config["kraken_database"]
+ganon_db_path=config["ganon_db_path"]
+db_path_ezvir=config["ezvir_database"]
+read_len=config["samples_read_length"]
+kmer_len=config["kraken_kmer_len"]
+
+rule all_database_setup:
+    input: surpi_db=f"{surpi_db}/build/nt_curated.fa",
+           pathseq_host_fai=f"{pathseq_db}/pathseq_host.fa.fai",
+           pathseq_host_fa=f"{pathseq_db}/pathseq_host.fa",
+           pathseq_host_bfi=f"{pathseq_db}/pathseq_host.bfi",
+           pathseq_host_img=f"{pathseq_db}/pathseq_host.fa.img",
+           pathseq_host_dict=f"{pathseq_db}/pathseq_host.dict",
+           pathseq_fai=f"{pathseq_db}/pathseq_microbe.fa.fai",
+           pathseq_fa=f"{pathseq_db}/pathseq_microbe.fa",
+           pathseq_img=f"{pathseq_db}/pathseq_microbe.fa.img",
+           pathseq_dict=f"{pathseq_db}/pathseq_microbe.dict",
+           pathseq_tax=f"{pathseq_db}/pathseq_taxonomy.db",
+           kraken2_tax=f"{kraken_db_path}/taxo.k2d",
+           kraken2_names=f"{kraken_db_path}/taxonomy/names.dmp",
+           kraken2_nodes=f"{kraken_db_path}/taxonomy/nodes.dmp",
+           kraken2_univec=f"{kraken_db_path}/library/UniVec_Core/library.fna",
+           kraken2_human=f"{kraken_db_path}/library/human/library.fna",
+           kraken2_viral=f"{kraken_db_path}/library/viral/library.fna",
+           kraken2_bacteria=f"{kraken_db_path}/library/bacteria/library.fna",
+           kraken2_archea=f"{kraken_db_path}/library/archaea/library.fna",
+           bracken=f"{kraken_db_path}/database{read_len}mers.kmer_distrib",
+           ganon_dl=f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt",
+           ganon_filter=f"{ganon_db_path}/refseqCG/refseqCG.filter",
+           ganon_fna=f"{ganon_db_path}/refseqCG/refseqCG.fna",
+           ganon_names=f"{ganon_db_path}/refseqCG/assemblies/names.dmp",
+           ganon_nodes=f"{ganon_db_path}/refseqCG/assemblies/nodes.dmp",
+           ganon_merged=f"{ganon_db_path}/refseqCG/assemblies/merged.dmp",
+           ganon_seq_info=f"{ganon_db_path}/refseqCG/assemblies/acc_len_taxid.txt",
+           ezVIR_index=f"{db_path_ezvir}/EZV0.1-database.rev.2.bt2",
+           ezVIR_len=f"{db_path_ezvir}/genome_lengths.csv",
+           ezVIR_names=f"{db_path_ezvir}/genome_names.csv",
+           ezVIR_taxids=f"{db_path_ezvir}/genome_taxids.csv",
+           ezVIR_colours=f"{db_path_ezvir}/colours.csv"
+
+
+
 rank=config["target_rank"]
 community=config['community_name']
-
 tools=sorted(config["tool_list"])
 vir_threshold=config["vir_reads_threshold"]
 bac_threshold=config["bac_reads_threshold"]
 
-
+#generate all tools taxonomy tables
 rule all_tax:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-
+#generate all tools outputs without a gold standard
 rule all_vir_out:
     input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
@@ -33,7 +78,7 @@ rule all_bac_out:
            time="compare_tools/resources_usage/time.pdf",
            mem_and_time="compare_tools/resources_usage/mem-time.pdf"
 
-
+#generate all benchmarks compared to a gold standard
 rule all_vir_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
             vir_read_counts_heatmaps=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
@@ -83,7 +128,7 @@ rule merge_Kraken2_outputs:
 
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-    output: f"taxonomy-tables/kraken2/all_kraken2.tsv"
+    output: "taxonomy-tables/kraken2/all_kraken2.tsv"
 
     script: "scripts/kraken2-merge.py"
 
@@ -92,7 +137,7 @@ rule merge_Bracken_outputs:
 
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 
-    output: f"taxonomy-tables/bracken/all_bracken.tsv"
+    output: "taxonomy-tables/bracken/all_bracken.tsv"
 
     script: "scripts/bracken-merge.py"
 
@@ -112,7 +157,7 @@ rule merge_Pathseq_outputs:
 
     input: expand("Pathseq/{sample}/output/correct-scores.txt",sample=list(read_naming.keys()))
 
-    output: f"taxonomy-tables/pathseq/all_pathseq.tsv"
+    output: "taxonomy-tables/pathseq/all_pathseq.tsv"
 
     script: "scripts/pathseq-merge.py"
 
@@ -121,7 +166,7 @@ rule merge_kaiju_outputs:
 
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
 
-    output: f"taxonomy-tables/kaiju/all_kaiju.tsv"
+    output: "taxonomy-tables/kaiju/all_kaiju.tsv"
 
     log: logging_folder + f"compare_tools/{community}/classification/kaiju.log"
 
@@ -134,7 +179,7 @@ rule merge_SURPI_outputs:
            vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
             #dust.annotated file because low complexity regions are substracted
 
-    output: f"taxonomy-tables/surpi/all_surpi.tsv"
+    output: "taxonomy-tables/surpi/all_surpi.tsv"
 
     log: logging_folder + f"compare_tools/{community}/classification/surpi.log"
 
@@ -147,7 +192,7 @@ rule merge_ezvir_outputs:
     input: hits=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
 
 
-    output: f"taxonomy-tables/ezvir/all_ezvir.tsv"
+    output: "taxonomy-tables/ezvir/all_ezvir.tsv"
 
     params: read_len=config["samples_read_length"],
             gen_taxids=f'{ezvir_db}/genome_taxids.csv'
@@ -160,7 +205,7 @@ rule merge_ganon_outputs:
 
     input: expand("ganon/{sample}/classified.rep",sample=list(read_naming.keys()))
 
-    output: f"taxonomy-tables/ganon/all_ganon.tsv"
+    output: "taxonomy-tables/ganon/all_ganon.tsv"
 
     script: "scripts/ganon-merge.py"
 
