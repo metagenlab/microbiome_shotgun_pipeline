@@ -1,90 +1,99 @@
 kraken_db_path=config["kraken_database"]
 
 rule all_kraken_standard_db:
-    input: f"{kraken_db_path}/taxo.k2d"
+    input: f"{kraken_db_path}/taxo.k2d",
+           f"{kraken_db_path}/taxonomy/names.dmp",
+           f"{kraken_db_path}/taxonomy/nodes.dmp",
+           f"{kraken_db_path}/library/UniVec_Core/library.fna",
+           f"{kraken_db_path}/library/human/library.fna",
+           f"{kraken_db_path}/library/viral/library.fna",
+           f"{kraken_db_path}/library/bacteria/library.fna",
+           f"{kraken_db_path}/library/archaea/library.fna"
 
-rule download_archea_database:
+
+
+rule download_Kraken2_archea_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/library/archaea/library.fna"
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_archea_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-library archaea --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-library archaea --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
-rule download_bacteria_database:
+rule download_Kraken2_bacteria_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/library/bacteria/library.fna"
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_bacteria_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-library bacteria --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-library bacteria --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
-rule download_viral_database:
+rule download_Kraken2_viral_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/library/viral/library.fna"
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_viral_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-library viral --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-library viral --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
-rule download_human_database:
+rule download_Kraken2_human_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/library/human/library.fna"
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_human_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-library human --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-library human --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
-rule download_Univec_database:
+rule download_Kraken2_Univec_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/library/UniVec_Core/library.fna"
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_Univec_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-library UniVec_Core --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-library UniVec_Core --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
 
-rule download_ncbi_taxonomy_database:
+rule download_Kraken2_ncbi_taxonomy_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/taxonomy/names.dmp",
@@ -92,26 +101,28 @@ rule download_ncbi_taxonomy_database:
 
     params: kraken_db_path
 
-    #log: logging_folder + "kraken_DB/DB_building.log"
+    log: logging_folder + "kraken_DB/DB_taxonomy_dl.log"
 
     threads: 1
 
     shell:
          """
-         kraken2-build --download-taxonomy --threads {threads} --use-ftp --db {params}
+         kraken2-build --download-taxonomy --threads {threads} --use-ftp --db {params} 2> {log}
          """
 
 
-rule building_standard_database:
+rule building_Kraken2_standard_database:
     conda: pipeline_path + "envs/kraken2.yml"
 
     output: f"{kraken_db_path}/taxo.k2d"
 
     params: kraken_db_path
 
+    log: logging_folder + "kraken_DB/DB_build.log"
+
     threads: 30
 
     shell:
          """
-         kraken2-build --build --threads {threads} --db {params}
+         kraken2-build --build --threads {threads} --db {params} 2> {log}
          """
