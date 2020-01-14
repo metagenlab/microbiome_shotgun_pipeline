@@ -1,13 +1,21 @@
 ganon_db_path=config["ganon_db_path"]
 
 rule all_refseqCG:
-    input: f"{ganon_db_path}/refseqCG/refseqCG.filter"
+    input:  dl=f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt",
+            filter=f"{ganon_db_path}/refseqCG/refseqCG.filter",
+            fna=f"{ganon_db_path}/refseqCG/refseqCG.fna",
+            names=f"{ganon_db_path}/refseqCG/assemblies/names.dmp",
+            nodes=f"{ganon_db_path}/refseqCG/assemblies/nodes.dmp",
+            merged=f"{ganon_db_path}/refseqCG/assemblies/merged.dmp",
+            seq_info=f"{ganon_db_path}/refseqCG/assemblies/acc_len_taxid.txt"
 
 
 rule download_fna_refseqCG:
     conda: pipeline_path + "envs/ganon.yml"
 
-    output: f"{ganon_db_path}/refseqCG/assemblies/assembly_summary.txt"
+    output: f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt",
+            f"{ganon_db_path}/refseqCG/assemblies/taxdump.tar.gz"
+
 
     params: f"{ganon_db_path}/refseqCG"
 
@@ -19,24 +27,10 @@ rule download_fna_refseqCG:
         """
         wget_tries=10 wget_timeout=200 
         genome_updater.sh -d "refseq" -g "viral,archaea,bacteria" -c "all" -l "Complete Genome" -o {params} -a -u -r -m -b assemblies -f "genomic.fna.gz,assembly_report.txt" -t {threads} &> {log}
+        genome_updater.sh -d "refseq" -g "viral,archaea,bacteria" -c "all" -l "Complete Genome" -o {params} -i -a -u -r -m -b assemblies -f "genomic.fna.gz,assembly_report.txt" -t {threads} &>> {log}
         """
 
-rule check_missing_fna_refseqCG:
-    conda: pipeline_path + "envs/ganon.yml"
 
-    output: f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt",
-            f"{ganon_db_path}/refseqCG/assemblies/taxdump.tar.gz"
-
-    params: f"{ganon_db_path}/refseqCG"
-
-    threads: 48
-
-    log: logging_folder + "ganon/database/download-missing-refseqCG.log"
-
-    shell:
-        """
-        genome_updater.sh -d "refseq" -g "viral,archaea,bacteria" -c "all" -l "Complete Genome" -o {params} -i -a -u -r -m -b assemblies -f "genomic.fna.gz,assembly_report.txt" -t {threads} &> {log}
-        """
 
 rule merge_fna_refseqCG:
     input: f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt"
