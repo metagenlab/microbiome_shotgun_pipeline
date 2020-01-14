@@ -12,10 +12,18 @@ else:
 
 if config["virus_family"]=='NA':
     rule all_ezvir:
-        input: expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+        input:  bam=expand("Ezvir/{sample}/{sample}.bam",sample=list(read_naming.keys())),
+                all_genomes=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
+                best_genomes=expand("Ezvir/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
+                plot=expand("Ezvir/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys()))
+
 else:
     rule all_ezvir:
-        input: expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
+        input:  bam=expand("Ezvir/{sample}/{sample}.bam",sample=list(read_naming.keys())),
+                all_genomes=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
+                best_genomes=expand("Ezvir/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
+                plot=expand("Ezvir/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys())),
+                coverage=expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
 sample_suffix=list(read_naming.values())
 if len(sample_suffix[0])==2:
@@ -24,7 +32,7 @@ else:
     paired=False
 
 if paired==True:
-    rule ezvir_mapping_PE_reads:
+    rule ezVIR_mapping_PE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
@@ -38,7 +46,7 @@ if paired==True:
 
         log: logging_folder + "Ezvir/mapping/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
+        benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.mapping.txt")
 
         shell:
             """
@@ -46,7 +54,7 @@ if paired==True:
             """
 else:
 
-    rule ezvir_mapping_SE_reads:
+    rule ezVIR_mapping_SE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
         input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
@@ -59,7 +67,7 @@ else:
 
         log:  logging_folder + "Ezvir/mapping/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
+        benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.mapping.txt")
 
         shell:
             """
@@ -69,7 +77,7 @@ else:
 
 
 
-rule ezvir_genome_coverage:
+rule ezVIR_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
     input: "Ezvir/{sample}/{sample}.bam"
@@ -101,7 +109,7 @@ def get_csv(wildcards):
     return expand("Ezvir/{sample}/coverage/{i}.csv",sample=wildcards.sample,i=glob_wildcards(os.path.join(checkpoint_output, "{i}.csv")).i)
 
 
-rule phase_1_report:
+rule ezVIR_report:
     conda: pipeline_path + "envs/ezvir.yml"
 
     input: get_csv
@@ -117,12 +125,28 @@ rule phase_1_report:
             colors=f"{db_path_ezvir}/colours.csv",
             db_names=f"{db_path_ezvir}/genome_names.csv"
 
+    benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.report.txt")
+
     shell:
         """
         cd Ezvir/{wildcards.sample}/report
         Rscript {params.report_script_path} -c {params.colors} -r {params.read_len} -g {params.genome_len} -j {params.db_names} -i {params.csv_dir} -o {wildcards.sample}
         """
-rule generate_coverage_histograms:
+
+
+rule ezVIR_concat_resources_usage:
+    input: mapping="compare_tools/resources_usage/{sample}/ezvir.mapping.txt",
+            report="compare_tools/resources_usage/{sample}/ezvir.report.txt"
+
+    output: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
+
+    shell:
+        """
+        cat {input.mapping} {input.report} > {output}
+        """
+
+
+rule generate_coverage_histograms_ezVIR:
     conda: pipeline_path + "envs/ezvir.yml"
 
     input: "Ezvir/{sample}/report/BEST-GENOMES.ezv"
