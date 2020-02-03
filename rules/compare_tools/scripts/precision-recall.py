@@ -96,11 +96,30 @@ subset=pd.concat(subset,sort=False)
 sorted_subset=subset.sort_values(by=['AUPR','tool'],ascending=False)
 sorted_subset.to_csv(snakemake.output.curve_table,sep='\t',index=False)
 
+plt.figure(figsize=(11.7,8.27))
+sns.set(style='white',font_scale=1.1)
 prc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3,hue='AUPR')
 prc.map(plt.step,'recall','precision',where='pre',label='AUPR')
 prc.map(plt.fill_between,'recall','precision',alpha=0.4,step='pre')
 prc.add_legend()
-prc.savefig(snakemake.output.curve)
+prc.savefig(snakemake.output.pr_curve)
+
+plt.figure(figsize=(11.7,8.27))
+sns.set(style='darkgrid',font_scale=1.1)
+f1_plot=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3)
+f1_plot.map(plt.plot,'threshold','precision',label='precision',color='blue',ls=':',alpha=0.5)
+f1_plot.map(plt.plot,'threshold','recall',label='recall',color='red',ls=':',alpha=0.5)
+f1_plot.map(plt.plot,'threshold','F1_score',label='F1',color='green')
+f1_plot.set_axis_labels('threshold','score')
+for ax in f1_plot.axes:
+    tool_name=ax.title.get_text().split('tool = ')[1]
+    max_f1=max(sorted_subset[sorted_subset.tool==tool_name].F1_score)
+    index_max=sorted_subset[sorted_subset.tool==tool_name]
+    min_cutoff=list(index_max[index_max.F1_score==max_f1].threshold)[0]
+    ax.axvline(min_cutoff,ls='--',color='purple',label='optimal-threshold',alpha=0.4)
+    ax.text(min_cutoff+300,0,f'{min_cutoff}',color='purple',alpha=0.4)
+f1_plot.add_legend()
+f1_plot.savefig(snakemake.output.f1_curve)
 
 indexed_subset=sorted_subset.set_index('threshold')
 opt_read_thresh={}

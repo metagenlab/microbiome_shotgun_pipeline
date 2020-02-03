@@ -87,7 +87,8 @@ rule all_vir_benchmark:
             all_vir_scores=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_scores_{rank}_level.tsv",
             all_vir_presence=f"compare_tools/{community}/classification/stats/all_tools/{vir_threshold}_vir_presence_{rank}_level.tsv",
             vir_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{vir_threshold}_virus_{rank}_level.pdf",
-            curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+            pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+            f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-viruses.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv",
             l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.pdf",
@@ -109,7 +110,8 @@ rule all_bac_benchmark:
             all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
             all_bac_presence=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_presence_{rank}_level.tsv",
             bac_presence_heatmap=f"compare_tools/{community}/classification/heatmaps/all_tools/{bac_threshold}_bacteria_{rank}_level.pdf",
-            curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+            pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+            f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-bacteria.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv",
             l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.pdf",
@@ -423,13 +425,14 @@ rule l1_distance_viruses:
     script: "scripts/l1-distance.py"
 
 
-rule precision_recall_curves_viruses:
+rule precision_recall_f1_curves_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+    output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
+            f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-viruses.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv"
 
@@ -489,7 +492,8 @@ rule precision_recall_curves_bacteria:
     input: gold_standard=f"gold_standard/tables/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
 
-    output: curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+    output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
+            f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-bacteria.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv"
 
