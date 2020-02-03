@@ -9,15 +9,20 @@ gold_standard_file=snakemake.input.gold_standard
 
 gold_standard=pd.read_csv(gold_standard_file,sep='\t')
 true_superkingdom=gold_standard[gold_standard['superkingdom']==superkingdom]
-true_superkingdom=true_superkingdom.groupby(f'{rank}',as_index=False).sum()
+true_superkingdom=true_superkingdom.groupby([f'{rank}','sample'],as_index=False).sum()
 
 
 def get_l1_distance(true_tb,tool_tb,tool_name,rank):
     sample_list=sorted(list(set(tool_tb['sample'])))
+    gs_sample_list=sorted(list(set(true_tb['sample'])))
+
     tables=[]
     for sample in sample_list:
         sample_tb=tool_tb[tool_tb['sample']==sample]
-        true_tb=true_tb[true_tb['sample']==sample]
+        if len(gs_sample_list)==1:
+            true_tb=true_tb
+        else:
+            true_tb=true_tb[true_tb['sample']==sample]
         sample_tb=sample_tb.groupby(f'{rank}',as_index=False).sum()
         if tool_name=='ezvir':
             sample_tb['read_counts']=sample_tb['read_counts']/2
