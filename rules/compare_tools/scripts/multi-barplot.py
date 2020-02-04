@@ -14,7 +14,7 @@ superkingdom_gs=gold_standard[gold_standard.superkingdom==superkingdom]
 def groupby_samples(table,tool_name,rank):
     if tool_name=='ezvir':
         sample_tb=table.groupby(['sample',f'{rank}'],as_index=False)['read_counts'].sum()
-        sample_tb['read_counts']=sample_tb['read_counts']/2
+        sample_tb['read_counts']=sample_tb['read_counts']//2
     else:
         sample_tb = table.groupby(['sample', f'{rank}'], as_index=False)['read_counts'].sum()
     sample_tb['tool'] = [tool_name] * len(sample_tb)
