@@ -434,6 +434,7 @@ rule precision_recall_f1_curves_viruses:
     output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
             f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-viruses.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.tsv",
+            raw_table=f"compare_tools/{community}/classification/plots/all_tools/raw-table-viruses.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-viruses.tsv"
 
     params: rank=rank,
@@ -495,6 +496,7 @@ rule precision_recall_curves_bacteria:
     output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
             f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-bacteria.pdf",
             curve_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.tsv",
+            raw_table=f"compare_tools/{community}/classification/plots/all_tools/raw-table-bacteria.tsv",
             table=f"compare_tools/{community}/classification/stats/all_tools/{rank}_optimal-params-bacteria.tsv"
 
     params: rank=rank,
