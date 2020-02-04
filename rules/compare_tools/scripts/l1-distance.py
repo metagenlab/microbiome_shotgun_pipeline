@@ -25,7 +25,7 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
             true_tb=true_tb[true_tb['sample']==sample]
         sample_tb=sample_tb.groupby(f'{rank}',as_index=False).sum()
         if tool_name=='ezvir':
-            sample_tb['read_counts']=sample_tb['read_counts']/2
+            sample_tb['read_counts']=sample_tb['read_counts']//2
         ljoin=pd.merge(true_tb,sample_tb,how='left',on=f'{rank}',suffixes=('_true','_found'))
         #ljoin.replace(np.nan,0,inplace=True)
         ljoin['l1_distance']=abs(ljoin['read_counts_true']-ljoin['read_counts_found'])
@@ -52,6 +52,7 @@ all_tools.reset_index(drop=True,inplace=True)
 all_tools.to_csv(snakemake.output.l1_dist_table,sep='\t',index=False)
 plt.figure(figsize=(11.7,8.27))
 plt.subplots_adjust(right=0.81)
+sns.set_context('paper',font_scale=1.5)
 vp=sns.violinplot(data=all_tools,x='tool',y='l1_distance',hue='type',dodge=False,cut=0)
 vp.legend(loc=2, bbox_to_anchor=(1.05, 1),borderaxespad=0.1)
 vp.get_figure().savefig(snakemake.output.l1_distance)
