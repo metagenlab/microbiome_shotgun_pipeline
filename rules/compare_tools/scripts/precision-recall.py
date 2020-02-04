@@ -20,11 +20,15 @@ for file in tables:
     tool = file.split('/')[1]
     tool_list.append(tool)
     tb=pd.read_csv(file,sep='\t')
+    tb=tb[tb.superkingdom==superkingdom]
     tb['tool']=[tool]*len(tb)
+    tb=tb.groupby(['tool', 'sample', f'{rank}_taxid'], as_index=False).sum()
+    if tool=='ezvir':
+        tb['read_counts']=tb['read_counts']//2
     tb_list.append(tb)
 
-all_tools=pd.concat(tb_list,axis=0,sort=False)
-tools_superkingdom=all_tools[all_tools.superkingdom==superkingdom]
+gb_tools=pd.concat(tb_list,axis=0,sort=False)
+
 
 
 
@@ -74,21 +78,13 @@ def get_prc_table(true_tb, tool_tb, rank, tool_name, step, end):
 
 gb_true=true_superkingdom.groupby(['tool','sample',f'{rank}_taxid'],as_index=False).sum()
 
-tools_tables=[]
-for tool in sorted(tool_list):
-    if tool=='ezvir':
-        gb_tools=tools_superkingdom.groupby(['tool','sample',f'{rank}_taxid'],as_index=False).sum()
-        gb_tools['read_counts']=gb_tools['read_counts']/2
-    else:
-        gb_tools = tools_superkingdom.groupby(['tool', 'sample', f'{rank}_taxid'], as_index=False).sum()
-        tools_tables.append(gb_tools)
-gb_tools=pd.concat(tools_tables,sort=False)
 
+gb_tools.to_csv(snakemake.output.raw_table,sep='\t',index=False)
 max_threshold=max(gb_tools['read_counts'])#set the max range of precision and recall curves
 if max_threshold>max_iter:#If the max number is too high, restrict it
     max_threshold=max_iter
 subset=[]
-for tool in sorted(tool_list):
+for tool in sorted(list(set(tool_list))):
         tool_tax=gb_tools[gb_tools['tool']==tool]
         table=get_prc_table(gb_true,tool_tax,rank,tool,read_step,max_threshold)
         subset.append(table)
@@ -97,7 +93,7 @@ sorted_subset=subset.sort_values(by=['AUPR','tool'],ascending=False)
 sorted_subset.to_csv(snakemake.output.curve_table,sep='\t',index=False)
 
 plt.figure(figsize=(11.7,8.27))
-sns.set(style='white',font_scale=1.1)
+sns.set_context('paper',font_scale=1.2)
 prc=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3,hue='AUPR')
 prc.map(plt.step,'recall','precision',where='pre',label='AUPR')
 prc.map(plt.fill_between,'recall','precision',alpha=0.4,step='pre')
@@ -105,10 +101,10 @@ prc.add_legend()
 prc.savefig(snakemake.output.pr_curve)
 
 plt.figure(figsize=(11.7,8.27))
-sns.set(style='darkgrid',font_scale=1.1)
+sns.set(context='paper',style='darkgrid',font_scale=1.2)
 f1_plot=sns.FacetGrid(data=sorted_subset,col='tool',col_wrap=3)
-f1_plot.map(plt.plot,'threshold','precision',label='precision',color='blue',ls=':',alpha=0.5)
-f1_plot.map(plt.plot,'threshold','recall',label='recall',color='red',ls=':',alpha=0.5)
+f1_plot.map(plt.plot,'threshold','precision',label='precision',color='blue',ls=':',alpha=0.6)
+f1_plot.map(plt.plot,'threshold','recall',label='recall',color='red',ls=':',alpha=0.6)
 f1_plot.map(plt.plot,'threshold','F1_score',label='F1',color='green')
 f1_plot.set_axis_labels('threshold','score')
 for ax in f1_plot.axes:
@@ -116,8 +112,8 @@ for ax in f1_plot.axes:
     max_f1=max(sorted_subset[sorted_subset.tool==tool_name].F1_score)
     index_max=sorted_subset[sorted_subset.tool==tool_name]
     min_cutoff=list(index_max[index_max.F1_score==max_f1].threshold)[0]
-    ax.axvline(min_cutoff,ls='--',color='purple',label='optimal-threshold',alpha=0.4)
-    ax.text(min_cutoff+300,0,f'{min_cutoff}',color='purple',alpha=0.4)
+    ax.axvline(min_cutoff,ls='-',color='black',label='optimal-threshold',alpha=0.4)
+    ax.text(min_cutoff+300,0,f'{min_cutoff}',color='black',alpha=0.4)
 f1_plot.add_legend()
 f1_plot.savefig(snakemake.output.f1_curve)
 
