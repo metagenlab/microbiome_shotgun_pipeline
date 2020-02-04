@@ -37,6 +37,7 @@ bpt.set(ylabel='minutes')
 bpt.savefig(snakemake.output.time)
 
 fig = plt.figure(figsize=(11.7,8.27))
+plt.rcParams.update({'font.size': 14})
 ax = fig.add_subplot(111)
 ax2 = ax.twinx()
 width = 0.4
