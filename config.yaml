@@ -38,6 +38,7 @@ nodes_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progeno
 names_dmp: /home/master_students/2019_Farid/tools_test/kaiju/db/kaiju_db_progenomes_2019-06-25/names.dmp
 ##Kraken2
 kraken_database: /media/data/databases/kraken_DB
+kraken2x_database: /media/data/databases/kraken_DB/Kraken2X
 samples_read_length: 150
 kraken_kmer_len: 35
 ##Bracken
@@ -75,7 +76,8 @@ rkmh_kmer_size: 15
 rkmh_sketch_size: 1000
 min_kmer_occurence: 100 #use k-mers that occur more than 10 times in the reads
 min_read_match: 10 #filter reads that map to less than 10 references
-
+##Centrifuge
+centrifuge_index: /data/diag_pipeline_data/references/centrifuge_db/p_compressed+h+v
 
 
 ###NCBI Entrez
@@ -84,7 +86,7 @@ api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
 
 
 ###Tool_comparison
-tool_list: ['kraken2','bracken','pathseq','kaiju','surpi','ezvir','ganon']
+tool_list: ['kraken2','kraken2x','bracken','pathseq','kaiju','surpi','ezvir','ganon','centrifuge']
 target_rank: species
 target_value: counts
 community_name: CF-metagenome-1

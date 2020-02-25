@@ -6,7 +6,7 @@ import numpy as np
 resources=snakemake.input
 
 tb_list=[]
-tool_type={'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kaiju':'k-mer','bracken':'k-mer'}
+tool_type={'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kraken2x':'k-mer','kaiju':'k-mer','bracken':'k-mer','centrifuge':'k-mer'}
 for file in resources:
     tool=file.split('/')[3].split('.')[0]
     name=file.split('/')[2]

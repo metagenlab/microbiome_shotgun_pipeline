@@ -74,11 +74,13 @@ include: "rules/protein_abundance/calculate_RPKM.rules"
 #taxonomy profiling
 include: "rules/taxonomy_profiling/kaiju.rules"
 include: "rules/taxonomy_profiling/kraken2.rules"
+include: "rules/taxonomy_profiling/kraken2x.rules"
 include: "rules/taxonomy_profiling/bracken.rules"
 include: "rules/taxonomy_profiling/Pathseq.rules"
 include: "rules/taxonomy_profiling/Ezvir.rules"
 include: "rules/taxonomy_profiling/SURPI.rules"
 include: "rules/taxonomy_profiling/ganon.rules"
 include: "rules/taxonomy_profiling/rkmh.rules"
+include: "rules/taxonomy_profiling/centrifuge.rules"
 #Compare tools
 include: "rules/compare_tools/compare_tools_outputs.rules"

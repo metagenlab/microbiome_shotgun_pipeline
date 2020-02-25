@@ -1,0 +1,56 @@
+rule all_kraken2x:
+    input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
+
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
+
+if paired==True:
+    rule kraken2x_PE_reads:
+        conda: pipeline_path + "envs/kraken2.yml"
+
+        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified_r1="kraken2x/{sample}/reads/classified_reads_1.fq",
+                classified_r2="kraken2x/{sample}/reads/classified_reads_2.fq",
+                unclassified_r1="kraken2x/{sample}/reads/unclassified_reads_1.fq",
+                unclassified_r2="kraken2x/{sample}/reads/unclassified_reads_2.fq",
+                all="kraken2x/{sample}/output.txt",
+                report="kraken2x/{sample}/report.txt"
+
+        threads: config["num_cores"]
+
+        params: db_path=config["kraken2x_database"]
+
+        log: logging_folder + "kraken2x/{sample}.log"
+
+        benchmark: "compare_tools/resources_usage/{sample}/kraken2x.benchmark.txt"
+
+        shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
+                --classified-out kraken2x/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2x/{wildcards.sample}/reads/unclassified_reads#.fq \
+                --report {output.report} {input[0]} {input[1]} &>> {log}"
+
+else:
+    rule kraken2x_SE_reads:
+        conda: pipeline_path + "envs/kraken2.yml"
+
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+        output: classified="kraken2x/{sample}/reads/classified_reads.fq",
+                unclassified="kraken2x/{sample}/reads/unclassified_reads.fq",
+                all="kraken2x/{sample}/output.txt",
+                report="kraken2x/{sample}/report.txt"
+
+        threads: config["num_cores"]
+
+        params: db_path=config["kraken2x_database"]
+
+        log: logging_folder + "kraken2x/{sample}.log"
+
+        benchmark: "compare_tools/resources_usage/{sample}/kraken2x.benchmark.txt"
+
+        shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
+                --classified-out {output.classified} --report {output.report} {input[0]}"

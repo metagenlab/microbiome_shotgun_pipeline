@@ -134,6 +134,16 @@ rule merge_Kraken2_outputs:
 
     script: "scripts/kraken2-merge.py"
 
+rule merge_Kraken2X_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
+
+    output: "taxonomy-tables/kraken2x/all_kraken2x.tsv"
+
+    script: "scripts/kraken2-merge.py"
+
+
 rule merge_Bracken_outputs:
     conda: pipeline_path + "envs/compare-tools.yml"
 
@@ -210,6 +220,17 @@ rule merge_ganon_outputs:
     output: "taxonomy-tables/ganon/all_ganon.tsv"
 
     script: "scripts/ganon-merge.py"
+
+
+rule merge_centrifuge_outputs:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: expand("centrifuge/{sample}/centrifuge-k-report.txt",sample=list(read_naming.keys()))
+
+    output: "taxonomy-tables/centrifuge/all_centrifuge.tsv"
+
+    script: "scripts/kraken2-merge.py"
+
 
 
 rule virus_read_count_heatmaps:

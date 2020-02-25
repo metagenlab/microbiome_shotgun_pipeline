@@ -1,4 +1,7 @@
 import pandas as pd
+from Bio import Entrez
+Entrez.email='farid.chaabane@unil.ch'
+Entrez.api_key='72a84b34c0317bb34bac7efbb7c6bda59209'
 from ete3 import NCBITaxa
 import numpy as np
 ncbi = NCBITaxa()
@@ -13,18 +16,33 @@ for path in input_file_list:
 
 def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
-    tab=tab.replace(np.nan,0)
+    tab = tab.replace(np.nan, 0)
     taxid_list = tab['taxid']
     percents = tab['read_percent']
     counts = tab['reads_assigned']
     count_dic = dict(zip(taxid_list, counts))
     percent_dic = dict(zip(taxid_list, percents))
     for taxid in taxid_list:
-        tax[taxid] = {'taxid':str(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
+        tax[taxid] = {'taxid': int(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
         if taxid > 0:
             scientific_name = ncbi.translate_to_names([taxid])[0]
-            tax[taxid]['scientific_name']=scientific_name
-            lineage = ncbi.get_lineage(taxid)
+            tax[taxid]['scientific_name'] = scientific_name
+            try:
+                lineage = ncbi.get_lineage(taxid)
+            except ValueError:
+                print(f'taxid:{taxid} not found, searching NCBI taxonomy')
+                del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
+                print(f'deleted entry name: {del_entry_name}')
+                simple_name = ' '.join(del_entry_name.split(' ')[
+                                       0:2])  # Some times, subspecies is added to the scientific name, and ete3 cannot find a match
+                print(f'first two words of entry name {simple_name}')
+                if 'unclassified' in simple_name:
+                    print('discarding "unclassified" in name')
+                    simple_name = simple_name.split('unclassified ')[1]
+                    print(f'final name: {simple_name}')
+                updated_taxid = list(ncbi.get_name_translator([simple_name]).values())[0][0]
+                lineage = ncbi.get_lineage(updated_taxid)
+
             names = ncbi.get_taxid_translator(lineage)
             ranks = ncbi.get_rank(lineage)
             rank_list = list(ranks.values())
@@ -48,6 +66,8 @@ def get_lin_tax(tab, ncbi, target_ranks):
                         if previous_rank not in rank2names.keys():
                             continue
                     tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
+        if taxid == 0:
+            tax[taxid]['scientific_name'] = 'unclassified'
     df = pd.DataFrame.from_dict(tax, orient='index')
     df = df.replace(np.nan, 'NA')
     return df

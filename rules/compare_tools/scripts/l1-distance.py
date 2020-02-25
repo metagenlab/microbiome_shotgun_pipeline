@@ -36,7 +36,7 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
     ljoin_all=pd.concat(tables,sort=False)
     return ljoin_all
 
-tool_type={'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kaiju':'k-mer','bracken':'k-mer'}
+tool_type={'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kraken2x':'k-mer','kaiju':'k-mer','bracken':'k-mer','centrifuge':'k-mer'}
 all_tools_l1=[]
 for file in tables:
     tool = file.split('/')[1]

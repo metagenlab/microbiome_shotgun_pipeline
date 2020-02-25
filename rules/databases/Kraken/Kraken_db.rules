@@ -8,7 +8,8 @@ rule all_kraken_standard_db:
            f"{kraken_db_path}/library/human/library.fna",
            f"{kraken_db_path}/library/viral/library.fna",
            f"{kraken_db_path}/library/bacteria/library.fna",
-           f"{kraken_db_path}/library/archaea/library.fna"
+           f"{kraken_db_path}/library/archaea/library.fna",
+           f"{kraken_db_path}/Kraken2X/taxo.k2d"
 
 
 
@@ -124,5 +125,54 @@ rule building_Kraken2_standard_database:
 
     shell:
          """
-         kraken2-build --build --threads {threads} --db {params} 2> {log}
+         kraken2-build --build --threads {threads} --db {params} &> {log}
+         """
+
+
+rule concat_library_fna:
+     input: f"{kraken_db_path}/library/UniVec_Core/library.fna",
+            f"{kraken_db_path}/library/human/library.fna",
+            f"{kraken_db_path}/library/viral/library.fna",
+            f"{kraken_db_path}/library/bacteria/library.fna",
+            f"{kraken_db_path}/library/archaea/library.fna"
+
+     output: temp(f"{kraken_db_path}/library/all.fna")
+
+     shell:
+        """
+        cat {input} >> {output}
+        """
+
+rule copy_names_nodes:
+    input:  names=f"{kraken_db_path}/taxonomy/names.dmp",
+            nodes=f"{kraken_db_path}/taxonomy/nodes.dmp"
+
+    output: names=f"{kraken_db_path}/Kraken2X/taxonomy/names.dmp",
+            nodes=f"{kraken_db_path}/Kraken2X/taxonomy/nodes.dmp"
+
+    shell:
+        """
+        cp {input.names} {output.names}
+        cp {input.nodes} {output.nodes}
+        """
+
+rule building_Kraken2X_standard_database:
+    conda: pipeline_path + "envs/kraken2.yml"
+
+    input: names=f"{kraken_db_path}/Kraken2X/taxonomy/names.dmp",
+           nodes=f"{kraken_db_path}/Kraken2X/taxonomy/nodes.dmp",
+           fna=f"{kraken_db_path}/library/all.fna"
+
+    output: f"{kraken_db_path}/Kraken2X/taxo.k2d"
+
+    params: f"{kraken_db_path}/Kraken2X"
+
+    threads: 30
+
+    log: logging_folder + "kraken_DB/Kraken2X_DB_build.log"
+
+    shell:
+         """
+         kraken2-build --db {params} --add-to-library {input.fna} --protein &>> {log}
+         kraken2-build --db {params} --threads {threads} --build -protein &>> {log}
          """

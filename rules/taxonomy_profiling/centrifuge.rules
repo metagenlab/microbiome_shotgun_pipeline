@@ -1,0 +1,68 @@
+rule all_centrifuge:
+    input: expand("centrifuge/{sample}/centrifuge-k-report.txt",sample=list(read_naming.keys()))
+
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
+
+if paired==True:
+    rule centrifuge_PE_reads:
+        conda: pipeline_path + "envs/centrifuge.yml"
+
+        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+
+        output: out="centrifuge/{sample}/centrifuge-out.txt",
+                report="centrifuge/{sample}/report.txt"
+
+        threads: config["num_cores"]
+
+        params: config["centrifuge_index"]
+
+        log: logging_folder + "centrifuge/{sample}.log"
+
+        benchmark: "compare_tools/resources_usage/{sample}/centrifuge.benchmark.txt"
+
+        shell:
+            """
+            centrifuge -p {threads} -x {params} -1 {input.r1} -2 {input.r2} -S {output.out} --report-file {output.report} 2> {log}
+            """
+else:
+    rule centrifuge_SE_reads:
+        conda: pipeline_path + "envs/centrifuge.yml"
+
+        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+
+        output: out="centrifuge/{sample}/centrifuge-out.txt",
+                report="centrifuge/{sample}/report.txt"
+
+        threads: config["num_cores"]
+
+        params: config["centrifuge_index"]
+
+        log: logging_folder + "centrifuge/{sample}-class.log"
+
+        benchmark: "compare_tools/resources_usage/{sample}/centrifuge.benchmark.txt"
+
+        shell:
+            """
+            centrifuge -p {threads} -x {params} -U {input} -S {output.out} --report-file {output.report} 2> {log}
+            """
+
+rule centrifuge_to_kraken_format:
+    conda: pipeline_path + "envs/centrifuge.yml"
+
+    input: "centrifuge/{sample}/centrifuge-out.txt"
+
+    output: "centrifuge/{sample}/centrifuge-k-report.txt"
+
+    params: config["centrifuge_index"]
+
+    log: logging_folder + "centrifuge/{sample}-k-report.log"
+
+    shell:
+        """
+        centrifuge-kreport -x {params} {input} > {output} 2> {log}
+        """
