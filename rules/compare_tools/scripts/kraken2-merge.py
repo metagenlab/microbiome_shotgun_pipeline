@@ -1,7 +1,7 @@
 import pandas as pd
 from Bio import Entrez
-Entrez.email='farid.chaabane@unil.ch'
-Entrez.api_key='72a84b34c0317bb34bac7efbb7c6bda59209'
+Entrez.email=snakemake.params.NCBI_email
+Entrez.api_key=snakemake.params.NCBI_key
 from ete3 import NCBITaxa
 import numpy as np
 ncbi = NCBITaxa()
