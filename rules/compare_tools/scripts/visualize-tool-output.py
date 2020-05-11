@@ -6,7 +6,7 @@ from numpy import mean
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.backends.backend_pdf import PdfPages
 
-def concat_sample_counts(file, sample_name, rank, tool_name, superkingdom, threshold):
+def concat_sample_counts(file,target_val,sample_name, rank, tool_name, superkingdom, threshold):
     tb_list = []
     col_sel = []
     tool_tb = pd.read_csv(file, sep='\t')
@@ -14,7 +14,7 @@ def concat_sample_counts(file, sample_name, rank, tool_name, superkingdom, thres
     tool_tb = tool_tb.groupby(f'{rank}').sum()
 
     for col in tool_tb:
-        if 'counts' in col:
+        if target_val in col:
             col_sel.append(col)
     subset = tool_tb[col_sel]
 
@@ -25,7 +25,7 @@ def concat_sample_counts(file, sample_name, rank, tool_name, superkingdom, thres
         sample_name_list = [f'{sample_name}'] * len(tb)
         tb.insert(loc=1, column='tool', value=type_list)
         tb.insert(loc=2, column='sample', value=sample_name_list)
-        tb = tb.rename(columns={f"{col}": "read_counts"})
+        tb = tb.rename(columns={f"{col}": f"read_{target_val}"})
         tb_list.append(tb)
 
     all_replicates = pd.concat(tb_list, axis=0, sort=False)
@@ -45,13 +45,16 @@ tables=[]
 for file in outputs:
     tool=file.split('/')[1]
     sample=file.split('/')[2].split('.tsv')[0]
-    tb=concat_sample_counts(file,sample,rank,tool,superkingdom,threshold)
+    tb=concat_sample_counts(file,value,sample,rank,tool,superkingdom,threshold)
     tables.append(tb)
 
 all_tools = pd.concat(tables, axis=0, sort=False)
-all_tools=all_tools.sort_values(by='read_counts',ascending=False)
+all_tools=all_tools.sort_values(by=f'read_{value}',ascending=False)
 all_tools=all_tools.reset_index()
-bp_table=all_tools[all_tools.read_counts>bp_threshold].dropna()
+if value=="counts":
+    bp_table=all_tools[all_tools.read_counts>=bp_threshold].dropna()
+else:
+    bp_table = all_tools[all_tools.read_percent >= bp_threshold].dropna()
 
 
 unique_sample_list=list(set(bp_table['sample']))
@@ -78,7 +81,7 @@ elif len(unique_names)<100:
 sns.set(font_scale=1.0)
 plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
 plt.subplots_adjust(left=0.2,top=0.8)
-bp=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
+bp=sns.catplot(data=bp_table,x=f'read_{value}',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
 bp.set(xscale='log')
 
 for ax in bp.axes.flat:
@@ -93,7 +96,7 @@ bp.savefig(snakemake.output.barplot_samples)
 sns.set(font_scale=1.0)
 plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
 plt.subplots_adjust(left=0.2,top=0.8)
-bpt=sns.catplot(data=bp_table,x='read_counts',y=f'{rank}',hue='sample',col='tool',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
+bpt=sns.catplot(data=bp_table,x=f'read_{value}',y=f'{rank}',hue='sample',col='tool',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
 bpt.set(xscale='log')
 
 for ax in bpt.axes.flat:
@@ -115,9 +118,9 @@ def draw_heatmap_counts(data,sample,rank,square,annot):
     pivot['sum']=pivot.sum(axis=1)
     pivot=pivot.sort_values(by='sum',ascending=False)
     pivot=pivot.drop('sum',axis=1)
-    pivot=pivot.replace(0,1)
-    logp=np.log10(pivot)
-    g=sns.heatmap(logp,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
+    #pivot=pivot.replace(0,1)
+    #logp=np.log10(pivot)
+    g=sns.heatmap(pivot,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
     return g
 
 fonstscale=1.0
