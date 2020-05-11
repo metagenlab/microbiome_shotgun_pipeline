@@ -16,8 +16,8 @@ def draw_hm(subset,sample,rank):
     matrix=matrix.replace(np.nan,3)
     col_list=list(matrix.columns)
     matrix=matrix.sort_values(by=col_list,axis=0,ascending=True)
-    if len(matrix)>50:
-        matrix=matrix[0:50]
+    if len(matrix)>30:
+        matrix=matrix[0:30]
 
     if 1 not in np.unique(matrix):#if no false negatives then no black colour
         myColors = [(0.3, 0.6, 0.1, 1.0),(1.0, 0.64, 0, 1.0),(0, 0, 0, 0)] #(Green, Orange, White)
