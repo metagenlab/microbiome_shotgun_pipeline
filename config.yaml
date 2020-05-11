@@ -69,7 +69,7 @@ quality: Illumina
 
 xlsx_template_path: /scratch/master_students/Farid/microbiome_shotgun_pipeline_test/SURPI_summary_template.xlsx
 ##ganon
-ganon_db_path: /media/data/databases/ganon_db/rvdb #Include the database prefix in the path
+ganon_db_path: /data/databases/ganon_db/rvdb #Include the database prefix in the path
 ##rkmh
 rkmh_reference: /media/data/databases/rkmh_db/reference.fa
 rkmh_kmer_size: 15
