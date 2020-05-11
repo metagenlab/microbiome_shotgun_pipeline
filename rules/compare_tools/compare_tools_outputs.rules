@@ -132,6 +132,9 @@ rule merge_Kraken2_outputs:
 
     output: "taxonomy-tables/kraken2/all_kraken2.tsv"
 
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+
     script: "scripts/kraken2-merge.py"
 
 rule merge_Kraken2X_outputs:
@@ -218,6 +221,9 @@ rule merge_ganon_outputs:
     input: expand("ganon/{sample}/classified.rep",sample=list(read_naming.keys()))
 
     output: "taxonomy-tables/ganon/all_ganon.tsv"
+
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
 
     script: "scripts/ganon-merge.py"
 
