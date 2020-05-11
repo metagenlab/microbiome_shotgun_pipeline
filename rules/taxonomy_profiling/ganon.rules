@@ -39,7 +39,7 @@ if paired==True:
              """
 
 else:
-    rule ganon_SE_reads_bacteria:
+    rule ganon_SE_reads:
         conda: pipeline_path + "envs/ganon.yml"
 
         input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
