@@ -25,13 +25,17 @@ def get_heatmap_table(file,rank,value,superkingdom):
 
 tb=get_heatmap_table(snakemake.input[0],rank,values,superkingdom)
 
+
+
 if len(tb)>0:
-    plt.figure(figsize=(11.7,8.27))
-    plt.subplots_adjust(left=0.4, bottom=0.4)
-    sns.set(font_scale=1.0)
-    hm=sns.heatmap(tb,cmap="YlGnBu")
-    plt.xticks(rotation=90)
-    hm.get_figure().savefig(snakemake.output[0])
+    if len(tb)>30:
+        tb=tb[0:30]
+        plt.figure(figsize=(11.7,8.27))
+        plt.subplots_adjust(left=0.4, bottom=0.4)
+        sns.set(font_scale=1.0)
+        hm=sns.heatmap(tb,cmap="YlGnBu")
+        plt.xticks(rotation=90)
+        hm.get_figure().savefig(snakemake.output[0])
 else:
     pdf = FPDF()
     pdf.add_page()
