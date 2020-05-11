@@ -71,7 +71,7 @@ else:
 
         shell:
             """
-            bowtie2 -p {threads} -q {input} -x {params.genome_path} | samtools view -bS -F 4 | samtools sort -n -O BAM -o {output} 2> {log}
+            bowtie2 -p {threads} -q {input} -x {params.genome_path} 2> {log} | samtools view -bS -F 12 2> {log} | samtools sort -n -O BAM -o {output} 2> {log}
             """
 
 
