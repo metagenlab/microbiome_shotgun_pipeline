@@ -60,7 +60,8 @@ divide_by_gen_len: true
 
 ##EZvir
 ezvir_database: /media/data/databases/EZvir
-virus_family: Hepatitis_E
+virus_family: Hepeviridea
+min_cov: 20 #at least 20% genome coverage
 ##SURPI
 surpi_database: /media/data/databases/SURPI
 surpi_image: /scratch/master_students/Farid/
