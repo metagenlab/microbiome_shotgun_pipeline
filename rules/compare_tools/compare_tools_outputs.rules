@@ -144,6 +144,9 @@ rule merge_Kraken2X_outputs:
 
     output: "taxonomy-tables/kraken2x/all_kraken2x.tsv"
 
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+
     script: "scripts/kraken2-merge.py"
 
 
@@ -235,6 +238,9 @@ rule merge_centrifuge_outputs:
 
     output: "taxonomy-tables/centrifuge/all_centrifuge.tsv"
 
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+    
     script: "scripts/kraken2-merge.py"
 
 
