@@ -50,7 +50,9 @@ option_list <- list(
    make_option(c("-n", "--table_names"),
        help="[required ] table regrouping virus names"),
     make_option(c("-g", "--genome_length"),
-       help="[required] table regrouping genome lengths")
+       help="[required] table regrouping genome lengths"),
+   make_option(c("-m", "--mincov"),
+       help="[optional] minimum coverage threshold")
 )
 
 opt <- parse_args(OptionParser(option_list = option_list))
@@ -70,6 +72,12 @@ if (is.null(opt$best_genomes)) {
 # check that short name was given
 if (is.null(opt$shortname)) {
     warning('missing genome shortname name [flag: -s]')
+    q()
+}
+
+if (is.null(opt$mincov)) {
+    mincov=0
+    warning('no minimum coverage threshold set, 0 by default [flag: -m]')
     q()
 }
 
@@ -96,19 +104,26 @@ bval = as.integer(common$DC)
 bcol = toString(common$DCN) # color name for this virus family
 
 
-names_tab=read.csv(opt$table_names,sep='\t',header=F)
-colnames(names_tab) <- c("gid","gname","vgroup","shortname")
-genome_lengths=read.csv(opt$genome_length,header=TRUE, sep="\t")
+names_tab=read.csv(opt$table_names,sep=',',header=T)
+colnames(names_tab) <- c("gname","shortname","vgroup")
+genome_lengths=read.csv(opt$genome_length,header=T, sep="\t")
+mincov=as.integer(opt$mincov)
+
+
+
 # make outfile
 pdf(paste(opt$shortname, "coverage-histogram.pdf", sep = "_"), onefile=TRUE, width=10, height=5)
 
 # create histograms for each mapping
+
+
 for (file in FN) {
   data = read.table(file, header=F, sep="\t")
   colnames(data) <- c("genome","pos","coverage")
   bn=basename(file)
   genname=gsub(".csv","",bn)
   genome_len = genome_lengths[genome_lengths$X==genname,"genome_length"]# get length of the genome
+
   depth <- sum(data[,"coverage"])/genome_len
   this_genome = toString(data$genome[1])
 
@@ -117,38 +132,49 @@ for (file in FN) {
   covered = length(data$coverage) # get bases that are covered
   percent_covered = (covered / genome_len) * 100   # % of genome covered at least once
 
-  ### get date and time and format nicely ###
-  t1 = format(Sys.Date(), format="%B %d, %Y")
-  t2 = format(Sys.time(), format="%I:%M %p")
+  if (percent_covered>=mincov){
+    ### get date and time and format nicely ###
+    t1 = format(Sys.Date(), format="%B %d, %Y")
+    t2 = format(Sys.time(), format="%I:%M %p")
 
-  ### make plot title from this file name ###
-  # get rid of linking characters for nicer titles
-  name=as.character(names_tab[names_tab$gid==genname,"gname"])
-  shortname=as.character(names_tab[names_tab$gid==genname,"shortname"])
-  family=as.character(names_tab[names_tab$gid==genname,"vgroup"])
-  title=paste(name,shortname,family,sep=', ')
-  cleanname = gsub("_", " ", title)
+    ### make plot title from this file name ###
+    # get rid of linking characters for nicer titles
+    name=as.character(names_tab[names_tab$gname==genname,"gname"])
+    shortname=as.character(names_tab[names_tab$gname==genname,"shortname"])
+    family=as.character(names_tab[names_tab$gname==genname,"vgroup"])
+    title=paste(name,shortname,family,sep=', ')
+    cleanname = gsub("_", " ", title)
 
 
-  plot.title = paste("reads mapped to:", cleanname, sep=" ")
-  plot.subtitle = paste("specimen:", opt$ref, ", genome: ",this_genome,",", t1, "at", t2, sep=" ")
-  tit = bquote(atop(.(plot.title), atop(.(plot.subtitle), "")))
+    plot.title = paste("reads mapped to:", cleanname, sep=" ")
+    plot.subtitle = paste("specimen:", shortname, ", genome: ",this_genome,",", t1, "at", t2, sep=" ")
+    tit = bquote(atop(.(plot.title), atop(.(plot.subtitle), "")))
 
-  # axis labels
-  x.upper = paste("coverage: ", as.integer(percent_covered), "%", sep="")
-  x.lower = paste("genome length: ", genome_len,
-                  " bp | average depth: ", as.integer(depth),
-                  " | tot covered bp: ", as.integer(covered), sep="")
-  xinfo = bquote(atop(.(x.upper), atop(italic(.(x.lower)), "")))
+    # axis labels
+    x.upper = paste("coverage: ", as.integer(percent_covered), "%", sep="")
+    x.lower = paste("genome length: ", genome_len,
+                    " bp | average depth: ", as.integer(depth),
+                    " | tot covered bp: ", as.integer(covered), sep="")
+    xinfo = bquote(atop(.(x.upper), atop(italic(.(x.lower)), "")))
 
-  data$coverage <- replace(data$coverage, length(data$coverage), 0)
+    #data$coverage <- replace(data$coverage, length(data$coverage), 0)
 
-  print(ggplot(data) + geom_area(aes(data$pos,data$coverage), color="black", fill=bcol, alpha=ALPHA)
-        + labs(title=tit)
-        + theme(plot.title=element_text(size=rel(1.2), colour="black"))
-        + xlab(xinfo) + theme(axis.title.x=element_text(size=rel(1.2)))
-        + ylab("depth") + theme(axis.title.y=element_text(size=rel(1.2)))
-        )
+
+    fullgenome=data.frame(rep(this_genome,genome_len),c(1:genome_len),rep(0,genome_len))#Create a dataframe with full genome length because coverage files only return genome pos at which there is coverage
+    colnames(fullgenome)=c('genome','pos','nocov')
+    joindf=merge(fullgenome,data,by = c('genome','pos'),all=T)#merge the coverage dataframe and the full genome dataframe
+    joindf[is.na(joindf)]=0
+
+    if (bcol=="") {
+    bcol="orange"}
+    print(ggplot(joindf) + geom_area(aes(pos,coverage), color="black", fill=bcol, alpha=ALPHA)
+          + labs(title=tit)
+          + theme(plot.title=element_text(size=rel(1.2), colour="black"))
+          + xlab(xinfo) + theme(axis.title.x=element_text(size=rel(1.2)))
+          + ylab("depth") + theme(axis.title.y=element_text(size=rel(1.2)))
+          )
+
+    }
+
 }
-
 dev.off()
