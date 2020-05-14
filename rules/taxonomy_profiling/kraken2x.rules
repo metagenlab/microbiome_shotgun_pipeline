@@ -31,7 +31,7 @@ if paired==True:
 
         shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
                 --classified-out kraken2x/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2x/{wildcards.sample}/reads/unclassified_reads#.fq \
-                --report {output.report} {input[0]} {input[1]} &>> {log}"
+                --report {output.report} {input[0]} {input[1]} 2>> {log}"
 
 else:
     rule kraken2x_SE_reads:
@@ -53,4 +53,4 @@ else:
         benchmark: "compare_tools/resources_usage/{sample}/kraken2x.benchmark.txt"
 
         shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
-                --classified-out {output.classified} --report {output.report} {input[0]}"
+                --classified-out {output.classified} --report {output.report} {input[0]} 2>> {log}"
