@@ -171,7 +171,7 @@ if (!is.null(opt$blacklist)) {
 }
 
 # give column names to genome list
-colnames(genomes) <- c("gid","gname","vgroup","shortname")
+colnames(genomes) <- c("gname","shortname","vgroup")
 
 ### merge GROUP names and COLORS (add corresponding color column) ###
 genomes$gcolor <- colors$colorname[match(genomes$vgroup,colors$v_grp)]
@@ -215,7 +215,7 @@ for (file in FN) {
     gen_name = gsub(".csv","",bn)
 
     # get row in "genomes" with corresponding short name
-    intersect <- match(gen_name, genomes$gid)
+    intersect <- match(gen_name, genomes$gname)
 
     ### catch the case when label names don't match ###
     # using list of names to plot (GENOMES.ezv), can have subsets of all virus tested.
