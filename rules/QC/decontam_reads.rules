@@ -1,6 +1,14 @@
 
-rule all_decontam:
-    input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+read_suffix=list(read_naming.values())[0]#contains the read suffix (R1.fq.gz for example) for the first sample
+                                         #this works only if all samples have the same read pairing (either all single or all paired)
+
+if len(read_suffix)==1:
+    rule all_decontam:
+        input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+else:
+    rule all_decontam:
+        input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+
 
 rule decompress_host_genome:
     input: "host/{host_acc}.fna.gz"
@@ -13,6 +21,7 @@ if config['reference_genome']['host']=='human':
     index_alg='bwtsw'
 else:
     index_alg='is'
+
 rule index_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
@@ -24,14 +33,21 @@ rule index_host_genome:
     params: algorithm=index_alg,
             mem=config["indexing_mem"]
 
-    shell: "bwa index -b {params.mem} -a {params.algorithm} {input}"
+    log: logging_folder + "host-filtering/{host_acc}-indexing.log"
+
+    shell: "bwa index -b {params.mem} -a {params.algorithm} {input} 2>> {log}"
 
 rule map_PE_reads_to_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
-    input: r1="samples/{sample}/reads/trimmed/R1_paired.fastq",
-            r2="samples/{sample}/reads/trimmed/R2_paired.fastq",
-            host_fa="host/{host_acc}.fa"
+    input: amb="host/{host_acc}.fa.amb",
+           pac="host/{host_acc}.fa.pac",
+           ann="host/{host_acc}.fa.ann",
+           bwt="host/{host_acc}.fa.bwt",
+           sa="host/{host_acc}.fa.sa",
+           r1="samples/{sample}/reads/trimmed/R1_paired.fastq",
+           r2="samples/{sample}/reads/trimmed/R2_paired.fastq",
+           host_fa="host/{host_acc}.fa"
 
     output: temp("host/{host_acc}/PE_{sample}.bam")
 
@@ -47,8 +63,13 @@ rule map_PE_reads_to_host_genome:
 rule map_SE_reads_to_host_genome:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
-    input: r1="samples/{sample}/reads/trimmed/single.fastq",
-            host_fa="host/{host_acc}.fa"
+    input: amb="host/{host_acc}.fa.amb",
+           pac="host/{host_acc}.fa.pac",
+           ann="host/{host_acc}.fa.ann",
+           bwt="host/{host_acc}.fa.bwt",
+           sa="host/{host_acc}.fa.sa",
+           r1="samples/{sample}/reads/trimmed/single.fastq",
+           host_fa="host/{host_acc}.fa"
 
     output: temp("host/{host_acc}/SE_{sample}.bam")
 
