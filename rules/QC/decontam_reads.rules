@@ -91,14 +91,14 @@ def get_bam_input_decontam(wildcards):
         return "host/{host_acc}/SE_{sample}.bam"
 
 
-rule get_unmapped_reads:
+rule get_host_unmapped_reads:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
     input: get_bam_input_decontam
 
     output: "unmapped/{host_acc}/{sample}.bam"
 
-    threads: 30
+    threads: config["num_cores"]
 
     shell: "samtools view -@ {threads} -b -f 4 {input} > {output}"
 
