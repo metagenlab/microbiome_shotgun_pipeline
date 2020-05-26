@@ -56,6 +56,9 @@ include: "rules/assembly_and_binning/bwa.rules"
 include: "rules/assembly_and_binning/assembly.rules"
 include: "rules/assembly_and_binning/binning.rules"
 
+#coverage plots
+include: "rules/genome_coverage/coverage.rules"
+
 # database setup
 include: "rules/databases/virulence/virulence.smk"
 include: "rules/databases/resistance/CARD.smk"

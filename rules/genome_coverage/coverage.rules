@@ -1,0 +1,166 @@
+import os
+fnagzlits=config["genomes_to_cover"]
+rule all_coverage:
+    input: expand("coverage/{filename}/{sample}.pdf",filename=[os.path.split(filename)[1].split('.fna.gz')[0] for filename in fnagzlits],sample=list(read_naming.keys()))
+
+
+
+
+
+rule coverage_decompress_reference:
+    input: "coverage/{filename}.fna.gz"
+
+    output: "coverage/{filename}.fna"
+
+    shell:
+        """
+        zcat {input} > {output}
+        """
+
+
+
+
+rule coverage_index_reference:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: "coverage/{filename}.fna"
+
+    output: "coverage/{filename}.fna.amb","coverage/{filename}.fna.pac","coverage/{filename}.fna.ann",
+            "coverage/{filename}.fna.bwt","coverage/{filename}.fna.sa"
+
+    params: alg=config["indexing_algorithm"]
+
+    log: logging_folder + "coverage/{filename}-indexing.log"
+
+    shell:
+         """
+         bwa index -a {params.alg} {input} 2>> {log}
+         """
+
+host_acc=config['reference_genome']['filename']
+rule coverage_map_PE_reads:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: amb="coverage/{filename}.fna.amb",
+           pac="coverage/{filename}.fna.pac",
+           ann="coverage/{filename}.fna.ann",
+           bwt="coverage/{filename}.fna.bwt",
+           sa="coverage/{filename}.fna.sa",
+           r1=f"unmapped/{host_acc}/{{sample}}_R1.fq",
+           r2=f"unmapped/{host_acc}/{{sample}}_R2.fq",
+           fna="coverage/{filename}.fna"
+
+    output: temp("coverage/{filename}/PE_{sample}.bam")
+
+    threads: config["num_cores"]
+
+    params: seed=config["minimum_seed_length"],
+            bandw=config["band_width"],
+            zdrop=config["z_dropoff"],
+            match=config["matching_score"],
+            mismatch=config["mismatch_penalty"],
+            gap=config["gap_open_penalty"],
+            gapext=config["gap_extension_penalty"],
+            minscore=config["minimum_alignment_score"],
+
+
+    log: logging_folder + "coverage/{filename}/bwa-{sample}.log"
+
+    shell:
+         """
+         bwa mem -k {params.seed} -w {params.bandw} -d {params.zdrop} -A {params.match} -B {params.mismatch} -O {params.gap} -E {params.gapext} -T {params.minscore} -t {threads} {input.fna} {input.r1} {input.r2} 2>> {log} | samtools sort -@ {threads} -n -O BAM -o {output} 2>> {log}
+         """
+
+
+rule coverage_map_SE_reads:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: amb="coverage/{filename}.fna.amb",
+           pac="coverage/{filename}.fna.pac",
+           ann="coverage/{filename}.fna.ann",
+           bwt="coverage/{filename}.fna.bwt",
+           sa="coverage/{filename}.fna.sa",
+           r1=f"unmapped/{host_acc}/{{sample}}_single.fq",
+           fna="coverage/{filename}.fna"
+
+    output: temp("coverage/{filename}/SE_{sample}.bam")
+
+    threads: config["num_cores"]
+
+    params: seed=config["minimum_seed_length"],
+            bandw=config["band_width"],
+            zdrop=config["z_dropoff"],
+            match=config["matching_score"],
+            mismatch=config["mismatch_penalty"],
+            gap=config["gap_open_penalty"],
+            gapext=config["gap_extension_penalty"],
+            minscore=config["minimum_alignment_score"],
+
+    log: logging_folder + "coverage/{filename}/bwa-{sample}.log"
+
+    shell:
+         """
+         bwa mem -k {params.seed} -w {params.bandw} -d {params.zdrop} -A {params.match} -B {params.mismatch} -O {params.gap} -E {params.gapext} -T {params.minscore} -t {threads} {input.fna} {input.r1} 2>> {log} | samtools sort -@ {threads} -n -O BAM -o {output} 2>> {log}
+         """
+
+def get_bam_pairing_coverage(wildcards):
+    fastq_list = read_naming[wildcards.sample]
+    if len(fastq_list) == 2:
+        return "coverage/{filename}/PE_{sample}.bam"
+    else:
+        return "coverage/{filename}/SE_{sample}.bam"
+
+rule get_mapping_info_and_mapped_reads:
+    conda: pipeline_path + "envs/bwa-samtools.yml"
+
+    input: get_bam_pairing_coverage
+
+    output: bam=temp("coverage/{filename}/{sample}.bam"),
+            info="coverage/{filename}/mapping-info-{sample}.txt"
+
+
+    threads: config["num_cores"]
+
+    shell:
+        """
+        samtools flagstat {input} > {output.info}
+        samtools view -@ {threads} -b -F 4 {input} > {output.bam}
+        """
+
+# import os
+# def check_bam_size(wildcards):
+#     checkpoint_output = checkpoints.coverage_get_mapped_reads_bam.get(**wildcards).output[0]
+#     size=os.path.getsize(checkpoint_output)
+#     if size>260:
+#         return "not empty"
+#     else:
+#         return "empty"
+# if check_bam_size=="not empty":
+rule generate_coverage_table:
+    conda: pipeline_path + "envs/bedtools.yml"
+
+    input: "coverage/{filename}/{sample}.bam"
+
+    output: "coverage/{filename}/{sample}.tsv"
+
+    log: logging_folder + "coverage/{filename}/{sample}_bedtools.log"
+
+    shell:
+         """
+         bedtools genomecov -d -ibam {input} > {output} 2> {log}
+         """
+
+rule create_coverage_plot:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: table="coverage/{filename}/{sample}.tsv",
+            txt="coverage/{filename}/mapping-info-{sample}.txt"
+
+    output: "coverage/{filename}/{sample}.pdf"
+
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+
+    script: "coverage.py"
+
+
