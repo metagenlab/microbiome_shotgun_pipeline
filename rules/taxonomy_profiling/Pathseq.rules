@@ -85,9 +85,9 @@ rule pathseq_on_reads:
            host_kmer=f"{db_path}/pathseq_host.bfi",
            host_bwa=f"{db_path}/pathseq_host.fa.img",
            microbe_fa=f"{db_path}/{fasta_name}",
-           microbe_bwa=f"{db_path}/{basename}.img",
+           microbe_bwa=f"{db_path}/{fasta_name}.img",
            microbe_dict=f"{db_path}/{basename}.dict",
-           tax_db=f"{db_path}/{taxonomy}.db"
+           tax_db=f"{db_path}/{taxonomy}"
 
     output: score_out="Pathseq/{sample}/output/scores.txt",
             bam_out="Pathseq/{sample}/output/output_reads.bam",
@@ -109,7 +109,7 @@ rule pathseq_on_reads:
 
     shell:
         """
-        gatk PathSeqPipelineSpark --java-options "-Xmx{params.mem_limit}" --input {input.bam} \
+        gatk PathSeqPipelineSpark --java-options "-Xmx{params.mem_limit}G" --input {input.bam} \
                                   --kmer-file {input.host_kmer} \
                                   --filter-bwa-image {input.host_bwa} \
                                   --microbe-bwa-image {input.microbe_bwa} \
