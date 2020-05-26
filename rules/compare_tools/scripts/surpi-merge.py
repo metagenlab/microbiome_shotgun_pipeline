@@ -119,9 +119,9 @@ tool_path='/'.join(split_path[0:len(split_path)-1])
 
 for sample in vir_dic.keys():
    v_tab=pd.read_csv(vir_dic[sample],sep='\t',low_memory=False)
-   vir_f=parse_surpi_table(v_tab, ncbi, 5, 0)
+   vir_f=parse_surpi_table(v_tab, ncbi, 1, 0)
    b_tab=pd.read_csv(bac_dic[sample],sep='\t',low_memory=False)
-   bac_f=parse_surpi_table(b_tab, ncbi, 5, 0)
+   bac_f=parse_surpi_table(b_tab, ncbi, 1, 0)
    full_tab = pd.concat([vir_f, bac_f],sort=False)
    full_tab = full_tab.replace(np.nan,'NA')
    full_tab['sample'] = [sample] * len(full_tab)
