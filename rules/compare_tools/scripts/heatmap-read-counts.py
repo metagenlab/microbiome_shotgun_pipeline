@@ -28,8 +28,8 @@ tb=get_heatmap_table(snakemake.input[0],rank,values,superkingdom)
 
 
 if len(tb)>0:
-    if len(tb)>30:
-        tb=tb[0:30]
+    if len(tb)>10:
+        tb=tb[0:10]
         plt.figure(figsize=(11.7,8.27))
         plt.subplots_adjust(left=0.4, bottom=0.4)
         sns.set(font_scale=1.0)
