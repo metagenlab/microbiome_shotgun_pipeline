@@ -60,25 +60,25 @@ else:
 unique_sample_list=list(set(bp_table['sample']))
 unique_names=list(set(bp_table[f'{rank}']))
 
-fontsize=10
+fontsize=5
 square=False
 annot=True
-fraction=0.6#For the presence heatmap: only consider hits identified by 60% of the tools
-if len(unique_names)>=150:
-    fontsize=2
-    square=False
-    fraction=0.9#High number of hits = heatmap is not visible
-if len(unique_names)<=150 and len(unique_names)>100:
-    fontsize=3
-    square=False
-elif len(unique_names)<100:
-    fontsize=7
-    square=True
+fraction=0.9#For the presence heatmap: only consider hits identified by 60% of the tools
+# if len(unique_names)>=150:
+#     fontsize=2
+#     square=False
+#     fraction=0.9#High number of hits = heatmap is not visible
+# if len(unique_names)<=150 and len(unique_names)>100:
+#     fontsize=3
+#     square=False
+# elif len(unique_names)<100:
+#     fontsize=7
+#     square=False
 
 
 
 
-sns.set(font_scale=1.0)
+sns.set(font_scale=0.8)
 plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
 plt.subplots_adjust(left=0.2,top=0.8)
 bp=sns.catplot(data=bp_table,x=f'read_{value}',y=f'{rank}',col='sample',col_wrap=3,kind='bar',estimator=mean,errwidth=0.3)
@@ -120,6 +120,8 @@ def draw_heatmap_counts(data,sample,rank,square,annot):
     pivot=pivot.drop('sum',axis=1)
     #pivot=pivot.replace(0,1)
     #logp=np.log10(pivot)
+    if len(pivot)>10:
+        pivot=pivot[0:10]
     g=sns.heatmap(pivot,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
     return g
 
@@ -131,8 +133,8 @@ if len(bp_table)>=50 and len(bp_table)<=100:
 
 with PdfPages(snakemake.output.heatmap_counts) as pdf:
     for sample in unique_sample_list:
-        plt.figure(figsize=(len(bp_table)/2,len(bp_table)))
-        sns.set(font_scale=fonstscale)
+        plt.figure(figsize=(11.7,8.27))
+        #sns.set(font_scale=fonstscale)
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
         fig=draw_heatmap_counts(bp_table,sample,rank,square,annot)
