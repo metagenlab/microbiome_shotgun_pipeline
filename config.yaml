@@ -13,22 +13,25 @@ indexing_mem: 25000000
 
 filter_with_Pathseq: False
 
-#assembly
+#QC
 minimum_quality_base: 28
 minimum_read_length: 50
 sliding_window_size: 5
 sliding_window_quality_threshold: 20
-adapter_file_name: NexteraPE-PE.fa
+adapter_file_name: TruSeq3-SE.fa
 adapter_removal_param1: 3
 adapter_removal_param2: 25
 adapter_removal_param3: 6
+
+#Assembly
 cov_cutoff: 5
 spades_kmer_sizes: 21,33,55,77,99,111,127
-minimum_contig_size: 500
+minimum_contig_size: 1000
+
 
 
 #Coverage
-genomes_to_cover: [path/to/genome1,path/to/genome2]
+genomes_to_cover: path/to/dir/with/genomes
 indexing_algorithm: "is"
 minimum_seed_length: 19 #matches shorter than 19bp will be missed
 band_width: 100 #Gaps longer than 100 will not be found
@@ -41,6 +44,7 @@ gap_open_penalty: 6
 gap_extension_penalty: 1
 minimum_alignment_score: 30
 
+min_contig_ident: 95 #% Minimum contig indentity to ref genome
 
 
 
