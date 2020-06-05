@@ -1,77 +1,124 @@
+rule all_assembly:
+    input: expand("assembly/{sample}/large_contigs_edit.fasta",sample=list(read_naming.keys()))
 
-rule correct_error_paired_reads_with_spades:
+host_acc=config['reference_genome']['filename']
+rule spades_correct_error_paired_reads:
     threads:
-        16
+        config["num_cores"]
     resources:
         mem_gb=120
     conda:
         pipeline_path + "envs/spades.yml"
     input:
-        R1_trimmed = "samples/{sample}/reads/trimmed/R1_paired.fastq",
-        R2_trimmed = "samples/{sample}/reads/trimmed/R2_paired.fastq",
+        R1_trimmed=f"unmapped/{host_acc}/{{sample}}_R1.fq",
+        R2_trimmed=f"unmapped/{host_acc}/{{sample}}_R1.fq"
     output:
-        R1_corrected = temp("samples/{sample}/reads/corrected/R1_paired.00.0_0.cor.fastq.gz"),
-        R2_corrected = temp("samples/{sample}/reads/corrected/R2_paired.00.0_0.cor.fastq.gz"),
-        single_corrected = temp("samples/{sample}/reads/corrected/R_unpaired.00.0_0.cor.fastq.gz"),
+        R1_corrected = temp("assembly/{sample}/corrected/{sample}_R1_paired.00.0_0.cor.fastq.gz"),
+        R2_corrected = temp("assembly/{sample}/corrected/{sample}_R2_paired.00.0_0.cor.fastq.gz"),
+        single_corrected = temp("assembly/{sample}/corrected/{sample}_R_unpaired.00.0_0.cor.fastq.gz")
+
+    params: outdir="assembly/{sample}"
+
     log:
-        logging_folder + "samples/{sample}/logs/spades_read_correction.txt"
+        logging_folder + "assembly/{sample}/spades_read_correction.txt"
     shell:
          """
-         spades.py --only-error-correction -1 {input[R1_trimmed]} -2 {input[R2_trimmed]} -o $(dirname $(dirname {output[0]})) --threads {threads} -m {resources.mem_gb} > {log}
+         spades.py --only-error-correction -1 {input.R1_trimmed} -2 {input.R2_trimmed} -o {params.outdir} --threads {threads} -m {resources.mem_gb} > {log}
          """
 
-rule correct_error_single_reads_with_spades:
+rule spades_correct_error_single_reads:
     threads:
-        16
-    conda:
-        pipeline_path + "envs/spades.yml"
-    input:
-        single_trimmed = "samples/{sample}/reads/trimmed/single.fastq",
-    output:
-        single_corrected = temp("samples/{sample}/reads/corrected/single.00.0_0.cor.fastq.gz")
-    log:
-        logging_folder + "samples/{sample}/logs/spades_read_correction.txt"
-    shell:
-         """
-         spades.py --only-error-correction  -s {input[single_trimmed]} -o $( dirname $(dirname {output[single_corrected]})) --threads {threads} > {log}
-"""
-
-
-rule assemble_metagenome_corrected_paired_reads_with_spades:
-    threads:
-        16
+        config["num_cores"]
     resources:
-        mem_gb=160
+        mem_gb=120
     conda:
         pipeline_path + "envs/spades.yml"
     input:
-        R1_corrected = "samples/{sample}/reads/corrected/R1_paired.00.0_0.cor.fastq.gz",
-        R2_corrected = "samples/{sample}/reads/corrected/R2_paired.00.0_0.cor.fastq.gz",
-        single_corrected = "samples/{sample}/reads/corrected/R_unpaired.00.0_0.cor.fastq.gz",
+        single_trimmed = f"unmapped/{host_acc}/{{sample}}_single.fq",
     output:
-        contigs = "samples/{sample}/assembly/spades/contigs.fasta",
-        graph = "samples/{sample}/assembly/spades/assembly_graph.fastg",
-        scaffolds = "samples/{sample}/assembly/spades/scaffolds.fasta",
-        contigs_paths = "samples/{sample}/assembly/spades/contigs.paths",
-        scaffolds_paths = "samples/{sample}/assembly/spades/scaffolds.paths",
-    log:
-        logging_folder + "samples/{sample}/logs/spades_assembly.txt"
-    shell:
-        """
-        spades.py --only-assembler -k 21,33,55,77,99,127 --meta -1 {input[R1_corrected]} -2 {input[R2_corrected]} -s {input[single_corrected]} -o $( dirname {output[contigs]}) --threads {threads} -m {resources.mem_gb} > {log}
-        """
+        single_corrected = temp("assembly/{sample}/corrected/{sample}_single.00.0_0.cor.fastq.gz")
 
-rule fasta_filter_size:
+    params: outdir="assembly/{sample}"
+
+    log:
+        logging_folder + "samples/{sample}/spades_read_correction.txt"
+    shell:
+         """
+         spades.py --only-error-correction -s {input} -o {params.outdir} --threads {threads} -m {resources.mem_gb} > {log}
+         """
+
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
+
+if paired==True:
+    rule spades_assemble_metagenome_corrected_paired_reads:
+        threads:
+            config["num_cores"]
+        resources:
+            mem_gb=120
+        conda:
+            pipeline_path + "envs/spades.yml"
+        input:
+            R1_corrected = temp("assembly/{sample}/corrected/{sample}_R1_paired.00.0_0.cor.fastq.gz"),
+            R2_corrected = temp("assembly/{sample}/corrected/{sample}_R2_paired.00.0_0.cor.fastq.gz"),
+            single_corrected = temp("assembly/{sample}/corrected/{sample}_R_unpaired.00.0_0.cor.fastq.gz")
+        output:
+            contigs = "assembly/{sample}/contigs.fasta",
+            graph = "assembly/{sample}/assembly_graph.fastg",
+            scaffolds = "assembly/{sample}/scaffolds.fasta",
+            contigs_paths = "assembly/{sample}/contigs.paths",
+            scaffolds_paths = "assembly/{sample}/scaffolds.paths",
+
+        params: kmer_sizes=config["spades_kmer_sizes"],
+                outdir="assembly/{sample}"
+
+        log:
+            logging_folder + "assembly/{sample}/spades_assembly.txt"
+        shell:
+            """
+            spades.py --only-assembler --meta -1 {input[R1_corrected]} -2 {input[R2_corrected]} -s {input[single_corrected]} -o {params.outdir} --threads {threads} -m {resources.mem_gb} > {log}
+            """
+
+else:
+    rule spades_assemble_metagenome_corrected_single_reads:
+        threads:
+            config["num_cores"]
+        resources:
+            mem_gb=160
+        conda:
+            pipeline_path + "envs/spades.yml"
+        input:
+            single_corrected = "assembly/{sample}/corrected/{sample}_single.00.0_0.cor.fastq.gz"
+        output:
+            contigs = "assembly/{sample}/contigs.fasta",
+            graph = "assembly/{sample}/assembly_graph.fastg",
+            scaffolds = "assembly/{sample}/scaffolds.fasta",
+            contigs_paths = "assembly/{sample}/contigs.paths",
+            scaffolds_paths = "assembly/{sample}/scaffolds.paths",
+
+        params: kmer_sizes=config["spades_kmer_sizes"],
+                outdir="assembly/{sample}"
+
+        log:
+            logging_folder + "assembly/{sample}/spades_assembly.txt"
+        shell:
+            """
+            spades.py --only-assembler -s {input} -o {params.outdir} --threads {threads} -m {resources.mem_gb} > {log}
+            """
+
+
+rule filter_contig_size:
     conda:
         pipeline_path + "envs/biopython.yml"
     input:
-        contigs = "samples/{sample}/assembly/spades/contigs.fasta"
+        contigs = "assembly/{sample}/contigs.fasta"
     output:
-        large_contigs = "samples/{sample}/assembly/spades/large_contigs.fasta"
+        large_contigs = "assembly/{sample}/large_contigs.fasta"
     params:
         config["minimum_contig_size"]
-    log:
-        logging_folder + "samples/{sample}/logs/spades_assembly.txt"
     shell:
         "awk '/^>/{{print (NR==1)?$0: \"\\n\" $0;next}} {{printf \"%s\", $0}}END{{print \"\"}}' {input} |  awk \'!/^>/ {{ next }} {{ getline seq }} length(seq) >= {params[0]} {{ print $0 \"\\n\" seq }}\'  > {output}"
 
@@ -79,13 +126,9 @@ rule fasta_edit_header:
     conda:
         pipeline_path + "envs/biopython.yml"
     input:
-        contigs = "samples/{sample}/assembly/spades/large_contigs.fasta"
+        contigs = "assembly/{sample}/large_contigs.fasta"
     output:
-        edited_contigs = "samples/{sample}/assembly/spades/large_contigs_edit.fasta"
-    params:
-        config["minimum_contig_size"]
-    log:
-        logging_folder + "samples/{sample}/logs/spades_assembly.txt"
+        edited_contigs = "assembly/{sample}/large_contigs_edit.fasta"
     shell:
         """
         sed 's/_length.*//' {input[0]}  > {output[0]}
