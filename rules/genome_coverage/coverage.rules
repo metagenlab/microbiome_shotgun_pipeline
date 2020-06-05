@@ -1,7 +1,10 @@
 import os
-fnagzlits=config["genomes_to_cover"]
+import glob
+path=config["genomes_to_cover"]
+fnagzlits=glob.glob(f'{path}/*.fna.gz')
 rule all_coverage:
     input: expand("coverage/{filename}/{sample}.pdf",filename=[os.path.split(filename)[1].split('.fna.gz')[0] for filename in fnagzlits],sample=list(read_naming.keys()))
+
 
 
 
@@ -10,14 +13,21 @@ rule all_coverage:
 rule coverage_decompress_reference:
     input: "coverage/{filename}.fna.gz"
 
-    output: "coverage/{filename}.fna"
+    output: temp("coverage/{filename}.fasta")
 
     shell:
         """
         zcat {input} > {output}
         """
 
+rule coverage_merge_contigs:
+    conda: pipeline_path + "envs/biopython.yml"
 
+    input: "coverage/{filename}.fasta"
+
+    output: "coverage/{filename}.fna"
+
+    script: "merge-contigs.py"
 
 
 rule coverage_index_reference:
@@ -162,5 +172,39 @@ rule create_coverage_plot:
             NCBI_key=config['api_key']
 
     script: "coverage.py"
+
+
+rule all_contig_coverage:
+    input: expand('coverage/{filename}/contigs-blastn/{sample}-contigs.fasta',sample=list(read_naming.keys()),filename=[os.path.split(filename)[1].split('.fna.gz')[0] for filename in fnagzlits])
+
+
+rule blastn_contigs_to_ref:
+    conda: pipeline_path + "envs/blast.yml"
+
+    input: ref='coverage/{filename}.fna',
+           contigs="assembly/{sample}/large_contigs.fasta"
+
+    output: 'coverage/{filename}/contigs-blastn/{sample}.tsv'
+
+    threads: 20
+
+    shell:
+         """
+         blastn -query {input.contigs} -subject {input.ref} -outfmt 6 -out {output}
+         """
+
+rule get_best_contig_hits:
+    conda: pipeline_path + "envs/biopython-pandas.yml"
+
+    input: 'coverage/{filename}/contigs-blastn/{sample}.tsv'
+
+    output: 'coverage/{filename}/contigs-blastn/{sample}-contigs.fasta'
+
+    params: contigs="assembly/{sample}/large_contigs.fasta",
+            ident=config['min_contig_ident']
+
+    script: "get-best-contigs.py"
+
+
 
 
