@@ -6,10 +6,6 @@ rule all_coverage:
     input: expand("coverage/{filename}/{sample}.pdf",filename=[os.path.split(filename)[1].split('.fna.gz')[0] for filename in fnagzlits],sample=list(read_naming.keys()))
 
 
-
-
-
-
 rule coverage_decompress_reference:
     input: "coverage/{filename}.fna.gz"
 
