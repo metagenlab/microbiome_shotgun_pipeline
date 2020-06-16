@@ -1,9 +1,9 @@
 #Resources
 num_cores: 55
-job_memory_limit: 6 #If you expect your job to use 6 arbitrary units (Here in Gb)
+job_memory_limit: 6 #If you expect your job to use 6GB
                     #Snakemake makes sure that the sum of all jobs memory do not exceed the total set by the flag 'resources' in the snakemake command
 #Path of sample names table
-local_samples: local_samples.tsv
+local_samples: local_samples.tsv #table with fastq sample file names
 
 #Host filtering:
 
@@ -32,7 +32,7 @@ minimum_contig_size: 1000
 
 #Coverage
 genomes_to_cover: path/to/dir/with/genomes
-indexing_algorithm: "is"
+indexing_algorithm: "is" #bwa indexing algorithm for bwa. Use 'is' for fasta smaller than 2GB
 minimum_seed_length: 19 #matches shorter than 19bp will be missed
 band_width: 100 #Gaps longer than 100 will not be found
 z_dropoff: 100 #Stop extension when the difference between the best and the current extension score is above |i-j|*A+INT
@@ -103,15 +103,15 @@ centrifuge_index: /data/diag_pipeline_data/references/centrifuge_db/p_compressed
 
 
 ###NCBI Entrez
-email: 'farid.chaabane@unil.ch'
-api_key: '72a84b34c0317bb34bac7efbb7c6bda59209'
+email: yourncbi@mail.com
+api_key: apikey
 
 
 ###Tool_comparison
-tool_list: ['kraken2','kraken2x','bracken','pathseq','kaiju','surpi','ezvir','ganon','centrifuge']
+tool_list: ['kraken2','kraken2x','bracken','pathseq','kaiju','surpi','ezvir','ganon','centrifuge'] #List of tools to run
 target_rank: species
 target_value: counts
-community_name: CF-metagenome-1
+community_name: communityname
 vir_reads_threshold: 100
 bac_reads_threshold: 10000
 ##Parameters for calculating precision and recall
