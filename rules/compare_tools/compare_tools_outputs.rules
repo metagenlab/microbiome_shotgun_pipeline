@@ -125,39 +125,40 @@ rule all_bac_benchmark:
 
 
 
-rule merge_Kraken2_outputs:
+rule linear_tax_Kraken2:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
+    input: "kraken2/{sample}/report.txt"
 
-    output: "taxonomy-tables/kraken2/all_kraken2.tsv"
+    output: "taxonomy-tables/kraken2/{sample}.tsv"
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
 
-    script: "scripts/kraken2-merge.py"
+    script: "scripts/kraken2-tax.py"
 
-rule merge_Kraken2X_outputs:
+
+rule linear_tax_Kraken2X:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
 
-    output: "taxonomy-tables/kraken2x/all_kraken2x.tsv"
+    output: "taxonomy-tables/kraken2x/{sample}.tsv"
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
 
-    script: "scripts/kraken2-merge.py"
+    script: "scripts/kraken2-tax.py"
 
 
-rule merge_Bracken_outputs:
+rule linear_tax_Bracken:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 
-    output: "taxonomy-tables/bracken/all_bracken.tsv"
+    output: "taxonomy-tables/bracken/{sample}.tsv"
 
-    script: "scripts/bracken-merge.py"
+    script: "scripts/bracken-tax.py"
 
 
 rule correct_Pathseq_counts:
@@ -170,85 +171,89 @@ rule correct_Pathseq_counts:
     script: "scripts/pathseq-correct-counts.py"
 
 
-rule merge_Pathseq_outputs:
+rule linear_tax_Pathseq:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("Pathseq/{sample}/output/correct-scores.txt",sample=list(read_naming.keys()))
+    input: "Pathseq/{sample}/output/correct-scores.txt"
 
-    output: "taxonomy-tables/pathseq/all_pathseq.tsv"
+    output: "taxonomy-tables/pathseq/{sample}.tsv"
 
-    script: "scripts/pathseq-merge.py"
+    script: "scripts/pathseq-tax.py"
 
-rule merge_kaiju_outputs:
+rule linear_tax_Kaiju:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys()))
+    input: "kaiju/{sample}/summary.tsv"
 
-    output: "taxonomy-tables/kaiju/all_kaiju.tsv"
+    output: "taxonomy-tables/kaiju/{sample}.tsv"
 
-    log: logging_folder + f"compare_tools/{community}/classification/kaiju.log"
+    script: "scripts/kaiju-tax.py"
 
-    script: "scripts/kaiju-merge.py"
-
-rule merge_SURPI_outputs:
+rule linear_tax_SURPI:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: bac=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",sample=list(read_naming.keys())),
-           vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
+    input: bac="SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",
+           vir="SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable"
             #dust.annotated file because low complexity regions are substracted
 
-    output: "taxonomy-tables/surpi/all_surpi.tsv"
+    output: "taxonomy-tables/surpi/{sample}.tsv"
 
-    log: logging_folder + f"compare_tools/{community}/classification/surpi.log"
+    log: logging_folder + f"compare_tools/{community}/classification/{{sample}}-surpi.log"
 
-    script: "scripts/surpi-merge.py"
+    script: "scripts/surpi-tax.py"
 
 ezvir_db=config["ezvir_database"]
-rule merge_ezvir_outputs:
+rule linear_tax_ezVIR:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: hits=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys()))
+    input: hits="Ezvir/{sample}/report/ALL-RESULTS.ezv"
 
 
-    output: "taxonomy-tables/ezvir/all_ezvir.tsv"
+    output: "taxonomy-tables/ezvir/{sample}.tsv"
 
     params: read_len=config["samples_read_length"],
             gen_taxids=f'{ezvir_db}/genome_taxids.csv'
 
-    script: "scripts/Ezvir-merge.py"
+    script: "scripts/ezVIR-tax.py"
 
 
-rule merge_ganon_outputs:
+rule linear_tax_ganon:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("ganon/{sample}/classified.rep",sample=list(read_naming.keys()))
+    input: "ganon/{sample}/classified.rep"
 
-    output: "taxonomy-tables/ganon/all_ganon.tsv"
+    output: "taxonomy-tables/ganon/{sample}.tsv"
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
 
-    script: "scripts/ganon-merge.py"
+    script: "scripts/ganon-tax.py"
 
 
-rule merge_centrifuge_outputs:
+rule linear_tax_centrifuge:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("centrifuge/{sample}/centrifuge-k-report.txt",sample=list(read_naming.keys()))
+    input: "centrifuge/{sample}/centrifuge-k-report.txt"
 
-    output: "taxonomy-tables/centrifuge/all_centrifuge.tsv"
+    output: "taxonomy-tables/centrifuge/{sample}.tsv"
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
     
-    script: "scripts/kraken2-merge.py"
+    script: "scripts/kraken2-tax.py"
 
 
+rule merge_all_tools_output:
+    input: expand("taxonomy-tables/{{tool}}/{sample}.tsv",sample=list(read_naming.keys()))
+
+    output: "taxonomy-tables/{tool}/all_{tool}.tsv"
+
+    script: "scripts/cat-tax.py"
 
 rule virus_read_count_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
+    input: "taxonomy-tables/{tool}/all_{tool}.tsv"
 
     output: f"plots/heatmaps/{{tool}}/viruses/{rank}_level.pdf"
 
@@ -261,7 +266,7 @@ rule virus_read_count_heatmaps:
 rule bacteria_read_count_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: f"taxonomy-tables/{{tool}}/all_{{tool}}.tsv"
+    input: "taxonomy-tables/{tool}/all_{tool}.tsv"
 
     output: f"plots/heatmaps/{{tool}}/bacteria/{rank}_level.pdf"
 

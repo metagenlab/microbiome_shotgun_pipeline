@@ -12,17 +12,6 @@ logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s',datefmt='%d %
 virus_input=snakemake.input['vir']
 bacteria_input=snakemake.input['bac']
 
-vir_dic={}
-for path in virus_input:
-    sample=path.split('/')[1]
-    vir_dic[sample]=path
-
-bac_dic={}
-for path in bacteria_input:
-    sample=path.split('/')[1]
-    bac_dic[sample]=path
-
-
 def filter_columns_low_read_counts(table, threshold):
     colname_list = []
     for colname in table.columns:
@@ -111,27 +100,20 @@ def parse_surpi_table(table, ncbi, col_threshold, row_threshold):
     tb = tb.replace(np.nan, 'NA')
     return tb
 
+v_tab=pd.read_csv(virus_input,sep='\t',low_memory=False)
+vir_f=parse_surpi_table(v_tab, ncbi, 1, 0)#select columns with at least 1 read in it, and select all rows
+b_tab=pd.read_csv(bacteria_input,sep='\t',low_memory=False)
+bac_f=parse_surpi_table(b_tab, ncbi, 1, 0)
+full_tab = pd.concat([vir_f, bac_f],sort=False)
+full_tab = full_tab.replace(np.nan,'NA')
+full_tab = full_tab.groupby(
+    ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
+     'genus', 'genus_taxid', 'species', 'species_taxid', 'scientific_name', 'taxid']).sum()
 
-list_tables=[]
+full_tab['sample'] = [snakemake.wildcards.sample] * len(full_tab)
+full_tab['read_percent'] = full_tab['read_counts'].div(sum(full_tab['read_counts'])).mul(100)
+full_tab.to_csv(snakemake.output[0], sep='\t')
 
-split_path=snakemake.output[0].split('/')
-tool_path='/'.join(split_path[0:len(split_path)-1])
-
-for sample in vir_dic.keys():
-   v_tab=pd.read_csv(vir_dic[sample],sep='\t',low_memory=False)
-   vir_f=parse_surpi_table(v_tab, ncbi, 1, 0)
-   b_tab=pd.read_csv(bac_dic[sample],sep='\t',low_memory=False)
-   bac_f=parse_surpi_table(b_tab, ncbi, 1, 0)
-   full_tab = pd.concat([vir_f, bac_f],sort=False)
-   full_tab = full_tab.replace(np.nan,'NA')
-   full_tab['sample'] = [sample] * len(full_tab)
-   full_tab=full_tab.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
-   full_tab['read_percent'] = full_tab['read_counts'].div(sum(full_tab['read_counts'])).mul(100)
-   full_tab.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
-   list_tables.append(full_tab)
-
-all_surpi_tab=pd.concat(list_tables,sort=False,axis=0)
-all_surpi_tab.to_csv(snakemake.output[0],sep='\t')
 
 
 

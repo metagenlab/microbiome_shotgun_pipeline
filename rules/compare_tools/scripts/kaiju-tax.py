@@ -3,14 +3,6 @@ from ete3 import NCBITaxa
 import numpy as np
 ncbi = NCBITaxa()
 
-
-input_file_list=snakemake.input
-dic={}
-for path in input_file_list:
-    sample=path.split('/')[1]
-    dic[sample]=path
-
-
 def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
     tab=tab.replace(np.nan,0)
@@ -54,18 +46,10 @@ def get_lin_tax(tab, ncbi, target_ranks):
     return df
 
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
-tables_list=[]
-split_path=snakemake.output[0].split('/')
-tool_path='/'.join(split_path[0:len(split_path)-1])
-
-for sample in dic.keys():
-    sample_tb=pd.read_csv(dic[sample],sep='\t')
-    sample_tb.columns=["file", "read_percent", "reads_assigned", "taxid", "lineage"]
-    lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
-    lin_tax_tb['sample']=[sample]*len(lin_tax_tb)
-    lin_tax_tb=lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
-    lin_tax_tb.to_csv(f"{tool_path}/{sample}.tsv",sep='\t')
-    tables_list.append(lin_tax_tb)
-
-concatDf=pd.concat(tables_list,sort=False,axis=0)
-concatDf.to_csv(snakemake.output[0],sep='\t')
+sample_tb=pd.read_csv(snakemake.input[0],sep='\t',names=["file", "read_percent", "reads_assigned", "taxid", "lineage"])
+lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
+lin_tax_tb = lin_tax_tb.groupby(
+    ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
+     'genus', 'genus_taxid', 'species', 'species_taxid', 'scientific_name', 'taxid']).sum()
+lin_tax_tb['sample']=[snakemake.wildcards.sample]*len(lin_tax_tb)
+lin_tax_tb.to_csv(snakemake.output[0],sep='\t')

@@ -1,18 +1,11 @@
 import pandas as pd
-from Bio import Entrez
-Entrez.email=snakemake.params.NCBI_email
-Entrez.api_key=snakemake.params.NCBI_key
 from ete3 import NCBITaxa
 import numpy as np
+from Bio import Entrez
+
+Entrez.email=snakemake.params.NCBI_email
+Entrez.api_key=snakemake.params.NCBI_key
 ncbi = NCBITaxa()
-
-
-input_file_list=snakemake.input
-dic={}
-for path in input_file_list:
-    sample=path.split('/')[1]
-    dic[sample]=path
-
 
 def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
@@ -24,7 +17,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
     percent_dic = dict(zip(taxid_list, percents))
     for taxid in taxid_list:
         tax[taxid] = {'taxid': int(taxid), 'read_percent': percent_dic[taxid], 'read_counts': count_dic[taxid]}
-        if taxid > 0:
+        if int(taxid) > 0:
             scientific_name = ncbi.translate_to_names([taxid])[0]
             tax[taxid]['scientific_name'] = scientific_name
             try:
@@ -34,7 +27,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
                 del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
                 print(f'deleted entry name: {del_entry_name}')
                 simple_name = ' '.join(del_entry_name.split(' ')[
-                                       0:2])  # Some times, subspecies is added to the scientific name, and ete3 cannot find a match
+                                       0:2])  # Some times, subspecies or a strain number is added to the scientific name, and ete3 cannot find a match
                 print(f'first two words of entry name {simple_name}')
                 if 'unclassified' in simple_name:
                     print('discarding "unclassified" in name')
@@ -66,25 +59,24 @@ def get_lin_tax(tab, ncbi, target_ranks):
                         if previous_rank not in rank2names.keys():
                             continue
                     tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
-        if taxid == 0:
+        if int(taxid) == 0:
             tax[taxid]['scientific_name'] = 'unclassified'
     df = pd.DataFrame.from_dict(tax, orient='index')
     df = df.replace(np.nan, 'NA')
     return df
 
-
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
-tables_list = []
-split_path=snakemake.output[0].split('/')
-tool_path='/'.join(split_path[0:len(split_path)-1])
-for sample in dic.keys():
-    sample_tb=pd.read_csv(dic[sample],sep='\t',names=["read_percent","rooted_frag_num","reads_assigned","rank_code","taxid","scientific_names"])
-    lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
-    lin_tax_tb['sample']=[sample]*len(lin_tax_tb)
-    lin_tax_tb=lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
-    lin_tax_tb.to_csv(f"{tool_path}/{sample}.tsv", sep='\t')
-    tables_list.append(lin_tax_tb)
 
-concatDf=pd.concat(tables_list,sort=False,axis=0)
-concatDf.to_csv(snakemake.output[0],sep='\t')
+tb_input=pd.read_csv(snakemake.input[0],sep='\t',names=['taxid','reads_assigned','read_percent','reads_assigned_total','reads_uniquely_assigned','rank','name','NA'])
+tb_input.replace('unclassified',0,inplace=True)
+tb_linear_tax=get_lin_tax(tb_input,ncbi,target_ranks)
+tb_linear_tax = tb_linear_tax.groupby(
+    ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
+     'genus', 'genus_taxid', 'species', 'species_taxid', 'scientific_name', 'taxid']).sum()
+tb_linear_tax['sample']=[snakemake.wildcards.sample]*len(tb_linear_tax)
+tb_linear_tax.to_csv(snakemake.output[0], sep='\t')
+
+
+
+

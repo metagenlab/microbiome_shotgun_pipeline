@@ -6,13 +6,11 @@ import numpy as np
 
 ncbi = NCBITaxa()
 
-input_file_list=snakemake.input.hits
+input_file=snakemake.input.hits
 genome_taxids_path=snakemake.params.gen_taxids
-sample_names=[name.split("/")[1] for name in input_file_list]
-dic=dict(zip(sample_names,input_file_list))
-
 read_length=snakemake.params.read_len
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
+
 
 def get_filtered_read_counts(table,threshold):
     read_counts = {}
@@ -21,9 +19,6 @@ def get_filtered_read_counts(table,threshold):
         if read_num >= threshold:
             read_counts[genome_name] = read_num #dictionary with accessions id as keys and read counts as values
     return read_counts
-
-
-
 
 def get_taxid_from_accession(acc_read_counts_dic,taxid_tb):
     acc_id = list(acc_read_counts_dic.keys())
@@ -92,22 +87,16 @@ def get_tax_table(table,taxid_tb,threshold,target_ranks):
     tb=tb.replace(np.nan,'NA')
     return tb
 
-tables_list=[]
-
-split_path=snakemake.output[0].split('/')
-tool_path='/'.join(split_path[0:len(split_path)-1])
 
 genome_taxids_tb=pd.read_csv(genome_taxids_path,sep=',')
 genome_taxids_tb.columns=['acc','taxid']
 genome_taxids_tb.set_index('acc',inplace=True)
-for i in sample_names:
-    ezvir_tb=pd.read_csv(dic[i],sep=',',index_col='GN')
-    ezvir_parsed_tb=get_tax_table(ezvir_tb,genome_taxids_tb,1,target_ranks)#Threshold =1, get all hits with at least 1 read
-    ezvir_parsed_tb['sample']=[i]*len(ezvir_parsed_tb)
-    samples_ezvir_tb=ezvir_parsed_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','sample']).sum()
-    samples_ezvir_tb[f'read_percent'] = samples_ezvir_tb[f'read_counts'].div(sum(samples_ezvir_tb[f'read_counts'])).mul(100)
-    samples_ezvir_tb.to_csv(f"{tool_path}/{i}.tsv", sep='\t')
-    tables_list.append(samples_ezvir_tb)
 
-all_ezvir_tab = pd.concat(tables_list, sort=False, axis=0)
-all_ezvir_tab.to_csv(snakemake.output[0],sep='\t')
+ezvir_tb=pd.read_csv(input_file,sep=',',index_col='GN')
+ezvir_parsed_tb=get_tax_table(ezvir_tb,genome_taxids_tb,1,target_ranks)#Threshold =1, get all hits with at least 1 read
+sample_ezvir_tb = ezvir_parsed_tb.groupby(
+    ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
+     'genus', 'genus_taxid', 'species', 'species_taxid', 'scientific_name', 'taxid']).sum()
+sample_ezvir_tb['sample']=[snakemake.wildcards.sample]*len(sample_ezvir_tb)
+sample_ezvir_tb[f'read_percent'] = sample_ezvir_tb[f'read_counts'].div(sum(sample_ezvir_tb[f'read_counts'])).mul(100)
+sample_ezvir_tb.to_csv(snakemake.output[0], sep='\t')
