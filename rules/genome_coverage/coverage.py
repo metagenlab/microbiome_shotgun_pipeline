@@ -11,8 +11,8 @@ fullname=snakemake.wildcards.filename
 temp=fullname.split('_')
 acc='_'.join(temp[:2])#split on the second underscore to get accession id
 try:
-    ID=Entrez.read(Entrez.esearch(db='assembly', term=f'{acc}'))['IdList'][0]
-    summary=Entrez.read(Entrez.esummary(db='assembly', id=ID))['DocumentSummarySet']['DocumentSummary'][0]
+    ID=Entrez.read(Entrez.esearch(db='assembly', term=f'{acc}'),validate=False)['IdList'][0]
+    summary=Entrez.read(Entrez.esummary(db='assembly', id=ID),validate=False)['DocumentSummarySet']['DocumentSummary'][0]
     name=summary['Organism']
     species=summary['SpeciesName']
     taxid=summary['Taxid']
