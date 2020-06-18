@@ -4,7 +4,7 @@ This branch of the microbiome shotgun pipeline includes metagenomic classificati
 ## Database setup
 So far there are 5 tools for which there are rules to generate a database, namely: SURPI, Pathseq, Kraken2, bracken, ganon
 and ezVIR.
-###Database setup for SURPI
+### Database setup for SURPI
 SURPI is ran through a singularity container and requires specific singularity arguments which can be incompatible with other tools using singularity (In our case Pathseq).
 To avoid this we run SURPI commands seperately.
 To generate the required database files run the command below
@@ -13,7 +13,7 @@ snakemake --snakefile path/to/Snakefile --configfile config.yml
  --use-conda --conda-prefix path/to/conda/envs/ 
 --use-singularity --singularity-args --app SURPI all_surpi_db
 ```
-###Database setup for the rest of tools
+### Database setup for the rest of tools
 ```bash
 snakemake --snakefile path/to/Snakefile --configfile config.yml 
 --use-conda --conda-prefix path/to/conda/envs/ 
@@ -70,7 +70,7 @@ AS2_R	185910	261
 AS2_D	687358	6975
 AS3_D	10372	1884
 ```
-####Generating benchmarks for Viruses or Bacteria
+#### Generating benchmarks for Viruses or Bacteria
 For Viruses:
 ```bash
 snakemake --snakefile path/to/Snakefile --configfile config.yml
