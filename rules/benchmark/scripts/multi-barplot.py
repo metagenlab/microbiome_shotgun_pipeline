@@ -12,7 +12,7 @@ superkingdom_gs=gold_standard[gold_standard.superkingdom==superkingdom]
 
 
 def groupby_samples(table,tool_name,rank):
-    if tool_name=='ezvir':
+    if tool_name=='ezvir' or tool_name=='metaphlan':
         sample_tb=table.groupby(['sample',f'{rank}'],as_index=False)['read_counts'].sum()
         sample_tb['read_counts']=sample_tb['read_counts']//2
     else:
@@ -26,7 +26,7 @@ files=snakemake.input.tool_out
 tables=[]
 tool_list=[]
 for file in files:
-    tool = file.split('/')[1]
+    tool = file.split('/')[1].split('.tsv')[0]
     tool_list.append(tool)
     tb=pd.read_csv(file,sep='\t')
     tb=tb[tb.superkingdom==superkingdom]
