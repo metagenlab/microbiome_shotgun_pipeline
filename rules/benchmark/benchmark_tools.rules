@@ -1,9 +1,10 @@
 #setup all tools native database
+ezvir_db=config["ezvir_database"]
 surpi_db=config["surpi_database"]
 pathseq_db=config["pathseq_database"]
 kraken_db_path=config["kraken_database"]
 ganon_db_path=config["ganon_db_path"]
-db_path_ezvir=config["ezvir_database"]
+
 read_len=config["samples_read_length"]
 kmer_len=config["kraken_kmer_len"]
 
@@ -35,91 +36,57 @@ rule all_database_setup:
            ganon_nodes=f"{ganon_db_path}/refseqCG/assemblies/nodes.dmp",
            ganon_merged=f"{ganon_db_path}/refseqCG/assemblies/merged.dmp",
            ganon_seq_info=f"{ganon_db_path}/refseqCG/assemblies/acc_len_taxid.txt",
-           ezVIR_index=f"{db_path_ezvir}/EZV0.1-database.rev.2.bt2",
-           ezVIR_len=f"{db_path_ezvir}/genome_lengths.csv",
-           ezVIR_names=f"{db_path_ezvir}/genome_names.csv",
-           ezVIR_taxids=f"{db_path_ezvir}/genome_taxids.csv",
-           ezVIR_colours=f"{db_path_ezvir}/colours.csv"
+           ezVIR_index=f"{ezvir_db}/EZV0.1-database.rev.2.bt2",
+           ezVIR_len=f"{ezvir_db}/genome_lengths.csv",
+           ezVIR_names=f"{ezvir_db}/genome_names.csv",
+           ezVIR_taxids=f"{ezvir_db}/genome_taxids.csv",
+           ezVIR_colours=f"{ezvir_db}/colours.csv"
 
 
-
+superkingdom=config["superkingdom"]
 rank=config["target_rank"]
 community=config['community_name']
 tools=sorted(list(config["tools"].keys()))
-vir_threshold=config["vir_reads_threshold"]
-bac_threshold=config["bac_reads_threshold"]
+threshold=config["reads_threshold"]
 
 #generate all tools taxonomy tables
 rule all_tax:
     input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
 #generate all tools outputs without a gold standard
-rule all_vir_out:
+rule all_tool_out:
     input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
-           vir_heatmap_per_sample=expand("{tool}/heatmap-viruses-{rank}-level.pdf",rank=rank,tool=tools),
-           barplots=expand("plots/viruses/barplot_{variable}_{rank}_level.pdf",rank=rank,variable=['tools','samples']),
-           vir_heatmap_counts=f"plots/viruses/heatmap_counts_{vir_threshold}_{rank}_level.pdf",
-           heatmap_presence=f"plots/viruses/heatmap_presence_{rank}_level.pdf",
+           heatmap_per_sample=expand("{tool}/heatmap-{superkingdom}-{rank}-level.pdf",superkingdom=superkingdom,rank=rank,tool=tools),
+           barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
+           heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
+           heatmap_presence=f"plots/{superkingdom}/heatmap_presence_{rank}_level.pdf",
            tab="benchmark/resources_usage/resources.tsv",
            memo="benchmark/resources_usage/memory.pdf",
            time="benchmark/resources_usage/time.pdf",
            mem_and_time="benchmark/resources_usage/mem-time.pdf"
 
-rule all_bac_out:
-    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
-           bac_heatmap_per_sample=expand("{tool}/heatmap-bacteria-{rank}-level.pdf",rank=rank,tool=tools),
-           barplots=expand("plots/bacteria/barplot_{variable}_{rank}_level.pdf",rank=rank,variable=['tools','samples']),
-           bac_heatmap_counts=f"plots/bacteria/heatmap_counts_{bac_threshold}_{rank}_level.pdf",
-           heatmap_presence=f"plots/bacteria/heatmap_presence_{rank}_level.pdf",
-           tab="benchmark/resources_usage/resources.tsv",
-           memo="benchmark/resources_usage/memory.pdf",
-           time="benchmark/resources_usage/time.pdf",
-           mem_and_time="benchmark/resources_usage/mem-time.pdf"
 
 #generate all benchmarks compared to a gold standard
-rule all_vir_benchmark:
+rule all_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
-            vir_read_counts_heatmaps=f"plots/viruses/heatmap_counts_{vir_threshold}_{rank}_level.pdf",
+            read_counts_heatmaps=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
             gold_standard=f"gold_standard/gs_{community}.tsv",
-            vir_scores_presence=expand("benchmark/tax-class/{community}/stats/vir_{out}_{rank}_level_{thr}.tsv",community=community,thr=vir_threshold,out=['scores','presence'],rank=rank),
-            vir_presence_heatmap=f"benchmark/tax-class/{community}/plots/heatmap_presence_vir_{vir_threshold}_{rank}_level.pdf",
-            pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-virus-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-virus-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-virus-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-virus-{rank}.tsv",
-            l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-virus-{rank}.pdf",
-            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-virus-{rank}.tsv",
-            barplots=expand("plots/viruses/barplot_{variable}_{rank}_level.pdf",rank=rank,variable=['tools','samples']),
-            all_barplots=f"benchmark/tax-class/{community}/plots/barplot-viruses-{rank}.pdf",
-            table_reads=f"benchmark/tax-class/{community}/stats/classified-viruses.tsv",
-            barplot_reads=f"benchmark/tax-class/{community}/plots/classified-viruses.pdf",
+            scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}_{out}_{rank}_level_{thr}.tsv",superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
+            presence_heatmap=f"benchmark/tax-class/{community}/plots/heatmap_presence_{superkingdom}_{threshold}_{rank}_level.pdf",
+            pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-{superkingdom}-{rank}.pdf",
+            f1_curve=f"benchmark/tax-class/{community}/plots/f1-{superkingdom}-{rank}.pdf",
+            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-{superkingdom}-{rank}.tsv",
+            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-{superkingdom}-{rank}.tsv",
+            l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-{superkingdom}-{rank}.pdf",
+            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv",
+            barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
+            all_barplots=f"benchmark/tax-class/{community}/plots/barplot-{superkingdom}-{rank}.pdf",
+            table_reads=f"benchmark/tax-class/{community}/stats/classified-{superkingdom}.tsv",
+            barplot_reads=f"benchmark/tax-class/{community}/plots/classified-{superkingdom}.pdf",
             tab="benchmark/resources_usage/resources.tsv",
             memo="benchmark/resources_usage/memory.pdf",
             time="benchmark/resources_usage/time.pdf",
             mem_and_time="benchmark/resources_usage/mem-time.pdf"
-
-
-rule all_bac_benchmark:
-    input:  merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
-            bac_read_counts_heatmaps=f"plots/bacteria/heatmap_counts_{bac_threshold}_{rank}_level.pdf",
-            gold_standard=f"gold_standard/gs_{community}.tsv",
-            bac_scores_presence=expand("benchmark/tax-class/{community}/stats/vir_{out}_{rank}_level_{thr}.tsv",community=community,thr=bac_threshold,out=['scores','presence'],rank=rank),
-            bac_presence_heatmap=f"benchmark/tax-class/{community}/plots/heatmap_presence_bac_{bac_threshold}_{rank}_level.pdf",
-            pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-bacteria-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-bacteria-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-bacteria-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-bacteria-{rank}.tsv",
-            l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-bacteria-{rank}.pdf",
-            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-bacteria-{rank}.tsv",
-            barplots=expand("plots/bacteria/barplot_{variable}_{rank}_level.pdf",rank=rank,variable=['tools','samples']),
-            all_barplots=f"benchmark/tax-class/{community}/plots/barplot-bateria-{rank}.pdf",
-            barplot_reads=f"benchmark/tax-class/{community}/plots/classified-bacteria.pdf",
-            tab="benchmark/resources_usage/resources.tsv",
-            memo="benchmark/resources_usage/memory.pdf",
-            time="benchmark/resources_usage/time.pdf",
-            mem_and_time="benchmark/resources_usage/mem-time.pdf"
-
-
 
 rule linear_tax_Kraken2:
     conda: pipeline_path + "envs/benchmark.yml"
@@ -201,7 +168,7 @@ rule linear_tax_SURPI:
     script: "scripts/surpi-tax.py"
 
 
-ezvir_db=config["ezvir_database"]
+
 rule linear_tax_ezVIR:
     conda: pipeline_path + "envs/benchmark.yml"
 
@@ -276,69 +243,38 @@ rule merge_all_tools_out:
 
 
 
-rule virus_read_count_heatmaps:
+rule read_count_heatmaps:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: "taxonomy-tables/{tool}.tsv"
 
-    output: f"{{tool}}/heatmap-viruses-{rank}-level.pdf"
+    output: f"{{tool}}/heatmap-{superkingdom}-{rank}-level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
-            superkingdom="Viruses"
+            superkingdom=superkingdom
 
     script: "scripts/heatmap-read-counts.py"
 
 
 
-rule bacteria_read_count_heatmaps:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: "taxonomy-tables/{tool}.tsv"
-
-    output: f"{{tool}}/heatmap-bacteria-{rank}-level.pdf"
-
-    params: rank=config["target_rank"],
-            value=config["target_value"],
-            superkingdom="Bacteria"
-
-    script: "scripts/heatmap-read-counts.py"
-
-
-rule plot_viruses_tools_output:
+rule plot_tools_output:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: expand("taxonomy-tables/{tool}/{sample}.tsv",tool=tools,sample=list(read_naming.keys()))
 
-    output: barplot_samples=f"plots/viruses/barplot_samples_{rank}_level.pdf",
-            barplot_tools=f"plots/viruses/barplot_tools_{rank}_level.pdf",
-            heatmap_counts=f"plots/viruses/heatmap_counts_{vir_threshold}_{rank}_level.pdf",
-            heatmap_presence=f"plots/viruses/heatmap_presence_{rank}_level.pdf"
+    output: barplot_samples=f"plots/{superkingdom}/barplot_samples_{rank}_level.pdf",
+            barplot_tools=f"plots/{superkingdom}/barplot_tools_{rank}_level.pdf",
+            heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
+            heatmap_presence=f"plots/{superkingdom}/heatmap_presence_{rank}_level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
-            superkingdom="Viruses",
-            threshold=vir_threshold
+            superkingdom=superkingdom,
+            threshold=threshold
 
     script: "scripts/visualize-tool-output.py"
 
-
-rule plot_bacteria_tools_output:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: expand("taxonomy-tables/{tool}/{sample}.tsv",tool=tools,sample=list(read_naming.keys()))
-
-    output: barplot_samples=f"plots/bacteria/barplot_samples_{rank}_level.pdf",
-            barplot_tools=f"plots/bacteria/barplot_tools_{rank}_level.pdf",
-            heatmap_counts=f"plots/bacteria/heatmap_counts_{bac_threshold}_{rank}_level.pdf",
-            heatmap_presence=f"plots/bacteria/heatmap_presence_{rank}_level.pdf"
-
-    params: rank=config["target_rank"],
-            value=config["target_value"],
-            superkingdom="Bacteria",
-            threshold=bac_threshold
-
-    script: "scripts/visualize-tool-output.py"
 
 
 rule plot_resource_usage:
@@ -370,77 +306,40 @@ rule genereate_gold_standard_profile:
 
 
 
-rule precision_recall_f1_score_viruses:
+rule precision_recall_f1_score_per_tool:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
             tool_out="taxonomy-tables/{tool}.tsv"
 
-    output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/vir_scores_{rank}_level_{vir_threshold}.tsv",
-            presence=f"benchmark/tax-class/{community}/stats/{{tool}}/vir_presence_{rank}_level_{vir_threshold}.tsv"
+    output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/{superkingdom}_scores_{rank}_level_{threshold}.tsv",
+            presence=f"benchmark/tax-class/{community}/stats/{{tool}}/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
 
-    params: threshold=vir_threshold,
-            superkingdom="Viruses"
-
-    script: "scripts/stats.py"
-
-
-
-rule precision_recall_f1_score_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            tool_out="taxonomy-tables/{tool}.tsv"
-
-    output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/bac_scores_{rank}_level_{bac_threshold}.tsv",
-            presence=f"benchmark/tax-class/{community}/stats/{{tool}}/bac_presence_{rank}_level_{bac_threshold}.tsv"
-
-    params: threshold=bac_threshold,
-            superkingdom="Bacteria"
+    params: threshold=threshold,
+            superkingdom=superkingdom
 
     script: "scripts/stats.py"
 
 
 
-rule regroup_scores_and_presence_viruses:
+rule regroup_scores_and_presence:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/vir_scores_{rank}_level_{vir_threshold}.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
-           presence=expand("benchmark/tax-class/{community}/stats/{tool}/vir_presence_{rank}_level_{vir_threshold}.tsv",community=community,tool=tools,rank=rank,vir_threshold=vir_threshold),
+    input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/{superkingdom}_scores_{rank}_level_{threshold}.tsv",community=community,tool=tools,superkingdom=superkingdom,rank=rank,threshold=threshold),
+           presence=expand("benchmark/tax-class/{community}/stats/{tool}/{superkingdom}_presence_{rank}_level_{threshold}.tsv",community=community,tool=tools,superkingdom=superkingdom,rank=rank,threshold=threshold),
 
-    output: all_scores=f"benchmark/tax-class/{community}/stats/vir_scores_{rank}_level_{vir_threshold}.tsv",
-            all_presence=f"benchmark/tax-class/{community}/stats/vir_presence_{rank}_level_{vir_threshold}.tsv"
+    output: all_scores=f"benchmark/tax-class/{community}/stats/{superkingdom}_scores_{rank}_level_{threshold}.tsv",
+            all_presence=f"benchmark/tax-class/{community}/stats/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
 
     script: "scripts/concat.py"
 
-rule regroup_scores_and_presence_bacteria:
+
+rule presence_heatmap:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/bac_scores_{rank}_level_{bac_threshold}.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold),
-           presence=expand("benchmark/tax-class/{community}/stats/{tool}/bac_presence_{rank}_level_{bac_threshold}.tsv",community=community,tool=tools,rank=rank,bac_threshold=bac_threshold),
+    input: f"benchmark/tax-class/{community}/stats/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
 
-    output: all_scores=f"benchmark/tax-class/{community}/stats/bac_scores_{rank}_level_{bac_threshold}.tsv",
-            all_presence=f"benchmark/tax-class/{community}/stats/bac_presence_{rank}_level_{bac_threshold}.tsv"
-
-    script: "scripts/concat.py"
-
-rule presence_heatmap_viruses:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: f"benchmark/tax-class/{community}/stats/vir_presence_{rank}_level_{vir_threshold}.tsv"
-
-    output: f"benchmark/tax-class/{community}/plots/heatmap_presence_vir_{vir_threshold}_{rank}_level.pdf"
-
-    params: rank=config["target_rank"]
-
-    script: "scripts/heatmap-presence.py"
-
-rule presence_heatmap_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: f"benchmark/tax-class/{community}/stats/bac_presence_{rank}_level_{bac_threshold}.tsv"
-
-    output: f"benchmark/tax-class/{community}/plots/heatmap_presence_bac_{bac_threshold}_{rank}_level.pdf"
+    output: f"benchmark/tax-class/{community}/plots/heatmap_presence_{superkingdom}_{threshold}_{rank}_level.pdf"
 
     params: rank=config["target_rank"]
 
@@ -448,212 +347,122 @@ rule presence_heatmap_bacteria:
 
 
 
-rule barplot_counts_viruses:
+rule barplot_counts:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
            tool_out="taxonomy-tables/{tool}.tsv"
 
-    output: f"benchmark/tax-class/{community}/{{tool}}/viruses-barplot_{rank}_level.pdf"
+    output: f"benchmark/tax-class/{community}/{{tool}}/{superkingdom}-barplot_{rank}_level.pdf"
 
     params: rank=config["target_rank"],
-            superkingdom='Viruses'
+            superkingdom=superkingdom
 
     script: "scripts/barplot.py"
 
 
 
-rule all_tools_barplot_counts_viruses:
+rule all_tools_barplot_counts:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
            tool_out=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     params: rank=config["target_rank"],
-            superkingdom='Viruses'
+            superkingdom=superkingdom
 
-    output: all_barplots=f"benchmark/tax-class/{community}/plots/barplot-viruses-{rank}.pdf"
+    output: all_barplots=f"benchmark/tax-class/{community}/plots/barplot-{superkingdom}-{rank}.pdf"
 
     script: "scripts/multi-barplot.py"
 
 
-rule l1_distance_viruses:
+rule l1_distance:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
             all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
-    output: l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-virus-{rank}.pdf",
-            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-virus-{rank}.tsv"
+    output: l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-{superkingdom}-{rank}.pdf",
+            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv"
 
     params: rank=rank,
-            superkingdom="Viruses",
+            superkingdom=superkingdom,
             type=config["tools"]
 
     script: "scripts/l1-distance.py"
 
 
-rule get_precision_recall_table_viruses:
+rule get_precision_recall_table:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
            tool="taxonomy-tables/{tool}.tsv"
 
-    output: aupr_table=f"benchmark/tax-class/{community}/stats/{{tool}}/aupr-viruses-{rank}.tsv"
+    output: aupr_table=f"benchmark/tax-class/{community}/stats/{{tool}}/aupr-{superkingdom}-{rank}.tsv"
 
     params: rank=rank,
-            superkingdom="Viruses",
+            superkingdom=superkingdom,
             read_step=config["read-step"],
             max_read=config["max-read"]
 
     script: "scripts/precision-recall.py"
 
 
-rule plot_precision_recall_f1_curves_viruses:
+rule plot_precision_recall_f1_curves:
    conda: pipeline_path + "envs/benchmark.yml"
 
-   input: expand("benchmark/tax-class/{community}/stats/{tool}/aupr-viruses-{rank}.tsv",community=community,tool=tools,rank=rank)
+   input: expand("benchmark/tax-class/{community}/stats/{tool}/aupr-{superkingdom}-{rank}.tsv",superkingdom=superkingdom,community=community,tool=tools,rank=rank)
 
-   output:  pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-virus-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-virus-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-virus-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-virus-{rank}.tsv"
+   output:  pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-{superkingdom}-{rank}.pdf",
+            f1_curve=f"benchmark/tax-class/{community}/plots/f1-{superkingdom}-{rank}.pdf",
+            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-{superkingdom}-{rank}.tsv",
+            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-{superkingdom}-{rank}.tsv"
 
    script: "scripts/plot-precision-recall.py"
 
 
-
-rule viral_classified_reads:
+rule number_of_classified_reads:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
-    output: table=f"benchmark/tax-class/{community}/stats/classified-viruses.tsv",
-            barplot=f"benchmark/tax-class/{community}/plots/classified-viruses.pdf"
+    output: table=f"benchmark/tax-class/{community}/stats/classified-{superkingdom}.tsv",
+            barplot=f"benchmark/tax-class/{community}/plots/classified-{superkingdom}.pdf"
 
-    params: superkingdom="Viruses"
-
-    script: "scripts/classified-reads.py"
-
-
-rule barplot_counts_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out="taxonomy-tables/{tool}.tsv"
-
-    output: f"benchmark/tax-class/{community}/{{tool}}/bacteria-barplot_{rank}_level.pdf"
-
-    params: rank=config["target_rank"],
-            superkingdom='Bacteria'
-
-    script: "scripts/barplot.py"
-
-
-rule all_tools_barplot_counts_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out=expand("taxonomy-tables/{tool}.tsv",tool=tools)
-
-    params: rank=config["target_rank"],
-            superkingdom='Bacteria'
-
-    output: all_barplots="benchmark/tax-class/{community}/plots/barplot-bateria-{rank}.pdf"
-
-    script: "scripts/multi-barplot.py"
-
-rule l1_distance_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
-
-    output: l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-bacteria-{rank}.pdf",
-            l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-bacteria-{rank}.tsv"
-
-    params: rank=rank,
-            superkingdom="Bacteria",
-            type=config["tools"]
-
-    script: "scripts/l1-distance.py"
-
-
-rule get_precision_recall_table_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool="taxonomy-tables/{tool}.tsv"
-
-    output: aupr_table=f"benchmark/tax-class/{community}/stats/{{tool}}/aupr-bacteria-{rank}.tsv"
-
-    params: rank=rank,
-            superkingdom="Bacteria",
-            read_step=config["read-step"],
-            max_read=config["max-read"]
-
-    script: "scripts/precision-recall.py"
-
-rule plot_precision_recall_curves_bacteria:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: expand("benchmark/tax-class/{community}/stats/{tool}/aupr-bacteria-{rank}.tsv",community=community,tool=tools,rank=rank)
-
-    output: pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-bacteria-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-bacteria-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-bacteria-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-bacteria-{rank}.tsv"
-
-    params: rank=rank,
-            superkingdom="Bacteria",
-            read_step=config["read-step"],
-            max_read=config["max-read"]
-
-    script: "scripts/plot-precision-recall.py"
-
-
-rule bacteria_classified_reads:
-    conda: pipeline_path + "envs/benchmark.yml"
-
-    input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
-
-    output: table=f"benchmark/tax-class/{community}/stats/classified-bacteria.tsv",
-            barplot=f"benchmark/tax-class/{community}/plots/classified-bacteria.pdf"
-
-    params: superkingdom="Bacteria"
+    params: superkingdom=superkingdom
 
     script: "scripts/classified-reads.py"
+
 
 
 if community=='qPCR':
 
     rule all_PCR:
-        input: all_scores=f"benchmark/tax-class/{community}/stats/PCR_vir_scores-{vir_threshold}.tsv",
-                all_presence=f"benchmark/tax-class/{community}/stats/PCR_vir_presence-{vir_threshold}.tsv"
+        input: all_scores=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_scores-{threshold}.tsv",
+                all_presence=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_presence-{threshold}.tsv"
 
-    rule precision_recall_vs_qPCR_viruses:
+    rule precision_recall_vs_qPCR:
         conda: pipeline_path + "envs/benchmark.yml"
 
         input: gold_standard=f"gold_standard/gs_{community}.tsv",
                 tool_out="taxonomy-tables/{tool}.tsv"
 
-        output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_vir_scores-{vir_threshold}.tsv",
-                presence=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_vir_presence-{vir_threshold}.tsv"
+        output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_{superkingdom}_scores-{threshold}.tsv",
+                presence=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_{superkingdom}_presence-{threshold}.tsv"
 
-        params: threshold=vir_threshold,
-                superkingdom="Viruses"
+        params: threshold=threshold,
+                superkingdom=superkingdom
 
         script: "scripts/qPCR.py"
 
     rule concat_qPCR_results:
         conda: pipeline_path + "envs/benchmark.yml"
 
-        input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_vir_scores-{vir_threshold}.tsv",community=community,tool=tools,vir_threshold=vir_threshold),
-               presence=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_vir_presence-{vir_threshold}.tsv",community=community,tool=tools,vir_threshold=vir_threshold)
+        input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_{superkingdom}_scores-{threshold}.tsv",superkingdom=superkingdom,community=community,tool=tools,threshold=threshold),
+               presence=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_{superkingdom}_presence-{threshold}.tsv",superkingdom=superkingdom,community=community,tool=tools,threshold=threshold)
 
-        output: all_scores=f"benchmark/tax-class/{community}/stats/PCR_vir_scores-{vir_threshold}.tsv",
-                all_presence=f"benchmark/tax-class/{community}/stats/PCR_vir_presence-{vir_threshold}.tsv"
+        output: all_scores=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_scores-{threshold}.tsv",
+                all_presence=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_presence-{threshold}.tsv"
 
         script: "scripts/concat.py"
