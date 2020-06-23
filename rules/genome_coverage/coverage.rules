@@ -52,8 +52,8 @@ rule coverage_map_PE_reads:
            ann="coverage/{filename}.fna.ann",
            bwt="coverage/{filename}.fna.bwt",
            sa="coverage/{filename}.fna.sa",
-           r1=f"unmapped/{host_acc}/{{sample}}_R1.fq",
-           r2=f"unmapped/{host_acc}/{{sample}}_R2.fq",
+           r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+           r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq",
            fna="coverage/{filename}.fna"
 
     output: temp("coverage/{filename}/PE_{sample}.bam")
@@ -86,7 +86,7 @@ rule coverage_map_SE_reads:
            ann="coverage/{filename}.fna.ann",
            bwt="coverage/{filename}.fna.bwt",
            sa="coverage/{filename}.fna.sa",
-           r1=f"unmapped/{host_acc}/{{sample}}_single.fq",
+           r1=f"decontaminated-reads/{host_acc}/{{sample}}_single.fq",
            fna="coverage/{filename}.fna"
 
     output: temp("coverage/{filename}/SE_{sample}.bam")
@@ -124,7 +124,6 @@ rule get_mapping_info_and_mapped_reads:
     output: bam=temp("coverage/{filename}/{sample}.bam"),
             info="coverage/{filename}/mapping-info-{sample}.txt"
 
-
     threads: config["num_cores"]
 
     shell:
@@ -133,15 +132,6 @@ rule get_mapping_info_and_mapped_reads:
         samtools view -@ {threads} -b -F 4 {input} > {output.bam}
         """
 
-# import os
-# def check_bam_size(wildcards):
-#     checkpoint_output = checkpoints.coverage_get_mapped_reads_bam.get(**wildcards).output[0]
-#     size=os.path.getsize(checkpoint_output)
-#     if size>260:
-#         return "not empty"
-#     else:
-#         return "empty"
-# if check_bam_size=="not empty":
 rule generate_coverage_table:
     conda: pipeline_path + "envs/bedtools.yml"
 
@@ -157,7 +147,7 @@ rule generate_coverage_table:
          """
 
 rule create_coverage_plot:
-    conda: pipeline_path + "envs/compare-tools.yml"
+    conda: pipeline_path + "envs/benchmark.yml"
 
     input: table="coverage/{filename}/{sample}.tsv",
             txt="coverage/{filename}/mapping-info-{sample}.txt"
