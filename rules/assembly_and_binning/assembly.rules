@@ -10,8 +10,8 @@ rule spades_correct_error_paired_reads:
     conda:
         pipeline_path + "envs/spades.yml"
     input:
-        R1_trimmed=f"unmapped/{host_acc}/{{sample}}_R1.fq",
-        R2_trimmed=f"unmapped/{host_acc}/{{sample}}_R1.fq"
+        R1_trimmed=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+        R2_trimmed=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq"
     output:
         R1_corrected = temp("assembly/{sample}/corrected/{sample}_R1_paired.00.0_0.cor.fastq.gz"),
         R2_corrected = temp("assembly/{sample}/corrected/{sample}_R2_paired.00.0_0.cor.fastq.gz"),
@@ -34,7 +34,7 @@ rule spades_correct_error_single_reads:
     conda:
         pipeline_path + "envs/spades.yml"
     input:
-        single_trimmed = f"unmapped/{host_acc}/{{sample}}_single.fq",
+        single_trimmed = f"decontaminated-reads/{host_acc}/{{sample}}_single.fq",
     output:
         single_corrected = temp("assembly/{sample}/corrected/{sample}_single.00.0_0.cor.fastq.gz")
 
