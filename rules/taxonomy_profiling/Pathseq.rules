@@ -1,4 +1,4 @@
-
+host_acc=config['reference_genome']['filename']
 common=config["common"]
 thread_num=config["num_cores"]
 if common==True:
@@ -12,15 +12,14 @@ else:
 basename=fasta_name.replace('.fasta','').replace('.fa','')
 
 rule all_pathseq:
-    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys())),
-           #expand("Pathseq/{sample}/output/krona.html",sample=list(read_naming.keys()))
+    input: expand("Pathseq/{sample}/output/scores.txt",sample=list(read_naming.keys()))
 
 
 rule pathseq_fastq_to_bam_PE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-            r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+    input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+            r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
     output: "Pathseq/{sample}/PE_input_reads.bam"
 
@@ -38,7 +37,7 @@ rule pathseq_fastq_to_bam_PE_reads:
 rule pathseq_fastq_to_bam_SE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: r1=expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+    input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
 
     output: "Pathseq/{sample}/SE_input_reads.bam"
 
@@ -103,7 +102,7 @@ rule pathseq_on_reads:
 
     threads: thread_num
 
-    benchmark: "compare_tools/resources_usage/{sample}/pathseq.benchmark.txt"
+    benchmark: "benchmark/resources_usage/{sample}/pathseq.benchmark.txt"
 
     log: logging_folder+"Pathseq/{sample}/PathseqPipelineSpark.log"
 

@@ -2,7 +2,7 @@ rule all_kaiju:
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys())),
             expand("kaiju/{sample}/kaiju.txt",sample=list(read_naming.keys()))
 
-
+host_acc=config['reference_genome']['filename']
 sample_suffix=list(read_naming.values())
 if len(sample_suffix[0])==2:
     paired=True
@@ -14,8 +14,8 @@ if paired==True:
     rule kaiju_PE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+               r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
         output: "kaiju/{sample}/kaiju.out"
 
@@ -26,14 +26,14 @@ if paired==True:
 
         log: logging_folder + "kaiju/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/kaiju.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/kaiju.benchmark.txt"
 
-        shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input[0]} -j {input[1]} -o {output} -v &> {log}"
+        shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input.r1} -j {input.r2} -o {output} -v &> {log}"
 else:
     rule kaiju_SE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
 
         output: "kaiju/{sample}/kaiju.out"
 
@@ -44,7 +44,7 @@ else:
 
         log: logging_folder + "kaiju/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/kaiju.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/kaiju.benchmark.txt"
 
         shell: "kaiju -z {threads} -t {params.nodes} -f {params.db} -i {input} -o {output} -v &> {log}"
 

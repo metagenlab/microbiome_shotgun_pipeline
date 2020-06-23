@@ -1,5 +1,5 @@
 surpi_db=config["surpi_database"]
-
+host_acc=config['reference_genome']['filename']
 rule all_surpi:
     input:  bac=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",sample=list(read_naming.keys())),
             vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
@@ -14,8 +14,8 @@ if paired==True:
     rule SURPI_interleve_paired_fastq:
         conda: pipeline_path + "envs/fastq-join.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+               f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
         output: temp("SURPI/{sample}/{sample}_join.fastq"),
                 temp("SURPI/{sample}/{sample}_un1.fastq"),
@@ -28,7 +28,7 @@ if paired==True:
 
 else:
     rule SURPI_copy_single_fastq:
-        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
 
         output: temp("SURPI/{sample}/{sample}_join.fastq")
 
@@ -99,7 +99,7 @@ rule run_surpi:
 
     log: logging_folder+"SURPI/{sample}.log"
 
-    benchmark: "compare_tools/resources_usage/{sample}/surpi.benchmark.txt"
+    benchmark: "benchmark/resources_usage/{sample}/surpi.benchmark.txt"
 
     shell:
         """

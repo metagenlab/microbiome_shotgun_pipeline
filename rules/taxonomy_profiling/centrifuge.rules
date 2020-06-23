@@ -11,8 +11,8 @@ if paired==True:
     rule centrifuge_PE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: r1=expand("decontaminated-reads/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
+               r2=expand("decontaminated-reads/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"
@@ -23,7 +23,7 @@ if paired==True:
 
         log: logging_folder + "centrifuge/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/centrifuge.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/centrifuge.benchmark.txt"
 
         shell:
             """
@@ -33,7 +33,7 @@ else:
     rule centrifuge_SE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: expand("decontaminated-reads/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"
@@ -44,7 +44,7 @@ else:
 
         log: logging_folder + "centrifuge/{sample}-class.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/centrifuge.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/centrifuge.benchmark.txt"
 
         shell:
             """

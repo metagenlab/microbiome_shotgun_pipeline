@@ -1,3 +1,4 @@
+host_acc=config['reference_genome']['filename']
 rule all_kraken2x:
     input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
 
@@ -11,8 +12,8 @@ if paired==True:
     rule kraken2x_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+               f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
         output: classified_r1="kraken2x/{sample}/reads/classified_reads_1.fq",
                 classified_r2="kraken2x/{sample}/reads/classified_reads_2.fq",
@@ -27,7 +28,7 @@ if paired==True:
 
         log: logging_folder + "kraken2x/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/kraken2x.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/kraken2x.benchmark.txt"
 
         shell: "kraken2 --db {params.db_path} --threads {threads} --paired --output {output.all} \
                 --classified-out kraken2x/{wildcards.sample}/reads/classified_reads#.fq --unclassified-out kraken2x/{wildcards.sample}/reads/unclassified_reads#.fq \
@@ -37,7 +38,7 @@ else:
     rule kraken2x_SE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
 
         output: classified="kraken2x/{sample}/reads/classified_reads.fq",
                 unclassified="kraken2x/{sample}/reads/unclassified_reads.fq",
@@ -50,7 +51,7 @@ else:
 
         log: logging_folder + "kraken2x/{sample}.log"
 
-        benchmark: "compare_tools/resources_usage/{sample}/kraken2x.benchmark.txt"
+        benchmark: "benchmark/resources_usage/{sample}/kraken2x.benchmark.txt"
 
         shell: "kraken2 --db {params.db_path} --threads {threads} --output {output.all} --unclassified-out {output.unclassified} \
                 --classified-out {output.classified} --report {output.report} {input[0]} 2>> {log}"

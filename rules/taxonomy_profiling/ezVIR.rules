@@ -7,23 +7,23 @@ if common==True:
 else:
     fasta_name='EZV0.1-database'
 
-
+host_acc=config['reference_genome']['filename']
 
 
 if config["virus_family"]=='NA':
     rule all_ezvir:
-        input:  bam=expand("Ezvir/{sample}/{sample}.bam",sample=list(read_naming.keys())),
-                all_genomes=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
-                best_genomes=expand("Ezvir/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
-                plot=expand("Ezvir/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys()))
+        input:  bam=expand("ezVIR/{sample}/{sample}.bam",sample=list(read_naming.keys())),
+                all_genomes=expand("ezVIR/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
+                best_genomes=expand("ezVIR/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
+                plot=expand("ezVIR/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys()))
 
 else:
     rule all_ezvir:
-        input:  bam=expand("Ezvir/{sample}/{sample}.bam",sample=list(read_naming.keys())),
-                all_genomes=expand("Ezvir/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
-                best_genomes=expand("Ezvir/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
-                plot=expand("Ezvir/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys())),
-                coverage=expand("Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
+        input:  bam=expand("ezVIR/{sample}/{sample}.bam",sample=list(read_naming.keys())),
+                all_genomes=expand("ezVIR/{sample}/report/ALL-RESULTS.ezv",sample=list(read_naming.keys())),
+                best_genomes=expand("ezVIR/{sample}/report/BEST-GENOMES.ezv",sample=list(read_naming.keys())),
+                plot=expand("ezVIR/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys())),
+                coverage=expand("ezVIR/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
 sample_suffix=list(read_naming.values())
 if len(sample_suffix[0])==2:
@@ -35,18 +35,18 @@ if paired==True:
     rule ezVIR_mapping_PE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: r1=expand("unmapped/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-                r2=expand("unmapped/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+                r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
         threads: config["num_cores"]
 
-        output: "Ezvir/{sample}/{sample}.bam"
+        output: "ezVIR/{sample}/{sample}.bam"
 
-        log: logging_folder + "Ezvir/mapping/{sample}.log"
+        log: logging_folder + "ezVIR/mapping/{sample}.log"
 
-        benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.mapping.txt")
+        benchmark: temp("benchmark/resources_usage/{sample}/ezvir.mapping.txt")
 
         shell:
             """
@@ -57,17 +57,17 @@ else:
     rule ezVIR_mapping_SE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: expand("unmapped/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: expand("decontaminated-reads/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
         threads: config["num_cores"]
 
-        output: "Ezvir/{sample}/{sample}.bam"
+        output: "ezVIR/{sample}/{sample}.bam"
 
-        log:  logging_folder + "Ezvir/mapping/{sample}.log"
+        log:  logging_folder + "ezVIR/mapping/{sample}.log"
 
-        benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.mapping.txt")
+        benchmark: temp("benchmark/resources_usage/{sample}/ezvir.mapping.txt")
 
         shell:
             """
@@ -80,11 +80,11 @@ else:
 rule ezVIR_genome_coverage:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/{sample}.bam"
+    input: "ezVIR/{sample}/{sample}.bam"
 
-    output: temp("Ezvir/{sample}/{sample}.csv")
+    output: temp("ezVIR/{sample}/{sample}.csv")
 
-    log: logging_folder + "Ezvir/coverage/{sample}.log"
+    log: logging_folder + "ezVIR/coverage/{sample}.log"
 
     shell:
         """
@@ -95,18 +95,18 @@ rule ezVIR_genome_coverage:
 checkpoint split_coverage_file:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/{sample}.csv"
+    input: "ezVIR/{sample}/{sample}.csv"
 
-    output: directory("Ezvir/{sample}/coverage")
+    output: directory("ezVIR/{sample}/coverage")
 
-    params: "Ezvir/{sample}/coverage"
+    params: "ezVIR/{sample}/coverage"
 
-    script: "scripts/Ezvir/coverage-parse.py"
+    script: "scripts/ezVIR/coverage-parse.py"
 
 import os
 def get_csv(wildcards):
     checkpoint_output = checkpoints.split_coverage_file.get(**wildcards).output[0]
-    return expand("Ezvir/{sample}/coverage/{i}.csv",sample=wildcards.sample,i=glob_wildcards(os.path.join(checkpoint_output, "{i}.csv")).i)
+    return expand("ezVIR/{sample}/coverage/{i}.csv",sample=wildcards.sample,i=glob_wildcards(os.path.join(checkpoint_output, "{i}.csv")).i)
 
 
 rule ezVIR_report:
@@ -114,31 +114,31 @@ rule ezVIR_report:
 
     input: get_csv
 
-    output: "Ezvir/{sample}/report/{sample}_p1-plot.pdf",
-            "Ezvir/{sample}/report/ALL-RESULTS.ezv",
-            "Ezvir/{sample}/report/BEST-GENOMES.ezv"
+    output: "ezVIR/{sample}/report/{sample}_p1-plot.pdf",
+            "ezVIR/{sample}/report/ALL-RESULTS.ezv",
+            "ezVIR/{sample}/report/BEST-GENOMES.ezv"
 
-    params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Report.r",
+    params: report_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/ezVIR/Report.r",
             csv_dir="../coverage",
             read_len=config["samples_read_length"],
             genome_len=f"{db_path_ezvir}/genome_lengths.csv",
             colors=f"{db_path_ezvir}/colours.csv",
             db_names=f"{db_path_ezvir}/genome_names.csv"
 
-    benchmark: temp("compare_tools/resources_usage/{sample}/ezvir.report.txt")
+    benchmark: temp("benchmark/resources_usage/{sample}/ezvir.report.txt")
 
     shell:
         """
-        cd Ezvir/{wildcards.sample}/report
+        cd ezVIR/{wildcards.sample}/report
         Rscript {params.report_script_path} -c {params.colors} -r {params.read_len} -g {params.genome_len} -j {params.db_names} -i {params.csv_dir} -o {wildcards.sample}
         """
 
 
 rule ezVIR_concat_resources_usage:
-    input: mapping="compare_tools/resources_usage/{sample}/ezvir.mapping.txt",
-            report="compare_tools/resources_usage/{sample}/ezvir.report.txt"
+    input: mapping="benchmark/resources_usage/{sample}/ezvir.mapping.txt",
+            report="benchmark/resources_usage/{sample}/ezvir.report.txt"
 
-    output: "compare_tools/resources_usage/{sample}/ezvir.benchmark.txt"
+    output: "benchmark/resources_usage/{sample}/ezvir.benchmark.txt"
 
     shell:
         """
@@ -149,11 +149,11 @@ rule ezVIR_concat_resources_usage:
 rule generate_coverage_histograms_ezVIR:
     conda: pipeline_path + "envs/ezvir.yml"
 
-    input: "Ezvir/{sample}/report/BEST-GENOMES.ezv"
+    input: "ezVIR/{sample}/report/BEST-GENOMES.ezv"
 
-    output: "Ezvir/{sample}/report/{target_virus}_coverage-histogram.pdf"
+    output: "ezVIR/{sample}/report/{target_virus}_coverage-histogram.pdf"
 
-    params: cov_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/Ezvir/Coverage_histograms.r",
+    params: cov_script_path=pipeline_path + "rules/taxonomy_profiling/scripts/ezVIR/Coverage_histograms.r",
             csv_dir="../coverage",
             target_family=config["virus_family"],
             names_tab=f"{db_path_ezvir}/genome_names.csv",
@@ -162,7 +162,7 @@ rule generate_coverage_histograms_ezVIR:
 
     shell:
          """
-         cd Ezvir/{wildcards.sample}/report
+         cd ezVIR/{wildcards.sample}/report
          Rscript {params.cov_script_path} -d {params.csv_dir} -b BEST-GENOMES.ezv -s "{params.target_family}" -n {params.names_tab} -g {params.genome_len} -m {params.min_cov}
          """
 
