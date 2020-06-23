@@ -1,0 +1,4 @@
+channels:
+ - bioconda
+dependencies:
+- metaphlan = 3.0.0_alpha

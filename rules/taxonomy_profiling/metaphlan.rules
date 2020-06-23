@@ -1,0 +1,51 @@
+host_acc=config['reference_genome']['filename']
+
+rule all_metaphlan:
+    input: expand("metaphlan/{sample}/profiled_{sample}.txt",sample=list(read_naming.keys()))
+
+
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
+if paired:
+    rule metaphlan_PE_reads:
+        conda: pipeline_path + "envs/metaphlan.yml"
+
+        input:  r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+                r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+
+        output: txt="metaphlan/{sample}/profiled_{sample}.txt",
+                bz2="metaphlan/{sample}/{sample}.bowtie2.bz2"
+
+        threads: config["num_cores"]
+
+        log: logging_folder + "metaphlan/{sample}"
+
+        benchmark: "benchmark/resources_usage/{sample}/metaphlan.benchmark.txt"
+
+        shell:
+             """
+             metaphlan {input.r1},{input.r2} --bowtie2out {output.bz2} -t rel_ab_w_read_stats --add_viruses --nproc {threads} --input_type fastq -o {output.txt} 2> {log}
+             """
+else:
+     rule metaphlan_SE_reads:
+        conda: pipeline_path + "envs/metaphlan.yml"
+
+        input:  f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+
+        output: txt="metaphlan/{sample}/profiled_{sample}.txt",
+                bz2="metaphlan/{sample}/{sample}.bowtie2.bz2"
+
+        threads: config["num_cores"]
+
+        log: logging_folder + "metaphlan/{sample}"
+
+        benchmark: "benchmark/resources_usage/{sample}/metaphlan.benchmark.txt"
+
+        shell:
+             """
+             metaphlan {input} --bowtie2out {output.bz2} -t rel_ab_w_read_stats --add_viruses --nproc {threads} --input_type fastq -o {output.txt} 2> {log}
+             """
+

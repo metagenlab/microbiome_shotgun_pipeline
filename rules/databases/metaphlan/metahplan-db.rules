@@ -1,0 +1,18 @@
+metaphlan_db=config['metaphlan_db']
+
+rule all_metaphlan_db:
+    input: pkl=f"{metaphlan_db}/mpa_v30_CHOCOPhlAn_201901.pkl"
+
+rule download_metaphlan_db:
+    conda: pipeline_path + "envs/metaphlan.yml"
+
+    output: pkl=f"{metaphlan_db}/mpa_v30_CHOCOPhlAn_201901.pkl"
+
+    params: metaphlan_db
+
+    shell:
+         """
+         metaphlan --install latest
+         cp ${{CONDA_PREFIX}}/lib/python3.7/site-packages/metaphlan/metaphlan_databases/* {params}
+         """
+

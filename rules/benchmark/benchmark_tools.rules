@@ -52,15 +52,15 @@ bac_threshold=config["bac_reads_threshold"]
 
 #generate all tools taxonomy tables
 rule all_tax:
-    input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
 #generate all tools outputs without a gold standard
 rule all_vir_out:
-    input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
            vir_heatmap_per_sample=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
-           barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom='viruses',variable=['tools','samples']),
-           vir_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='viruses',threshold=vir_threshold),
-           heatmap_presence=expand("plots/heatmaps/all_tools/{superkingdom}/presence_{rank}_level.pdf",rank=rank,superkingdom='viruses'),
+           barplots=expand("plots/barplots/all_tools/viruses/{variable}_{rank}_level.pdf",rank=rank,variable=['tools','samples']),
+           vir_heatmap_counts=expand("plots/heatmaps/all_tools/viruses/counts_{threshold}_{rank}_level.pdf",rank=rank,threshold=vir_threshold),
+           heatmap_presence=expand("plots/heatmaps/all_tools/viruses/presence_{rank}_level.pdf",rank=rank),
            tab="compare_tools/resources_usage/resources.tsv",
            memo="compare_tools/resources_usage/memory.pdf",
            time="compare_tools/resources_usage/time.pdf",
@@ -68,7 +68,7 @@ rule all_vir_out:
 
 
 rule all_bac_out:
-    input: merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
            bac_heatmap_per_sample=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
            barplots=expand("plots/barplots/all_tools/{superkingdom}/{variable}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',variable=['tools','samples']),
            bac_heatmap_counts=expand("plots/heatmaps/all_tools/{superkingdom}/counts_{threshold}_{rank}_level.pdf",rank=rank,superkingdom='bacteria',threshold=bac_threshold),
@@ -80,7 +80,7 @@ rule all_bac_out:
 
 #generate all benchmarks compared to a gold standard
 rule all_vir_benchmark:
-    input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+    input:  merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
             vir_read_counts_heatmaps=expand("plots/heatmaps/{tool}/viruses/{rank}_level.pdf",rank=rank,tool=tools),
             bac_read_counts_heatmaps=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
             gold_standard=f"gold_standard/gs_{community}.tsv",
@@ -104,7 +104,7 @@ rule all_vir_benchmark:
 
 
 rule all_bac_benchmark:
-    input:  merged_tsv=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools),
+    input:  merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
             bac_read_counts_heatmaps=expand("plots/heatmaps/{tool}/bacteria/{rank}_level.pdf",rank=rank,tool=tools),
             gold_standard=f"gold_standard/gs_{community}.tsv",
             all_bac_scores=f"compare_tools/{community}/classification/stats/all_tools/{bac_threshold}_bac_scores_{rank}_level.tsv",
@@ -154,7 +154,7 @@ rule linear_tax_Kraken2X:
 rule linear_tax_Bracken:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
+    input: "kraken2/{sample}/bracken.txt"
 
     output: "taxonomy-tables/bracken/{sample}.tsv"
 
@@ -243,19 +243,35 @@ rule linear_tax_centrifuge:
     script: "scripts/kraken2-tax.py"
 
 
-rule merge_all_tools_output:
+
+rule linear_tax_metaphlan:
+    conda: pipeline_path + "envs/compare-tools.yml"
+
+    input: "metaphlan/{sample}/profiled_{sample}.txt"
+
+    output: tab="metaphlan/{sample}/profiled_{sample}.tsv",
+            lin="taxonomy-tables/metaphlan/{sample}.tsv"
+
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+
+    script: "scripts/metaphlan-tax.py"
+
+
+
+rule merge_all_tools_out:
     input: expand("taxonomy-tables/{{tool}}/{sample}.tsv",sample=list(read_naming.keys()))
 
-    output: "taxonomy-tables/{tool}/all_{tool}.tsv"
+    output: "taxonomy-tables/{tool}.tsv"
 
     script: "scripts/cat-tax.py"
 
 rule virus_read_count_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: "taxonomy-tables/{tool}/all_{tool}.tsv"
+    input: "taxonomy-tables/{tool}.tsv"
 
-    output: f"plots/heatmaps/{{tool}}/viruses/{rank}_level.pdf"
+    output: f"{{tool}}/heatmap/viruses/{rank}_level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
@@ -266,9 +282,9 @@ rule virus_read_count_heatmaps:
 rule bacteria_read_count_heatmaps:
     conda: pipeline_path + "envs/compare-tools.yml"
 
-    input: "taxonomy-tables/{tool}/all_{tool}.tsv"
+    input: "taxonomy-tables/{tool}.tsv"
 
-    output: f"plots/heatmaps/{{tool}}/bacteria/{rank}_level.pdf"
+    output: f"{{tool}}/heatmap/bacteria/{rank}_level.pdf"
 
     params: rank=config["target_rank"],
             value=config["target_value"],
@@ -438,7 +454,7 @@ rule all_tools_barplot_counts_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+           tool_out=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     params: rank=config["target_rank"],
             superkingdom='Viruses'
@@ -452,7 +468,7 @@ rule l1_distance_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+            all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.pdf",
             l1_dist_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-viruses.tsv"
@@ -467,7 +483,7 @@ rule precision_recall_f1_curves_viruses:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+           all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-viruses.pdf",
             f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-viruses.pdf",
@@ -501,7 +517,7 @@ rule all_tools_barplot_counts_bacteria:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+           tool_out=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     params: rank=config["target_rank"],
             superkingdom='Bacteria'
@@ -514,7 +530,7 @@ rule l1_distance_bacteria:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+            all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     output: l1_distance=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.pdf",
             l1_dist_table=f"compare_tools/{community}/classification/plots/all_tools/{rank}_l1-distance-bacteria.tsv"
@@ -529,7 +545,7 @@ rule precision_recall_curves_bacteria:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+           all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     output: pr_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_precision-recall-bacteria.pdf",
             f1_curve=f"compare_tools/{community}/classification/plots/all_tools/{rank}_f1-bacteria.pdf",
@@ -549,7 +565,7 @@ rule viral_classified_reads:
     conda: pipeline_path + "envs/compare-tools.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           all_tools=expand("taxonomy-tables/{tool}/all_{tool}.tsv",tool=tools)
+           all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
 
     output: table=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.tsv",
             barplot=f"compare_tools/{community}/classification/plots/all_tools/classified-viruses.pdf"
