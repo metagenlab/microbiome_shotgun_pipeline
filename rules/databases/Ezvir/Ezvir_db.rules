@@ -44,7 +44,7 @@ rule index_ezVIR_database:
 
     params: f"{db_path_ezvir}/EZV0.1-database"
 
-    log: logging_folder + "Ezvir/indexing.log"
+    log: logging_folder + "ezVIR/indexing.log"
 
     threads: 30
 
