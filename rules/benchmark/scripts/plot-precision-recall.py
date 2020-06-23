@@ -9,7 +9,10 @@ for file in files:
     all_tb.append(tb)
 
 concat = pd.concat(all_tb)
-sorted_aupr = concat.sort_values(by=['AUPR','tool','sample'],ascending=False)
+
+mean_aupr = concat.groupby(['tool','threshold'],as_index=False).mean()#calculate the mean scores per tool
+mean_aupr['AUPR']=round(mean_aupr['AUPR'],2)
+sorted_aupr = mean_aupr.sort_values(by=['AUPR','tool'],ascending=False)
 sorted_aupr.to_csv(snakemake.output.curve_table,sep='\t',index=False)
 
 plt.figure(figsize=(11.7,8.27))
