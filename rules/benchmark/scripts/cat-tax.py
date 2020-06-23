@@ -10,4 +10,4 @@ def concat_tables(files):
     return all_tables
 
 cat=concat_tables(samples_tab)
-out=cat.to_csv(snakemake.output[0])
+out=cat.to_csv(snakemake.output[0],sep='\t',index=None)
