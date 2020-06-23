@@ -62,9 +62,9 @@ if paired==True:
         conda:
             pipeline_path + "envs/spades.yml"
         input:
-            R1_corrected = temp("assembly/{sample}/corrected/{sample}_R1_paired.00.0_0.cor.fastq.gz"),
-            R2_corrected = temp("assembly/{sample}/corrected/{sample}_R2_paired.00.0_0.cor.fastq.gz"),
-            single_corrected = temp("assembly/{sample}/corrected/{sample}_R_unpaired.00.0_0.cor.fastq.gz")
+            R1_corrected = "assembly/{sample}/corrected/{sample}_R1_paired.00.0_0.cor.fastq.gz",
+            R2_corrected = "assembly/{sample}/corrected/{sample}_R2_paired.00.0_0.cor.fastq.gz",
+            single_corrected = "assembly/{sample}/corrected/{sample}_R_unpaired.00.0_0.cor.fastq.gz"
         output:
             contigs = "assembly/{sample}/contigs.fasta",
             graph = "assembly/{sample}/assembly_graph.fastg",
