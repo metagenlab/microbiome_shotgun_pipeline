@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 superkingdom=snakemake.params.superkingdom
 def groupby_samples(table,tool_name,rank):
-    if tool_name=='ezvir':
+    if tool_name=='ezvir' or tool_name=='metaphlan':
         sample_tb=table.groupby(['sample',f'{rank}'],as_index=False)['read_counts'].sum()
         sample_tb['read_counts']=sample_tb['read_counts']/2
     else:
@@ -19,7 +19,7 @@ rank='superkingdom'
 tables=[]
 files=snakemake.input.all_tools
 for file in files:
-    toolname = file.split('/')[1]
+    toolname = file.split('/')[1].split('.tsv')[0]
     table=pd.read_csv(file,sep='\t')
     table=table[table.superkingdom==superkingdom]
     gbs=[]
@@ -36,8 +36,9 @@ gold_standard=gold_standard[gold_standard.superkingdom==superkingdom]
 gold_standard=gold_standard.groupby(['sample',f'{rank}'],as_index=False).sum()
 theoretical_max=max(gold_standard['read_counts'])
 plt.figure(figsize=(11.7,8.27))
-plt.subplots_adjust(left=0.4,right=0.81)
+plt.subplots_adjust(left=0.4,right=0.81,bottom=0.3)
 bp=sns.barplot(data=tables,y='read_counts',x='tool')
+bp.set_xticklabels(bp.get_xticklabels(), rotation=90)
 ax1=bp.axes
 ax1.axhline(theoretical_max,ls='-',c='red')
 ax1.text(1,theoretical_max+1000,'theoretical read counts',c='red')
