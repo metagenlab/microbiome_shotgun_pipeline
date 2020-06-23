@@ -101,6 +101,8 @@ min_read_match: 10 #filter reads that map to less than 10 references
 ##Centrifuge
 centrifuge_index: /data/diag_pipeline_data/references/centrifuge_db/p_compressed+h+v
 
+## Metaphlan
+metaphlan_db: /data/databases/metaphlan
 
 ###NCBI Entrez
 email: yourncbi@mail.com
@@ -108,7 +110,7 @@ api_key: apikey
 
 
 ###Tool_comparison
-tool_list: ['kraken2','kraken2x','bracken','pathseq','kaiju','surpi','ezvir','ganon','centrifuge'] #List of tools to run
+tools: {'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kraken2x':'k-mer','kaiju':'k-mer','bracken':'k-mer','centrifuge':'k-mer','metaphlan':'marker'}
 target_rank: species
 target_value: counts
 community_name: communityname
