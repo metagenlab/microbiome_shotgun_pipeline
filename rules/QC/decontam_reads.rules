@@ -4,10 +4,10 @@ read_suffix=list(read_naming.values())[0]#contains the read suffix (R1.fq.gz for
 
 if len(read_suffix)==1:
     rule all_decontam:
-        input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+        input: expand("decontaminated-reads/{host_acc}/{sample}_R{rp}.fq",rp=['1'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
 else:
     rule all_decontam:
-        input: expand("unmapped/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
+        input: expand("decontaminated-reads/{host_acc}/{sample}_R{rp}.fq",rp=['1','2'],sample=list(read_naming.keys()),host_acc=config['reference_genome']['filename'])
 
 
 rule decompress_host_genome:
@@ -83,9 +83,8 @@ rule map_SE_reads_to_host_genome:
         """
 
 
-def get_bam_input_decontam(wildcards):
-    fastq_list = read_naming[wildcards.sample]
-    if len(fastq_list) == 2:
+def get_bam_input_decontam(list):
+    if len(list) == 2:
         return "host/{host_acc}/PE_{sample}.bam"
     else:
         return "host/{host_acc}/SE_{sample}.bam"
@@ -94,23 +93,28 @@ def get_bam_input_decontam(wildcards):
 rule get_host_unmapped_reads:
     conda: pipeline_path + "envs/bwa-samtools.yml"
 
-    input: get_bam_input_decontam
+    input: get_bam_input_decontam(read_suffix)
 
-    output: "unmapped/{host_acc}/{sample}.bam"
+    output: bam=temp("decontaminated-reads/{host_acc}/{sample}.bam"),
+            info="decontaminated-reads/{host_acc}/mapping-{sample}.txt"
 
     threads: config["num_cores"]
 
-    shell: "samtools view -@ {threads} -b -f 4 {input} > {output}"
+    shell:
+        """
+        samtools view -@ {threads} -b -f 4 {input} > {output}
+        samtools flagstat {input} > {output.info}
+        """
 
 
 
 rule decontaminated_PE_bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
 
-    input: "unmapped/{host_acc}/{sample}.bam"
+    input: "decontaminated-reads/{host_acc}/{sample}.bam"
 
-    output: "unmapped/{host_acc}/{sample}_R1.fq",
-            "unmapped/{host_acc}/{sample}_R2.fq"
+    output: "decontaminated-reads/{host_acc}/{sample}_R1.fq",
+            "decontaminated-reads/{host_acc}/{sample}_R2.fq"
 
     log: logging_folder + "host-filtering/{host_acc}/bam-to-fq-{sample}.log"
 
@@ -119,9 +123,9 @@ rule decontaminated_PE_bam_to_fastq:
 rule decontaminated_SE_bam_to_fastq:
     conda: pipeline_path + "envs/bedtools.yml"
 
-    input: "unmapped/{host_acc}/{sample}.bam"
+    input: "decontaminated-reads/{host_acc}/{sample}.bam"
 
-    output: "unmapped/{host_acc}/{sample}_single.fq"
+    output: "decontaminated-reads/{host_acc}/{sample}_single.fq"
 
     log: logging_folder + "host-filtering/{host_acc}/bam-to-fq-{sample}.log"
 
