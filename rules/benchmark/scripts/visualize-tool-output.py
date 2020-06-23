@@ -125,16 +125,10 @@ def draw_heatmap_counts(data,sample,rank,square,annot):
     g=sns.heatmap(pivot,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
     return g
 
-fonstscale=1.0
-if len(bp_table)>100:
-    fonstscale=5.0
-if len(bp_table)>=50 and len(bp_table)<=100:
-    fonstscale=2.0
 
 with PdfPages(snakemake.output.heatmap_counts) as pdf:
     for sample in unique_sample_list:
         plt.figure(figsize=(11.7,8.27))
-        #sns.set(font_scale=fonstscale)
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
         fig=draw_heatmap_counts(bp_table,sample,rank,square,annot)
@@ -177,6 +171,8 @@ def draw_presence_heatmap(table,rank,sample,fraction,squared):
     else:
         myColors = [(0.0, 0.0, 0.0, 0.9), (0.3, 0.6, 0.1, 1.0)]#RGB color palette
     cmap = LinearSegmentedColormap.from_list('Custom', myColors, len(myColors))
+    if len(subset)>=10:#limit matrix length to 10
+        subset=subset[0:10]
     g = sns.heatmap(subset, square=squared, cbar_kws={'fraction' : 0.01},cmap=cmap,linecolor='white',linewidths='0.1')
     colorbar = g.collections[0].colorbar
     colorbar.set_ticks([0,1.0])
@@ -186,8 +182,7 @@ def draw_presence_heatmap(table,rank,sample,fraction,squared):
 
 with PdfPages(snakemake.output.heatmap_presence) as pdf:
     for sample in unique_sample_list:
-        plt.figure(figsize=(len(bp_table),len(bp_table)/2))
-        sns.set(font_scale=fonstscale)
+        plt.figure(figsize=(11.7,8.27))
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
         fig=draw_presence_heatmap(all_tools,rank,sample,fraction,square)
