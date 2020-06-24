@@ -70,7 +70,7 @@ include: "rules/databases/Bracken/bracken_db.rules"
 include: "rules/databases/Kraken/Kraken_db.rules"
 include: "rules/databases/ganon/ganon_db.rules"
 include: "rules/databases/metaphlan/metahplan-db.rules"
-
+include: "rules/databases/databases.rules"
 # taxonomy abundance
 include: "rules/taxonomy_abundance/motus2.rules"
 include: "rules/protein_abundance/calculate_RPKM.rules"
@@ -87,5 +87,6 @@ include: "rules/taxonomy_profiling/ganon.rules"
 include: "rules/taxonomy_profiling/rkmh.rules"
 include: "rules/taxonomy_profiling/centrifuge.rules"
 include: "rules/taxonomy_profiling/metaphlan.rules"
+include: "rules/taxonomy_profiling/motus.rules"
 #Compare tools
 include: "rules/benchmark/benchmark_tools.rules"
