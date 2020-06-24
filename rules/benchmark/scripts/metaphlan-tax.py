@@ -11,7 +11,7 @@ ncbi = NCBITaxa()
 ###Cleaning names and taxids
 tax=pd.read_csv(snakemake.input[0],sep='\t')
 tax=tax.replace('-1','0')
-tax=tax.replace('UNKNOWN','unclassifed')
+tax=tax.replace('UNKNOWN','unclassified')
 clean_names=[]
 taxids=[]
 for i in range(len(tax)):
