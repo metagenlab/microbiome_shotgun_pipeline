@@ -1,0 +1,4 @@
+channels:
+ - bioconda
+dependencies:
+- motus = 2.5.1

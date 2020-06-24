@@ -1,0 +1,56 @@
+host_acc=config['reference_genome']['filename']
+
+rule all_motus:
+    input: expand("motus/{sample}/profiled_{sample}.tsv",sample=list(read_naming.keys()))
+
+
+sample_suffix=list(read_naming.values())
+if len(sample_suffix[0])==2:
+    paired=True
+else:
+    paired=False
+
+if paired:
+    rule motus_PE_reads:
+        conda: pipeline_path + "envs/motus.yml"
+
+        input:  r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
+                r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+
+        output: txt="motus/{sample}/profiled_{sample}.txt"
+
+        threads: config["num_cores"]
+
+        log: logging_folder + "motus/{sample}.log"
+
+        benchmark: "benchmark/resources_usage/{sample}/motus.benchmark.txt"
+
+        shell:
+             """
+             motus profile -f {input.r1} -r {input.r2} -n {wildcards.sample} -p -c -t {threads} > {output} 2> {log}
+             """
+else:
+    rule motus_SE_reads:
+        conda: pipeline_path + "envs/motus.yml"
+
+        input:  r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq"
+
+        output: txt="motus/{sample}/profiled_{sample}.txt"
+
+        threads: config["num_cores"]
+
+        log: logging_folder + "motus/{sample}.log"
+
+        benchmark: "benchmark/resources_usage/{sample}/motus.benchmark.txt"
+
+        shell:
+             """
+             motus profile -s {input.r1} -n {wildcards.sample} -p -c -t {threads} > {output} 2> {log}
+             """
+
+rule get_motus_table:
+    input: "motus/{sample}/profiled_{sample}.txt"
+
+    output: "motus/{sample}/profiled_{sample}.tsv"
+
+    shell: "tail -n+3 {input} > {output}"
