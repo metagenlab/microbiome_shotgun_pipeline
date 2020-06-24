@@ -38,6 +38,7 @@ rank=snakemake.params.rank
 value=snakemake.params.value
 bp_threshold=snakemake.params.threshold
 superkingdom=snakemake.params.superkingdom
+path=snakemake.params.matrix_path
 threshold=0
 sample_list=[]
 tables=[]
@@ -63,17 +64,8 @@ unique_names=list(set(bp_table[f'{rank}']))
 fontsize=5
 square=False
 annot=True
-fraction=0.9#For the presence heatmap: only consider hits identified by 60% of the tools
-# if len(unique_names)>=150:
-#     fontsize=2
-#     square=False
-#     fraction=0.9#High number of hits = heatmap is not visible
-# if len(unique_names)<=150 and len(unique_names)>100:
-#     fontsize=3
-#     square=False
-# elif len(unique_names)<100:
-#     fontsize=7
-#     square=False
+fraction=0.9#For the presence heatmap: only consider hits identified by 90% of the tools
+
 
 
 
@@ -110,7 +102,7 @@ bpt.savefig(snakemake.output.barplot_tools)
 
 
 
-def draw_heatmap_counts(data,sample,rank,square,annot):
+def draw_heatmap_counts(data,sample,rank,square,annot,tab_path):
     subset=data[data['sample']==sample]
     pivot=subset.pivot_table(subset,index=f'{rank}',columns='tool')
     pivot=pivot.replace(np.nan,0)
@@ -118,8 +110,7 @@ def draw_heatmap_counts(data,sample,rank,square,annot):
     pivot['sum']=pivot.sum(axis=1)
     pivot=pivot.sort_values(by='sum',ascending=False)
     pivot=pivot.drop('sum',axis=1)
-    #pivot=pivot.replace(0,1)
-    #logp=np.log10(pivot)
+    pivot.to_csv(f'{tab_path}/{sample}_matrix.tsv',sep='\t')
     if len(pivot)>10:
         pivot=pivot[0:10]
     g=sns.heatmap(pivot,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
@@ -131,7 +122,7 @@ with PdfPages(snakemake.output.heatmap_counts) as pdf:
         plt.figure(figsize=(11.7,8.27))
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
-        fig=draw_heatmap_counts(bp_table,sample,rank,square,annot)
+        fig=draw_heatmap_counts(bp_table,sample,rank,square,annot,path)
         pdf.savefig()
         plt.close()
 
