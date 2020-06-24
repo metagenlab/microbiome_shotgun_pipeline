@@ -235,7 +235,7 @@ rule plot_tools_output:
             value=config["target_value"],
             superkingdom=superkingdom,
             threshold=threshold,
-            matrix_path=f"plots/{superkingdom}/heatmap_matrices"
+            matrix_path=f"plots/{superkingdom}"
 
     script: "scripts/visualize-tool-output.py"
 
