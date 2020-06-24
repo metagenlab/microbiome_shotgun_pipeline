@@ -1,7 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+import os
 superkingdom=snakemake.params.superkingdom
 rank=snakemake.params.rank
 
@@ -26,7 +26,7 @@ files=snakemake.input.tool_out
 tables=[]
 tool_list=[]
 for file in files:
-    tool = file.split('/')[1].split('.tsv')[0]
+    tool = os.path.split(file)[1].split('.tsv')[0]
     tool_list.append(tool)
     tb=pd.read_csv(file,sep='\t')
     tb=tb[tb.superkingdom==superkingdom]

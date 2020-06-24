@@ -1,7 +1,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+import os
 tables=snakemake.input.all_tools
 rank=snakemake.params.rank
 superkingdom=snakemake.params.superkingdom
@@ -39,7 +39,7 @@ def get_l1_distance(true_tb,tool_tb,tool_name,rank):
 tool_type=snakemake.params.type
 all_tools_l1=[]
 for file in tables:
-    tool = file.split('/')[1].split('.tsv')[0]
+    tool = os.path.split(file)[1].split('.tsv')[0]
     type = tool_type[tool]
     tb=pd.read_csv(file,sep='\t')
     tool_tb=tb[tb.superkingdom==superkingdom]
