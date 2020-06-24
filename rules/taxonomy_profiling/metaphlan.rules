@@ -1,7 +1,7 @@
 host_acc=config['reference_genome']['filename']
 
 rule all_metaphlan:
-    input: expand("metaphlan/{sample}/profiled_{sample}.txt",sample=list(read_naming.keys()))
+    input: expand("metaphlan/{sample}/profiled_{sample}.tsv",sample=list(read_naming.keys()))
 
 
 sample_suffix=list(read_naming.values())
@@ -21,7 +21,7 @@ if paired:
 
         threads: config["num_cores"]
 
-        log: logging_folder + "metaphlan/{sample}"
+        log: logging_folder + "metaphlan/{sample}.log"
 
         benchmark: "benchmark/resources_usage/{sample}/metaphlan.benchmark.txt"
 
@@ -40,7 +40,7 @@ else:
 
         threads: config["num_cores"]
 
-        log: logging_folder + "metaphlan/{sample}"
+        log: logging_folder + "metaphlan/{sample}.log"
 
         benchmark: "benchmark/resources_usage/{sample}/metaphlan.benchmark.txt"
 
@@ -49,3 +49,9 @@ else:
              metaphlan {input} --bowtie2out {output.bz2} -t rel_ab_w_read_stats --add_viruses --nproc {threads} --input_type fastq -o {output.txt} 2> {log}
              """
 
+rule get_tax_table_metaphlan:
+   input: "metaphlan/{sample}/profiled_{sample}.txt"
+
+   output: "metaphlan/{sample}/profiled_{sample}.tsv"
+
+   shell: "tail -n+5 {input} > {output}"
