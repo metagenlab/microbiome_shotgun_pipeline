@@ -1,48 +1,8 @@
-#setup all tools native database
+#ezVIR params
 ezvir_db=config["ezvir_database"]
-surpi_db=config["surpi_database"]
-pathseq_db=config["pathseq_database"]
-kraken_db_path=config["kraken_database"]
-ganon_db_path=config["ganon_db_path"]
-
 read_len=config["samples_read_length"]
-kmer_len=config["kraken_kmer_len"]
 
-rule all_database_setup:
-    input: surpi_db=f"{surpi_db}/build/nt_curated.fa",
-           pathseq_host_fai=f"{pathseq_db}/pathseq_host.fa.fai",
-           pathseq_host_fa=f"{pathseq_db}/pathseq_host.fa",
-           pathseq_host_bfi=f"{pathseq_db}/pathseq_host.bfi",
-           pathseq_host_img=f"{pathseq_db}/pathseq_host.fa.img",
-           pathseq_host_dict=f"{pathseq_db}/pathseq_host.dict",
-           pathseq_fai=f"{pathseq_db}/pathseq_microbe.fa.fai",
-           pathseq_fa=f"{pathseq_db}/pathseq_microbe.fa",
-           pathseq_img=f"{pathseq_db}/pathseq_microbe.fa.img",
-           pathseq_dict=f"{pathseq_db}/pathseq_microbe.dict",
-           pathseq_tax=f"{pathseq_db}/pathseq_taxonomy.db",
-           kraken2_tax=f"{kraken_db_path}/taxo.k2d",
-           kraken2_names=f"{kraken_db_path}/taxonomy/names.dmp",
-           kraken2_nodes=f"{kraken_db_path}/taxonomy/nodes.dmp",
-           kraken2_univec=f"{kraken_db_path}/library/UniVec_Core/library.fna",
-           kraken2_human=f"{kraken_db_path}/library/human/library.fna",
-           kraken2_viral=f"{kraken_db_path}/library/viral/library.fna",
-           kraken2_bacteria=f"{kraken_db_path}/library/bacteria/library.fna",
-           kraken2_archea=f"{kraken_db_path}/library/archaea/library.fna",
-           bracken=f"{kraken_db_path}/database{read_len}mers.kmer_distrib",
-           ganon_dl=f"{ganon_db_path}/refseqCG/assemblies/updated_sequence_accession.txt",
-           ganon_filter=f"{ganon_db_path}/refseqCG/refseqCG.filter",
-           ganon_fna=f"{ganon_db_path}/refseqCG/refseqCG.fna",
-           ganon_names=f"{ganon_db_path}/refseqCG/assemblies/names.dmp",
-           ganon_nodes=f"{ganon_db_path}/refseqCG/assemblies/nodes.dmp",
-           ganon_merged=f"{ganon_db_path}/refseqCG/assemblies/merged.dmp",
-           ganon_seq_info=f"{ganon_db_path}/refseqCG/assemblies/acc_len_taxid.txt",
-           ezVIR_index=f"{ezvir_db}/EZV0.1-database.rev.2.bt2",
-           ezVIR_len=f"{ezvir_db}/genome_lengths.csv",
-           ezVIR_names=f"{ezvir_db}/genome_names.csv",
-           ezVIR_taxids=f"{ezvir_db}/genome_taxids.csv",
-           ezVIR_colours=f"{ezvir_db}/colours.csv"
-
-
+#Benchmark params
 superkingdom=config["superkingdom"]
 rank=config["target_rank"]
 community=config['community_name']
@@ -51,11 +11,11 @@ threshold=config["reads_threshold"]
 
 #generate all tools taxonomy tables
 rule all_tax:
-    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools)
+    input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
 #generate all tools outputs without a gold standard
 rule all_tool_out:
-    input: merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
+    input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
            heatmap_per_sample=expand("{tool}/heatmap-{superkingdom}-{rank}-level.pdf",superkingdom=superkingdom,rank=rank,tool=tools),
            barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
            heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
@@ -68,7 +28,7 @@ rule all_tool_out:
 
 #generate all benchmarks compared to a gold standard
 rule all_benchmark:
-    input:  merged_tsv=expand("taxonomy-tables/{tool}.tsv",tool=tools),
+    input:  merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
             read_counts_heatmaps=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
             gold_standard=f"gold_standard/gs_{community}.tsv",
             scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}_{out}_{rank}_level_{thr}.tsv",superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
@@ -209,17 +169,6 @@ rule linear_tax_centrifuge:
     script: "scripts/kraken2-tax.py"
 
 
-rule get_tax_table_metaphlan:
-   conda: pipeline_path + "envs/benchmark.yml"
-
-   input: "metaphlan/{sample}/profiled_{sample}.txt"
-
-   output: "metaphlan/{sample}/profiled_{sample}.tsv"
-
-   script: "scripts/metaphlan-tab.py"
-
-
-
 rule linear_tax_metaphlan:
     conda: pipeline_path + "envs/benchmark.yml"
 
@@ -234,10 +183,24 @@ rule linear_tax_metaphlan:
 
 
 
+rule linear_tax_motus:
+    conda: pipeline_path + "envs/benchmark.yml"
+
+    input: "motus/{sample}/profiled_{sample}.tsv"
+
+    output: "taxonomy-tables/motus/{sample}.tsv"
+
+    params: NCBI_email=config['email'],
+            NCBI_key=config['api_key']
+
+    script: "scripts/motus-tax.py"
+
+
+
 rule merge_all_tools_out:
     input: expand("taxonomy-tables/{{tool}}/{sample}.tsv",sample=list(read_naming.keys()))
 
-    output: "taxonomy-tables/{tool}.tsv"
+    output: "taxonomy-tables/all_tools/{tool}.tsv"
 
     script: "scripts/cat-tax.py"
 
@@ -246,7 +209,7 @@ rule merge_all_tools_out:
 rule read_count_heatmaps:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: "taxonomy-tables/{tool}.tsv"
+    input: "taxonomy-tables/all_tools/{tool}.tsv"
 
     output: f"{{tool}}/heatmap-{superkingdom}-{rank}-level.pdf"
 
@@ -271,7 +234,8 @@ rule plot_tools_output:
     params: rank=config["target_rank"],
             value=config["target_value"],
             superkingdom=superkingdom,
-            threshold=threshold
+            threshold=threshold,
+            matrix_path=f"plots/{superkingdom}/heatmap_matrices"
 
     script: "scripts/visualize-tool-output.py"
 
@@ -310,7 +274,7 @@ rule precision_recall_f1_score_per_tool:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            tool_out="taxonomy-tables/{tool}.tsv"
+            tool_out="taxonomy-tables/all_tools/{tool}.tsv"
 
     output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/{superkingdom}_scores_{rank}_level_{threshold}.tsv",
             presence=f"benchmark/tax-class/{community}/stats/{{tool}}/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
@@ -351,7 +315,7 @@ rule barplot_counts:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out="taxonomy-tables/{tool}.tsv"
+           tool_out="taxonomy-tables/all_tools/{tool}.tsv"
 
     output: f"benchmark/tax-class/{community}/{{tool}}/{superkingdom}-barplot_{rank}_level.pdf"
 
@@ -366,7 +330,7 @@ rule all_tools_barplot_counts:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool_out=expand("taxonomy-tables/{tool}.tsv",tool=tools)
+           tool_out=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
     params: rank=config["target_rank"],
             superkingdom=superkingdom
@@ -380,7 +344,7 @@ rule l1_distance:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-            all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
+            all_tools=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
     output: l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-{superkingdom}-{rank}.pdf",
             l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv"
@@ -396,7 +360,7 @@ rule get_precision_recall_table:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           tool="taxonomy-tables/{tool}.tsv"
+           tool="taxonomy-tables/all_tools/{tool}.tsv"
 
     output: aupr_table=f"benchmark/tax-class/{community}/stats/{{tool}}/aupr-{superkingdom}-{rank}.tsv"
 
@@ -425,7 +389,7 @@ rule number_of_classified_reads:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
-           all_tools=expand("taxonomy-tables/{tool}.tsv",tool=tools)
+           all_tools=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
     output: table=f"benchmark/tax-class/{community}/stats/classified-{superkingdom}.tsv",
             barplot=f"benchmark/tax-class/{community}/plots/classified-{superkingdom}.pdf"
@@ -446,7 +410,7 @@ if community=='qPCR':
         conda: pipeline_path + "envs/benchmark.yml"
 
         input: gold_standard=f"gold_standard/gs_{community}.tsv",
-                tool_out="taxonomy-tables/{tool}.tsv"
+                tool_out="taxonomy-tables/all_tools/{tool}.tsv"
 
         output: scores=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_{superkingdom}_scores-{threshold}.tsv",
                 presence=f"benchmark/tax-class/{community}/stats/{{tool}}/PCR_{superkingdom}_presence-{threshold}.tsv"
