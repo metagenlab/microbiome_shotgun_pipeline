@@ -34,7 +34,7 @@ reads_mapped=info.split('\n')[4].split(' ')[0]
 covered=len(coverage[coverage['cov']!=0])#Coverage = positions that are mapped by at least one read
 covpercent=round((covered/len(coverage))*100,2)#Coverage percent = Coverage/genome length *100 (rounded to 2 decimals)
 med_reads=round(coverage['cov'].median(),2)#Calculate median read coverage
-rollm=coverage.rolling(len(coverage)//2).mean()#calculate moving average with a sliding window of genome length divided by 100
+rollm=coverage.rolling(len(coverage)*0.01).mean()#calculate moving average with a sliding window of 1% genome length
 
 plt.style.use('ggplot')
 plt.figure(figsize=(11.7,8.27))
