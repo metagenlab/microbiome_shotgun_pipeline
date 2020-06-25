@@ -44,16 +44,10 @@ The number of jobs running in parallel is the number of cores in the snakemake c
 
 ### Visualizing tool output
 We developed scripts to generate heatmaps and other plots to summarize and visualize each tool's output, for both bacteria and viruses.
-#### Viruses
+Define the superkingdom and the taxonomic rank in the config file and then run the command below:
 ```bash
 snakemake --snakefile path/to/Snakefile --configfile config.yml
- --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_vir_out 
-```
-For bacteria, run the command below
-#### Bacteria
-```bash
-snakemake --snakefile path/to/Snakefile --configfile config.yml
- --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_bac_out 
+ --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_tool_out 
 ```
 
 ### Benchmarking according to a gold standard
@@ -71,16 +65,12 @@ AS2_D	687358	6975
 AS3_D	10372	1884
 ```
 #### Generating benchmarks for Viruses or Bacteria
-For Viruses:
+Similar to visualizing tool outputs, choose a superkingdom and a taxonomic rank for which the benchmark will be made and run the command below: 
 ```bash
 snakemake --snakefile path/to/Snakefile --configfile config.yml
- --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_vir_benchmark
+ --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_benchmark
 ```
-For Bacteria:
-```bash
-snakemake --snakefile path/to/Snakefile --configfile config.yml
- --use-conda --conda-prefix path/to/conda/envs/ --cores 10 all_bac_benchmark
-```
+
 
 ## Coverage plots of reference genomes
 The user has to create a directory containing the fasta.gz files of interest:
