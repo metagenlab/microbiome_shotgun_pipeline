@@ -31,18 +31,18 @@ rule all_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
             read_counts_heatmaps=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
             gold_standard=f"gold_standard/gs_{community}.tsv",
-            scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}_{out}_{rank}_level_{thr}.tsv",superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
-            presence_heatmap=f"benchmark/tax-class/{community}/plots/heatmap_presence_{superkingdom}_{threshold}_{rank}_level.pdf",
-            pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-{superkingdom}-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-{superkingdom}-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-{superkingdom}-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-{superkingdom}-{rank}.tsv",
-            l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-{superkingdom}-{rank}.pdf",
+            scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}/{out}_{rank}_level_{thr}.tsv",superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
+            presence_heatmap=f"benchmark/tax-class/{community}/plots/{superkingdom}/heatmap_presence_{threshold}_{rank}_level.pdf",
+            pr_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/precision-recall-{rank}.pdf",
+            f1_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/f1-scores-{rank}.pdf",
+            curve_table=f"benchmark/tax-class/{community}/stats/{superkingdom}/precision-recall-{rank}.tsv",
+            optimal_params=f"benchmark/tax-class/{community}/stats/{superkingdom}/optimal-params-{rank}.tsv",
+            l1_distance=f"benchmark/tax-class/{community}/plots/{superkingdom}/l1-distance-{rank}.pdf",
             l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv",
             barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
-            all_barplots=f"benchmark/tax-class/{community}/plots/barplot-{superkingdom}-{rank}.pdf",
-            table_reads=f"benchmark/tax-class/{community}/stats/classified-{superkingdom}.tsv",
-            barplot_reads=f"benchmark/tax-class/{community}/plots/classified-{superkingdom}.pdf",
+            all_barplots=f"benchmark/tax-class/{community}/plots/{superkingdom}/barplot-{rank}.pdf",
+            table_reads=f"benchmark/tax-class/{community}/stats/{superkingdom}/classified-reads.tsv",
+            barplot_reads=f"benchmark/tax-class/{community}/plots/{superkingdom}/classified-reads.pdf",
             tab="benchmark/resources_usage/resources.tsv",
             memo="benchmark/resources_usage/memory.pdf",
             time="benchmark/resources_usage/time.pdf",
@@ -292,8 +292,8 @@ rule regroup_scores_and_presence:
     input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/{superkingdom}_scores_{rank}_level_{threshold}.tsv",community=community,tool=tools,superkingdom=superkingdom,rank=rank,threshold=threshold),
            presence=expand("benchmark/tax-class/{community}/stats/{tool}/{superkingdom}_presence_{rank}_level_{threshold}.tsv",community=community,tool=tools,superkingdom=superkingdom,rank=rank,threshold=threshold),
 
-    output: all_scores=f"benchmark/tax-class/{community}/stats/{superkingdom}_scores_{rank}_level_{threshold}.tsv",
-            all_presence=f"benchmark/tax-class/{community}/stats/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
+    output: all_scores=f"benchmark/tax-class/{community}/stats/{superkingdom}/scores_{rank}_level_{threshold}.tsv",
+            all_presence=f"benchmark/tax-class/{community}/stats/{superkingdom}/presence_{rank}_level_{threshold}.tsv"
 
     script: "scripts/concat.py"
 
@@ -301,9 +301,9 @@ rule regroup_scores_and_presence:
 rule presence_heatmap:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: f"benchmark/tax-class/{community}/stats/{superkingdom}_presence_{rank}_level_{threshold}.tsv"
+    input: f"benchmark/tax-class/{community}/stats/{superkingdom}/presence_{rank}_level_{threshold}.tsv"
 
-    output: f"benchmark/tax-class/{community}/plots/heatmap_presence_{superkingdom}_{threshold}_{rank}_level.pdf"
+    output: f"benchmark/tax-class/{community}/plots/{superkingdom}/heatmap_presence_{threshold}_{rank}_level.pdf"
 
     params: rank=config["target_rank"]
 
@@ -335,7 +335,7 @@ rule all_tools_barplot_counts:
     params: rank=config["target_rank"],
             superkingdom=superkingdom
 
-    output: all_barplots=f"benchmark/tax-class/{community}/plots/barplot-{superkingdom}-{rank}.pdf"
+    output: all_barplots=f"benchmark/tax-class/{community}/plots/{superkingdom}/barplot-{rank}.pdf"
 
     script: "scripts/multi-barplot.py"
 
@@ -346,7 +346,7 @@ rule l1_distance:
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
             all_tools=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
-    output: l1_distance=f"benchmark/tax-class/{community}/plots/l1-distance-{superkingdom}-{rank}.pdf",
+    output: l1_distance=f"benchmark/tax-class/{community}/plots/{superkingdom}/l1-distance-{rank}.pdf",
             l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv"
 
     params: rank=rank,
@@ -377,10 +377,10 @@ rule plot_precision_recall_f1_curves:
 
    input: expand("benchmark/tax-class/{community}/stats/{tool}/aupr-{superkingdom}-{rank}.tsv",superkingdom=superkingdom,community=community,tool=tools,rank=rank)
 
-   output:  pr_curve=f"benchmark/tax-class/{community}/plots/precision-recall-{superkingdom}-{rank}.pdf",
-            f1_curve=f"benchmark/tax-class/{community}/plots/f1-{superkingdom}-{rank}.pdf",
-            curve_table=f"benchmark/tax-class/{community}/stats/precision-recall-{superkingdom}-{rank}.tsv",
-            optimal_params=f"benchmark/tax-class/{community}/stats/optimal-params-{superkingdom}-{rank}.tsv"
+   output:  pr_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/precision-recall-{rank}.pdf",
+            f1_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/f1-scores-{rank}.pdf",
+            curve_table=f"benchmark/tax-class/{community}/stats/{superkingdom}/precision-recall-{rank}.tsv",
+            optimal_params=f"benchmark/tax-class/{community}/stats/{superkingdom}/optimal-params-{rank}.tsv"
 
    script: "scripts/plot-precision-recall.py"
 
@@ -391,8 +391,8 @@ rule number_of_classified_reads:
     input: gold_standard=f"gold_standard/gs_{community}.tsv",
            all_tools=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
 
-    output: table=f"benchmark/tax-class/{community}/stats/classified-{superkingdom}.tsv",
-            barplot=f"benchmark/tax-class/{community}/plots/classified-{superkingdom}.pdf"
+    output: table=f"benchmark/tax-class/{community}/stats/{superkingdom}/classified-reads.tsv",
+            barplot=f"benchmark/tax-class/{community}/plots/{superkingdom}/classified-reads.pdf"
 
     params: superkingdom=superkingdom
 
@@ -403,8 +403,8 @@ rule number_of_classified_reads:
 if community=='qPCR':
 
     rule all_PCR:
-        input: all_scores=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_scores-{threshold}.tsv",
-                all_presence=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_presence-{threshold}.tsv"
+        input: all_scores=f"benchmark/tax-class/{community}/stats/{superkingdom}/PCR_scores-{threshold}.tsv",
+                all_presence=f"benchmark/tax-class/{community}/stats/{superkingdom}/PCR_presence-{threshold}.tsv"
 
     rule precision_recall_vs_qPCR:
         conda: pipeline_path + "envs/benchmark.yml"
@@ -426,7 +426,7 @@ if community=='qPCR':
         input: scores=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_{superkingdom}_scores-{threshold}.tsv",superkingdom=superkingdom,community=community,tool=tools,threshold=threshold),
                presence=expand("benchmark/tax-class/{community}/stats/{tool}/PCR_{superkingdom}_presence-{threshold}.tsv",superkingdom=superkingdom,community=community,tool=tools,threshold=threshold)
 
-        output: all_scores=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_scores-{threshold}.tsv",
-                all_presence=f"benchmark/tax-class/{community}/stats/PCR_{superkingdom}_presence-{threshold}.tsv"
+        output: all_scores=f"benchmark/tax-class/{community}/stats/{superkingdom}/PCR_scores-{threshold}.tsv",
+                all_presence=f"benchmark/tax-class/{community}/stats/{superkingdom}/PCR_presence-{threshold}.tsv"
 
         script: "scripts/concat.py"
