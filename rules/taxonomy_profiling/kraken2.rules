@@ -13,7 +13,7 @@ if paired==True:
     rule kraken2_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq"
+        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
                f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
 
         output: classified_r1="kraken2/{sample}/reads/classified_reads_1.fq",
