@@ -25,7 +25,10 @@ def get_lin_tax(tab, ncbi, target_ranks):
                 lineage = ncbi.get_lineage(taxid)
             except ValueError:
                 print(f'taxid:{taxid} not found, searching NCBI taxonomy')
-                del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
+                try:
+                    del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
+                except RuntimeError:
+                    print("Could not convert to ncbi taxid, skipping:", tax[taxid])
                 print(f'deleted entry name: {del_entry_name}')
                 simple_name = ' '.join(del_entry_name.split(' ')[
                                        0:2])  # Some times, subspecies is added to the scientific name, and ete3 cannot find a match
