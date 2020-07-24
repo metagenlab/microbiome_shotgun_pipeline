@@ -102,7 +102,7 @@ rule get_host_unmapped_reads:
 
     shell:
         """
-        samtools view -@ {threads} -b -f 4 {input} > {output}
+        samtools view -@ {threads} -b -f 4 {input} > {output.bam}
         samtools flagstat {input} > {output.info}
         """
 
