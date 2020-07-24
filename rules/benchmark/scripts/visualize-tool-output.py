@@ -9,15 +9,13 @@ from matplotlib.backends.backend_pdf import PdfPages
 def concat_sample_counts(file,target_val,sample_name, rank, tool_name, superkingdom, threshold):
     tb_list = []
     col_sel = []
-    tool_tb = pd.read_csv(file, sep='\t')
-    tool_tb = tool_tb[tool_tb.superkingdom == superkingdom]
-    tool_tb = tool_tb.groupby(f'{rank}').sum()
-
+    tool_tb_raw = pd.read_csv(file, sep='\t')
+    tool_tb_raw = tool_tb_raw[tool_tb_raw.superkingdom.str.lower() == superkingdom]
+    tool_tb = tool_tb_raw.groupby(f'{rank}').sum()
     for col in tool_tb:
         if target_val in col:
             col_sel.append(col)
     subset = tool_tb[col_sel]
-
     for col in subset.columns:
         tb = subset[[col]]
         tb = tb[tb > threshold].dropna()
