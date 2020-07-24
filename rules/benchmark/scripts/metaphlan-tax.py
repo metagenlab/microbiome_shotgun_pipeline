@@ -55,11 +55,13 @@ def get_lin_tax(tab, ncbi, target_ranks):
                 lineage = ncbi.get_lineage(taxid)
             except ValueError:
                 print(f'taxid:{taxid} not found, searching NCBI taxonomy')
-                del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
-                print(f'deleted entry name: {del_entry_name}')
+                try:
+                    del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
+                except RuntimeError:
+                    print("Could not convert to ncbi taxid, skipping:", tax[taxid])
+                    continue
                 simple_name = ' '.join(del_entry_name.split(' ')[
                                        0:2])  # Some times, subspecies is added to the scientific name, and ete3 cannot find a match
-                print(f'first two words of entry name {simple_name}')
                 if 'unclassified' in simple_name:
                     print('discarding "unclassified" in name')
                     simple_name = simple_name.split('unclassified ')[1]
@@ -98,7 +100,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
 
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 lin_tax=get_lin_tax(tax,ncbi,target_ranks)
-lin_tax=lin_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
+lin_tax=lin_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid', 'scientific_name','taxid']).sum()
 lin_tax['sample']=[snakemake.wildcards.sample]*len(lin_tax)
 
 lin_tax.to_csv(snakemake.output[0],sep='\t')
