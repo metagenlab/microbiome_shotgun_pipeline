@@ -45,7 +45,11 @@ def get_lin_tax(tab, ncbi, target_ranks):
     df=df.replace(np.nan,'NA')
     return df
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
-tb=pd.read_csv(snakemake.input[0],sep='\t',names=['name','taxid','taxonomy_lvl','kraken_assigned_reads','added_reads','reads_assigned','read_percent'])
+tb=pd.read_csv(snakemake.input[0],
+               sep='\t',
+               names=['name','taxid','taxonomy_lvl','kraken_assigned_reads','added_reads','reads_assigned','read_percent'],
+               skiprows=[0],
+               header=None)
 lin_tax_tb=get_lin_tax(tb,ncbi,target_ranks)
 lin_tax_tb = lin_tax_tb.groupby(
     ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
