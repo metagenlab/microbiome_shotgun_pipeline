@@ -32,8 +32,6 @@ rule anvio:
 pipeline_path = workflow.basedir + '/'
 multiqc_configfile = pipeline_path + "data/configuration_files/multiqc/config.yaml"
 
-
-
 # general
 include: "rules/logging.rules"
 
@@ -42,6 +40,7 @@ include: "rules/read_manipulation/get_reads.rules"
 include: "rules/read_manipulation/get_sras.rules"
 
 # quality check
+host_acc=config['reference_genome']['filename']#The name of the host genome
 include: "rules/QC/multiqc.rules"
 include: "rules/QC/qualimap.rules"
 include: "rules/QC/quast.rules"
