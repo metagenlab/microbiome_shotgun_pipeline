@@ -17,7 +17,7 @@ sql = 'create table uniparc_accession2genus (accession varchar(200), genus varch
 cursor.execute(sql)
 
 uniparc_accession2silix_acc_and_consensus_annotation = {}
-sql = 'select uniparc_accession,silix_name,description from uniparc2silix_90 t1 inner join uniparc_consensus_annotation t2 on t1.uniparc_id=t2.uniparc_id;'
+sql = 'select uniparc_accession,cluster_name,description from uniparc2silix_90 t1 inner join uniparc_consensus_annotation t2 on t1.uniparc_id=t2.uniparc_id;'
 
 for row in cursor.execute(sql).fetchall():
     row = list(row)

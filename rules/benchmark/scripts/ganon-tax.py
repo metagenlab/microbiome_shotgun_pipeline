@@ -33,6 +33,10 @@ def get_lin_tax(tab, ncbi, target_ranks):
                     print('discarding "unclassified" in name')
                     simple_name = simple_name.split('unclassified ')[1]
                     print(f'final name: {simple_name}')
+                if 'incertae' in simple_name:
+                    print('discarding "incertae:" in name')
+                    simple_name = simple_name.split('incertae')[0].strip()
+                    print(f'final name: {simple_name}')  
                 updated_taxid = list(ncbi.get_name_translator([simple_name]).values())[0][0]
                 lineage = ncbi.get_lineage(updated_taxid)
 

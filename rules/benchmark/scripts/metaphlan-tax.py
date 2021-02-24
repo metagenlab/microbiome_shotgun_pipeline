@@ -11,6 +11,7 @@ ncbi = NCBITaxa()
 ###Cleaning names and taxids
 tax=pd.read_csv(snakemake.input[0],sep='\t')
 tax=tax.replace('-1','0')
+tax=tax.replace(-1,'0')
 tax=tax.replace('UNKNOWN','unclassified')
 clean_names=[]
 taxids=[]
@@ -23,6 +24,7 @@ for i in range(len(tax)):
     cname=tmp.replace('_',' ')
     clean_names.append(cname)
     ctaxid=tax.iloc[i]["clade_taxid"]
+    print(ctaxid)
     taxsplt=ctaxid.split('|')
     taxid=taxsplt[len(taxsplt)-1]
     if taxid=='' and 'unclassified' in cname:
@@ -100,6 +102,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
 
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 lin_tax=get_lin_tax(tax,ncbi,target_ranks)
+print(lin_tax.head())
 lin_tax=lin_tax.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid', 'scientific_name','taxid']).sum()
 lin_tax['sample']=[snakemake.wildcards.sample]*len(lin_tax)
 

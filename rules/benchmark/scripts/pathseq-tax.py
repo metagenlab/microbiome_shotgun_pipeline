@@ -62,7 +62,7 @@ def get_lin_tax(tb, ncbi, target_ranks):
 
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 
-pathseq_tb=pd.read_csv(snakemake.input[0],sep='\t',names=['taxid', 'taxonomy', 'rank', 'name', 'kingdom', 'score', 'score_normalized', 'reads','reads_assigned', 'refence_length'])
+pathseq_tb=pd.read_csv(snakemake.input[0],sep='\t',names=['taxid', 'taxonomy', 'rank', 'name', 'kingdom', 'score', 'score_normalized', 'reads','reads_assigned', 'refence_length'],  skiprows=1)
 
 lin_tax_tb = get_lin_tax(pathseq_tb,ncbi,target_ranks)
 lin_tax_tb = lin_tax_tb.groupby(

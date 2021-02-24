@@ -6,8 +6,6 @@ from ete3 import NCBITaxa
 import numpy as np
 ncbi = NCBITaxa()
 
-
-
 def get_lin_tax(tab, ncbi, target_ranks):
     tax = {}
     tab = tab.replace(np.nan, 0)
@@ -29,6 +27,7 @@ def get_lin_tax(tab, ncbi, target_ranks):
                     del_entry_name = Entrez.read(Entrez.esummary(db='taxonomy', id=f'{taxid}'))[0]['ScientificName']
                 except RuntimeError:
                     print("Could not convert to ncbi taxid, skipping:", tax[taxid])
+
                 print(f'deleted entry name: {del_entry_name}')
                 simple_name = ' '.join(del_entry_name.split(' ')[
                                        0:2])  # Some times, subspecies is added to the scientific name, and ete3 cannot find a match
@@ -37,7 +36,12 @@ def get_lin_tax(tab, ncbi, target_ranks):
                     print('discarding "unclassified" in name')
                     simple_name = simple_name.split('unclassified ')[1]
                     print(f'final name: {simple_name}')
+                if 'incertae' in simple_name:
+                    print('discarding "incertae:" in name')
+                    simple_name = simple_name.split('incertae')[0].strip()
+                    print(f'final name: {simple_name}')                    
                 updated_taxid = list(ncbi.get_name_translator([simple_name]).values())[0][0]
+                print("updated_taxid", updated_taxid)
                 lineage = ncbi.get_lineage(updated_taxid)
 
             names = ncbi.get_taxid_translator(lineage)
