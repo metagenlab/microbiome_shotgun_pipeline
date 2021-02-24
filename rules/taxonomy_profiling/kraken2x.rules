@@ -1,14 +1,7 @@
-host_acc=config['reference_genome']['filename']
 rule all_kraken2x:
     input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
 
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
-
-if paired==True:
+if paired:
     rule kraken2x_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 

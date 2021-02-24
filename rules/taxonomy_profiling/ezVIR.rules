@@ -1,15 +1,5 @@
 db_path_ezvir=config["ezvir_database"]
-
 common=config["common"]
-if common==True:
-    fasta_name=config["fasta_name"]
-
-else:
-    fasta_name='EZV0.1-database'
-
-host_acc=config['reference_genome']['filename']
-
-
 if config["virus_family"]=='NA':
     rule all_ezvir:
         input:  bam=expand("ezVIR/{sample}/{sample}.bam",sample=list(read_naming.keys())),
@@ -25,18 +15,13 @@ else:
                 plot=expand("ezVIR/{sample}/report/{sample}_p1-plot.pdf",sample=list(read_naming.keys())),
                 coverage=expand("ezVIR/{sample}/report/{target_virus}_coverage-histogram.pdf",sample=list(read_naming.keys()),target_virus=config["virus_family"])
 
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
 
-if paired==True:
+if paired:
     rule ezVIR_mapping_PE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-                r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: r1=fasta_input_list[0],
+                r2=fasta_input_list[1]
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
@@ -57,7 +42,7 @@ else:
     rule ezVIR_mapping_SE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: expand("decontaminated-reads/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: get_fasta_input
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 

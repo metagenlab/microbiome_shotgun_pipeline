@@ -1,20 +1,12 @@
-host_acc=config['reference_genome']['filename']
-
 rule all_metaphlan:
     input: expand("metaphlan/{sample}/profiled_{sample}.tsv",sample=list(read_naming.keys()))
 
-
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
 if paired:
     rule metaphlan_PE_reads:
         conda: pipeline_path + "envs/metaphlan.yml"
 
-        input:  r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-                r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input:  r1=fasta_input_list[0],
+                r2=fasta_input_list[1]
 
         output: txt="metaphlan/{sample}/profiled_{sample}.txt",
                 bz2="metaphlan/{sample}/{sample}.bowtie2.bz2"
@@ -33,7 +25,7 @@ else:
      rule metaphlan_SE_reads:
         conda: pipeline_path + "envs/metaphlan.yml"
 
-        input:  f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+        input:  get_fasta_input
 
         output: txt="metaphlan/{sample}/profiled_{sample}.txt",
                 bz2="metaphlan/{sample}/{sample}.bowtie2.bz2"

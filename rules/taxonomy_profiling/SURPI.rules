@@ -1,21 +1,16 @@
 surpi_db=config["surpi_database"]
-host_acc=config['reference_genome']['filename']
 rule all_surpi:
     input:  bac=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d1.fl.Bacteria.annotated.species.clx.counttable",sample=list(read_naming.keys())),
             vir=expand("SURPI/{sample}/OUTPUT_{sample}/{sample}.NT.snap.matched.d16.fl.Viruses.filt.NTblastn_tru.dust.annotated.species.clx.counttable",sample=list(read_naming.keys()))
 
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
 
-if paired==True:
+
+if paired:
     rule SURPI_interleve_paired_fastq:
         conda: pipeline_path + "envs/fastq-join.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-               f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: r1=fasta_input_list[0],
+               r2=fasta_input_list[1]
 
         output: temp("SURPI/{sample}/{sample}_join.fastq"),
                 temp("SURPI/{sample}/{sample}_un1.fastq"),
@@ -28,7 +23,7 @@ if paired==True:
 
 else:
     rule SURPI_copy_single_fastq:
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+        input: get_fasta_input
 
         output: temp("SURPI/{sample}/{sample}_join.fastq")
 

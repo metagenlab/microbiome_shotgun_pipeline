@@ -1,6 +1,5 @@
 kraken_db_path=config["kraken_database"]
 read_len=config["samples_read_length"]
-
 rule all_bracken:
     input: expand("kraken2/{sample}/bracken.txt",sample=list(read_naming.keys()))
 

@@ -2,20 +2,13 @@ rule all_kaiju:
     input: expand("kaiju/{sample}/summary.tsv",sample=list(read_naming.keys())),
             expand("kaiju/{sample}/kaiju.txt",sample=list(read_naming.keys()))
 
-host_acc=config['reference_genome']['filename']
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
 
-if paired==True:
-
+if paired:
     rule kaiju_PE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
-        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-               r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: r1=fasta_input_list[0],
+               r2=fasta_input_list[1]
 
         output: "kaiju/{sample}/kaiju.out"
 
@@ -33,7 +26,7 @@ else:
     rule kaiju_SE_reads:
         conda: pipeline_path + "envs/kaiju.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+        input: get_fasta_input
 
         output: "kaiju/{sample}/kaiju.out"
 

@@ -1,18 +1,13 @@
 rule all_centrifuge:
     input: expand("centrifuge/{sample}/centrifuge-k-report.txt",sample=list(read_naming.keys()))
 
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
 
-if paired==True:
+if paired:
     rule centrifuge_PE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: r1=expand("decontaminated-reads/{host_acc}/{{sample}}_R1.fq",host_acc=config['reference_genome']['filename']),
-               r2=expand("decontaminated-reads/{host_acc}/{{sample}}_R2.fq",host_acc=config['reference_genome']['filename'])
+        input: r1=fasta_input_list[0],
+               r2=fasta_input_list[1]
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"
@@ -33,7 +28,7 @@ else:
     rule centrifuge_SE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: expand("decontaminated-reads/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: get_fasta_input
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"

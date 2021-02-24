@@ -1,22 +1,14 @@
+ganon_db_path=config["ganon_db_path"]
+job_mem_alloc=config["job_memory_limit"]
 rule all_ganon:
     input: expand("ganon/{sample}/classified.rep",sample=list(read_naming.keys()))
 
-ganon_db_path=config["ganon_db_path"]
-host_acc=config['reference_genome']['filename']
-job_mem_alloc=config["job_memory_limit"]
-
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
-
-if paired==True:
+if paired:
     rule ganon_PE_reads:
         conda: pipeline_path + "envs/ganon.yml"
 
-        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-               r2=f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: r1=fasta_input_list[0],
+               r2=fasta_input_list[1]
 
         output: classified="ganon/{sample}/classified.out",
                 unclassified="ganon/{sample}/unclassified.txt",
@@ -42,7 +34,7 @@ else:
     rule ganon_SE_reads:
         conda: pipeline_path + "envs/ganon.yml"
 
-        input: r1=f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+        input: r1=get_fasta_input
 
         output: classified="ganon/{sample}/classified.out",
                 unclassified="ganon/{sample}/unclassified.txt",

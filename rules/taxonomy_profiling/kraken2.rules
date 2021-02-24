@@ -1,20 +1,12 @@
-host_acc=config['reference_genome']['filename']
-
 rule all_kraken2:
     input: expand("kraken2/{sample}/report.txt",sample=list(read_naming.keys()))
 
-sample_suffix=list(read_naming.values())
-if len(sample_suffix[0])==2:
-    paired=True
-else:
-    paired=False
-
-if paired==True:
+if paired:
     rule kraken2_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-               f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: r1=fasta_input_list[0],
+               r2=fasta_input_list[1]
 
         output: classified_r1="kraken2/{sample}/reads/classified_reads_1.fq",
                 classified_r2="kraken2/{sample}/reads/classified_reads_2.fq",
@@ -39,7 +31,7 @@ else:
     rule kraken2_SE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: expand("decontaminated-reads/{host_acc}/{{sample}}_single.fq",host_acc=config['reference_genome']['filename'])
+        input: get_fasta_input
 
         output: classified="kraken2/{sample}/reads/classified_reads.fq",
                 unclassified="kraken2/{sample}/reads/unclassified_reads.fq",
