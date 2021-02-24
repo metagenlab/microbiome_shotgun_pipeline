@@ -1,8 +1,9 @@
 #ezVIR params
 ezvir_db=config["ezvir_database"]
-read_len=config["samples_read_length"]
+
 
 #Benchmark params
+read_len=config["samples_read_length"]
 superkingdom=config["superkingdom"]
 rank=config["target_rank"]
 community=config['community_name']
