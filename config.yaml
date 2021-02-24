@@ -4,9 +4,8 @@ job_memory_limit: 6 #If you expect your job to use 6GB
                     #Snakemake makes sure that the sum of all jobs memory do not exceed the total set by the flag 'resources' in the snakemake command
 #Path of sample names table
 local_samples: local_samples.tsv #table with fastq sample file names
-
+skip_preprocess: False
 #Host filtering:
-
 reference_genome: {'host':'human','filename':'GCA_000001405.28_GRCh38.p13'}
 
 indexing_mem: 25000000
