@@ -12,7 +12,9 @@ threshold=config["reads_threshold"]
 
 #generate all tools taxonomy tables
 rule all_tax:
-    input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
+    input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
+           status_update="ete3-NCBI-database.txt"
+
 
 #generate all tools outputs without a gold standard
 rule all_tool_out:
@@ -48,6 +50,17 @@ rule all_benchmark:
             memo="benchmark/resources_usage/memory.pdf",
             time="benchmark/resources_usage/time.pdf",
             mem_and_time="benchmark/resources_usage/mem-time.pdf"
+
+
+rule check_for_ete3_ncbi_database_update:
+    conda: pipeline_path + "envs/benchmark.yml"
+
+    output: "ete3-NCBI-database.txt"
+
+    log: logging_folder + "benchmark/ete3-NCBI-database.log"
+
+    script: "scripts/update-ete3.py"
+
 
 rule linear_tax_Kraken2:
     conda: pipeline_path + "envs/benchmark.yml"
