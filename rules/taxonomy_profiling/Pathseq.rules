@@ -17,8 +17,8 @@ rule all_pathseq:
 rule pathseq_fastq_to_bam_PE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: r1=fasta_input_list[0],
-           r2=fasta_input_list[1]
+    input: r1=fastq_input_list[0],
+           r2=fastq_input_list[1]
 
     output: "Pathseq/{sample}/PE_input_reads.bam"
 
@@ -36,7 +36,7 @@ rule pathseq_fastq_to_bam_PE_reads:
 rule pathseq_fastq_to_bam_SE_reads:
     singularity: "docker://broadinstitute/gatk:4.1.3.0"
 
-    input: r1=get_fasta_input
+    input: r1=get_fastq_input
 
     output: "Pathseq/{sample}/SE_input_reads.bam"
 

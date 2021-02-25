@@ -6,8 +6,8 @@ if paired:
     rule centrifuge_PE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: r1=fasta_input_list[0],
-               r2=fasta_input_list[1]
+        input: r1=fastq_input_list[0],
+               r2=fastq_input_list[1]
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"
@@ -28,7 +28,7 @@ else:
     rule centrifuge_SE_reads:
         conda: pipeline_path + "envs/centrifuge.yml"
 
-        input: get_fasta_input
+        input: get_fastq_input
 
         output: out="centrifuge/{sample}/centrifuge-out.txt",
                 report="centrifuge/{sample}/report.txt"
@@ -37,7 +37,7 @@ else:
 
         params: config["centrifuge_index"]
 
-        log: logging_folder + "centrifuge/{sample}-class.log"
+        log: logging_folder + "centrifuge/{sample}.log"
 
         benchmark: "benchmark/resources_usage/{sample}/centrifuge.benchmark.txt"
 

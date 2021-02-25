@@ -20,8 +20,8 @@ if paired:
     rule ezVIR_mapping_PE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: r1=fasta_input_list[0],
-                r2=fasta_input_list[1]
+        input: r1=fastq_input_list[0],
+                r2=fastq_input_list[1]
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 
@@ -42,7 +42,7 @@ else:
     rule ezVIR_mapping_SE_reads:
         conda: pipeline_path + "envs/ezvir.yml"
 
-        input: get_fasta_input
+        input: get_fastq_input
 
         params: genome_path=f"{db_path_ezvir}/{fasta_name}"
 

@@ -78,8 +78,8 @@ if len(sample_suffix[0])==2:
     paired=True
 else:
     paired=False
-##Define a function that gets fasta outputs whether the user wants to skip host-filtering and adapter trimming or not
-def get_fasta_input():
+##Define a function that gets fastq files whether the user wants to skip host-filtering and QC or not
+def get_fastq_input():
     if config['skip_preprocess']:
         if paired:
             return expand("samples/{{sample}}/reads/raw/{{sample}}_R{rd}.fastq.gz",rd=[1,2])
@@ -90,7 +90,7 @@ def get_fasta_input():
             return expand("decontaminated-reads/{host_acc}/{{sample}}_R{rd}.fq",rd=[1,2],host_acc=host_acc)
         else:
             return f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
-fasta_input_list=get_fasta_input()
+fastq_input_list=get_fastq_input()
 
 
 

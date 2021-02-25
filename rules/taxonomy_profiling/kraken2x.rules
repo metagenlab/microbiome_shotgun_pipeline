@@ -5,8 +5,8 @@ if paired:
     rule kraken2x_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_R1.fq",
-               f"decontaminated-reads/{host_acc}/{{sample}}_R2.fq"
+        input: fastq_input_list[0],
+               fastq_input_list[1]
 
         output: classified_r1="kraken2x/{sample}/reads/classified_reads_1.fq",
                 classified_r2="kraken2x/{sample}/reads/classified_reads_2.fq",
@@ -31,7 +31,7 @@ else:
     rule kraken2x_SE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: f"decontaminated-reads/{host_acc}/{{sample}}_single.fq"
+        input: get_fastq_input
 
         output: classified="kraken2x/{sample}/reads/classified_reads.fq",
                 unclassified="kraken2x/{sample}/reads/unclassified_reads.fq",

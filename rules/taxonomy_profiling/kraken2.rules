@@ -5,8 +5,8 @@ if paired:
     rule kraken2_PE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: r1=fasta_input_list[0],
-               r2=fasta_input_list[1]
+        input: r1=fastq_input_list[0],
+               r2=fastq_input_list[1]
 
         output: classified_r1="kraken2/{sample}/reads/classified_reads_1.fq",
                 classified_r2="kraken2/{sample}/reads/classified_reads_2.fq",
@@ -31,7 +31,7 @@ else:
     rule kraken2_SE_reads:
         conda: pipeline_path + "envs/kraken2.yml"
 
-        input: get_fasta_input
+        input: get_fastq_input
 
         output: classified="kraken2/{sample}/reads/classified_reads.fq",
                 unclassified="kraken2/{sample}/reads/unclassified_reads.fq",

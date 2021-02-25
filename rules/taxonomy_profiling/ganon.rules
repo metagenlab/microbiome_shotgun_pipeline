@@ -7,8 +7,8 @@ if paired:
     rule ganon_PE_reads:
         conda: pipeline_path + "envs/ganon.yml"
 
-        input: r1=fasta_input_list[0],
-               r2=fasta_input_list[1]
+        input: r1=fastq_input_list[0],
+               r2=fastq_input_list[1]
 
         output: classified="ganon/{sample}/classified.out",
                 unclassified="ganon/{sample}/unclassified.txt",
@@ -34,7 +34,7 @@ else:
     rule ganon_SE_reads:
         conda: pipeline_path + "envs/ganon.yml"
 
-        input: r1=get_fasta_input
+        input: r1=get_fastq_input
 
         output: classified="ganon/{sample}/classified.out",
                 unclassified="ganon/{sample}/unclassified.txt",

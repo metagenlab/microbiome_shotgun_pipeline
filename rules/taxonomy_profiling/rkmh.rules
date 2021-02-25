@@ -7,8 +7,8 @@ if paired:
     rule interleve_fastq_rkmh:
         conda: pipeline_path + "envs/fastq-join.yml"
 
-        input: r1=fasta_input_list[0],
-               r2=fasta_input_list[1]
+        input: r1=fastq_input_list[0],
+               r2=fastq_input_list[1]
 
         output: temp("rkmh/{sample}/{sample}_join.fastq"),
                 temp("rkmh/{sample}/{sample}_un1.fastq"),
@@ -19,7 +19,7 @@ if paired:
         shell: "fastq-join {input[0]} {input[1]} -o rkmh/{wildcards.sample}/{wildcards.sample}_%.fastq &> {log}"
 else:
     rule rename_fastq_rkmh:
-        input: get_fasta_input
+        input: get_fastq_input
 
         output: temp("rkmh/{sample}/{sample}_join.fastq")
 
