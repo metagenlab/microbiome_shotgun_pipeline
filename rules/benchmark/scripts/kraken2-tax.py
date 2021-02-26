@@ -56,7 +56,6 @@ def get_lin_tax(tab, ncbi, target_ranks):
                     lineage = ncbi.get_lineage(updated_taxid)
                     foundlineage = True
                 except RuntimeError:
-                    tax[taxid]['scientific_name'] = 'unclassified'
                     print("Could not convert to ncbi taxid, skipping:", tax[taxid])
                     foundlineage = False
 
@@ -83,16 +82,14 @@ def get_lin_tax(tab, ncbi, target_ranks):
                             if previous_rank not in rank2names.keys():
                                 continue
                         tax[taxid][rank] = f'{previous_name}_{rank[0:1]}'
-        else:
-            tax[taxid]['scientific_name'] = 'unclassified'
     df = pd.DataFrame.from_dict(tax, orient='index')
-    df = df.replace(np.nan, 'NA')
     return df
-
 
 target_ranks = ['superkingdom','phylum','order','family','genus','species']
 sample_tb=pd.read_csv(snakemake.input[0],sep='\t',names=["read_percent","rooted_frag_num","reads_assigned","rank_code","taxid","scientific_names"])
 lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
-lin_tax_tb=lin_tax_tb.groupby(['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid']).sum()
+lin_tax_tb['read_counts']=np.int64(lin_tax_tb['read_counts'])
 lin_tax_tb['sample']=[snakemake.wildcards.sample]*len(lin_tax_tb)
-lin_tax_tb.to_csv(snakemake.output[0], sep='\t')
+linear_taxonomy_table=lin_tax_tb[['superkingdom','superkingdom_taxid','phylum','phylum_taxid','order','order_taxid','family','family_taxid','genus','genus_taxid','species','species_taxid','scientific_name','taxid','read_counts','read_percent','sample']]
+linear_taxonomy_table.replace(np.nan,'na',inplace=True)
+linear_taxonomy_table.to_csv(snakemake.output[0], sep='\t',index=False)
