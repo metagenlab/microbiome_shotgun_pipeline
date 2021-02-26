@@ -10,7 +10,7 @@ superkingdom=snakemake.params["superkingdom"]
 
 def get_heatmap_table(file,rank,value,superkingdom):
     tb=pd.read_csv(file,sep='\t')
-    subset = tb[tb.superkingdom == superkingdom]
+    subset = tb[tb.superkingdom.str.lower() == superkingdom]
     subset=subset.groupby(f'{rank}',as_index=False).sum()
     subset.set_index(f'{rank}',inplace=True)
     col=[]
