@@ -22,7 +22,8 @@ rule all_tool_out:
            heatmap_per_sample=expand("{tool}/heatmap-{superkingdom}-{rank}-level.pdf",superkingdom=superkingdom,rank=rank,tool=tools),
            barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
            heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
-           heatmap_presence=f"plots/{superkingdom}/heatmap_presence_{rank}_level.pdf",
+           heatmap_presence_tools=f"plots/{superkingdom}/presence_between_tools_{rank}_level.pdf",
+           heatmap_presence_samples=f"plots/{superkingdom}/presence_between_samples_{rank}_level.pdf",
            tab="benchmark/resources_usage/resources.tsv",
            memo="benchmark/resources_usage/memory.pdf",
            time="benchmark/resources_usage/time.pdf",
@@ -55,7 +56,7 @@ rule all_benchmark:
 rule check_for_ete3_ncbi_database_update:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    output: "ete3-NCBI-database.txt"
+    output: temp("ete3-NCBI-database.txt")
 
     log: logging_folder + "benchmark/ete3-NCBI-database.log"
 
@@ -243,7 +244,8 @@ rule plot_tools_output:
     output: barplot_samples=f"plots/{superkingdom}/barplot_samples_{rank}_level.pdf",
             barplot_tools=f"plots/{superkingdom}/barplot_tools_{rank}_level.pdf",
             heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
-            heatmap_presence=f"plots/{superkingdom}/heatmap_presence_{rank}_level.pdf"
+            heatmap_presence_tools=f"plots/{superkingdom}/presence_between_tools_{rank}_level.pdf",
+            heatmap_presence_samples=f"plots/{superkingdom}/presence_between_samples_{rank}_level.pdf",
 
     params: rank=config["target_rank"],
             value=config["target_value"],
