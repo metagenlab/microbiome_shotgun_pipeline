@@ -82,7 +82,7 @@ bpt.savefig(snakemake.output.barplot_tools)
 
 
 
-def draw_heatmap_counts(data,sample,rank,square,annot,tab_path):
+def draw_heatmap_counts(data,sample,rank,square,annot):
     subset=data[data['sample']==sample]
     pivot=subset.pivot_table(subset,index=f'{rank}',columns='tool')
     pivot=pivot.replace(np.nan,0)
@@ -90,7 +90,6 @@ def draw_heatmap_counts(data,sample,rank,square,annot,tab_path):
     pivot['sum']=pivot.sum(axis=1)
     pivot=pivot.sort_values(by='sum',ascending=False)
     pivot=pivot.drop('sum',axis=1)
-    pivot.to_csv(f'{tab_path}/{sample}_matrix.tsv',sep='\t')
     if len(pivot)>10:
         pivot=pivot[0:10]
     g=sns.heatmap(pivot,square=square,cbar_kws={'fraction' : 0.01},cmap='OrRd',linewidth=1,annot=annot,fmt='.1f')
@@ -102,7 +101,7 @@ with PdfPages(snakemake.output.heatmap_counts) as pdf:
         plt.figure(figsize=(11.7,8.27))
         plt.subplots_adjust(left=0.3, bottom=0.3)
         plt.title(sample)
-        fig=draw_heatmap_counts(all_tools,sample,rank,square,annot,path)
+        fig=draw_heatmap_counts(all_tools,sample,rank,square,annot)
         pdf.savefig()
         plt.close()
 
