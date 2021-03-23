@@ -49,8 +49,7 @@ target_ranks = ['superkingdom','phylum','order','family','genus','species']
 sample_tb=pd.read_csv(snakemake.input[0],
                       sep='\t',
                       names=["file", "read_percent", "reads_assigned", "taxid", "lineage"],
-                      skiprows=[0],
-                      header=None)
+                      header=0)
 lin_tax_tb=get_lin_tax(sample_tb,ncbi,target_ranks)
 lin_tax_tb = lin_tax_tb.groupby(
     ['superkingdom', 'superkingdom_taxid', 'phylum', 'phylum_taxid', 'order', 'order_taxid', 'family', 'family_taxid',
