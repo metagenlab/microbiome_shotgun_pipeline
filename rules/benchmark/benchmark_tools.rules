@@ -3,6 +3,10 @@ ezvir_db=config["ezvir_database"]
 
 
 #Benchmark params
+if paired:
+    pairing=2
+else:
+    pairing=1
 read_len=config["samples_read_length"]
 superkingdom=config["superkingdom"]
 rank=config["target_rank"]
@@ -19,11 +23,13 @@ rule all_tax:
 #generate all tools outputs without a gold standard
 rule all_tool_out:
     input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
-           heatmap_per_sample=expand("{tool}/heatmap-{superkingdom}-{rank}-level.pdf",superkingdom=superkingdom,rank=rank,tool=tools),
-           barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
+           barplots=expand(f"plots/{superkingdom}/barplot_{{variable}}_{rank}_level.pdf",variable=['tools','samples']),
            heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
            heatmap_presence_tools=f"plots/{superkingdom}/presence_between_tools_{rank}_level.pdf",
            heatmap_presence_samples=f"plots/{superkingdom}/presence_between_samples_{rank}_level.pdf",
+           nmds=expand(f"plots/{superkingdom}/ndms-{{tool}}-{threshold}-{rank}-level.pdf",tool=tools),
+           heatmap=expand(f"plots/{superkingdom}/heatmap-{{tool}}-{threshold}-{rank}-level.pdf",tool=tools),
+           coverage=expand("taxonomy-tables/all_tools/{tool}-coverage.tsv",tool=tools),
            tab="benchmark/resources_usage/resources.tsv",
            memo="benchmark/resources_usage/memory.pdf",
            time="benchmark/resources_usage/time.pdf",
@@ -62,6 +68,30 @@ rule check_for_ete3_ncbi_database_update:
 
     script: "scripts/update-ete3.py"
 
+
+rule get_prokaryotes_assemblies_summaries:
+    output: "taxonomy-tables/prokaryotes.txt"
+
+    shell:
+        """
+        wget ftp://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/prokaryotes.txt > {output[0]}
+        """
+
+rule get_eukaryotes_assemblies_summaries:
+    output: "taxonomy-tables/eukaryotes.txt"
+
+    shell:
+        """
+        wget https://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/eukaryotes.txt > {output[0]}
+        """
+
+rule get_viruses_assemblies_summaries:
+    output: "taxonomy-tables/viruses.txt"
+
+    shell:
+        """
+        wget https://ftp.ncbi.nlm.nih.gov/genomes/GENOME_REPORTS/viruses.txt > {output[0]}
+        """
 
 rule linear_tax_Kraken2:
     conda: pipeline_path + "envs/benchmark.yml"
@@ -178,6 +208,8 @@ rule linear_tax_centrifuge:
 
     output: "taxonomy-tables/centrifuge/{sample}.tsv"
 
+    resources: ncbi_requests=1
+
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
     
@@ -220,20 +252,48 @@ rule merge_all_tools_out:
     script: "scripts/cat-tax.py"
 
 
+rule calculate_coverage:
+    input: tab="taxonomy-tables/{tool}/{sample}.tsv",
+           prok="taxonomy-tables/prokaryotes.txt",
+           euk='taxonomy-tables/eukaryotes.txt',
+           vir='taxonomy-tables/viruses.txt'
 
-rule read_count_heatmaps:
+    output: "taxonomy-tables/{tool}/{sample}.cov"
+
+    params: rank=rank,
+            pairing=pairing,
+            readlen=read_len
+
+    script: "scripts/normalize.py"
+
+rule concat_coverages_samples:
+    input: expand("taxonomy-tables/{tool}/{sample}.cov",sample=list(read_naming.keys()),tool=tools)
+
+    output: "taxonomy-tables/all_tools/{tool}-coverage.tsv"
+
+    script: "scripts/cat-tax.py"
+
+# rule plot_unclassified_reads:
+#     conda: pipeline_path + "envs/benchmark.yml"
+#
+#     input: expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
+#
+#     script: "unclassified.py"
+
+
+rule plot_nmds:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: "taxonomy-tables/all_tools/{tool}.tsv"
 
-    output: f"{{tool}}/heatmap-{superkingdom}-{rank}-level.pdf"
+    output: nmds=f"plots/{superkingdom}/ndms-{{tool}}-{threshold}-{rank}-level.pdf",
+            heatmap=f"plots/{superkingdom}/heatmap-{{tool}}-{threshold}-{rank}-level.pdf"
 
-    params: rank=config["target_rank"],
-            value=config["target_value"],
-            superkingdom=superkingdom
+    params: superkingdom=superkingdom,
+            rank=config["target_rank"],
+            threshold=threshold
 
-    script: "scripts/heatmap-read-counts.py"
-
+    script: "scripts/nmds.py"
 
 
 rule plot_tools_output:
