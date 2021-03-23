@@ -9,7 +9,7 @@ if paired:
         input: r1=fastq_input_list[0],
                r2=fastq_input_list[1]
 
-        output: out="centrifuge/{sample}/centrifuge-out.txt",
+        output: out=temp("centrifuge/{sample}/centrifuge-out.txt"),
                 report="centrifuge/{sample}/report.txt"
 
         threads: config["num_cores"]
@@ -30,7 +30,7 @@ else:
 
         input: get_fastq_input
 
-        output: out="centrifuge/{sample}/centrifuge-out.txt",
+        output: out=temp("centrifuge/{sample}/centrifuge-out.txt"),
                 report="centrifuge/{sample}/report.txt"
 
         threads: config["num_cores"]
