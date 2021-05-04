@@ -37,7 +37,8 @@ for t in tables:
 all_sizes = pd.concat(cat)  # Table with a list of taxids with their mean genome size
 all_sizes = all_sizes.astype({'TaxID': 'int64'})
 s = taxtb[(taxtb[f'{rank}_taxid'] != 'na')]  # select only hits identified at the species level for example
-gb = s.groupby(['superkingdom', f'{rank}', f'{rank}_taxid', 'sample'], as_index=False)['read_counts'].sum()
+gb = s.groupby(['superkingdom', f'{rank}', f'{rank}_taxid', 'sample',
+                'bodysite', 'type'], as_index=False)['read_counts'].sum()
 gb = gb.rename(columns={f'{rank}_taxid': 'TaxID'})
 gb = gb.astype({'TaxID': 'int64'})
 merged = gb.merge(all_sizes, on='TaxID', how='left').replace(np.nan, 0)
