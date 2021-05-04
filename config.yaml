@@ -107,9 +107,19 @@ metaphlan_db: /data/databases/metaphlan
 email: yourncbi@mail.com
 api_key: apikey
 
+### Sample comparison
+#### Clustering
+clustering: single  #method for hierarchical clustering, see scipy.cluster.hierarchy.linkage for more details
+distance: braycurtis #Distance metric between samples
+#### NMDS
+metric: bray #Distance for calculating distance matrix
+
+#### alpha diversity correlation
+cor: spearman
 
 ###Tool_comparison
-tools: {'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kraken2x':'k-mer','kaiju':'k-mer','bracken':'k-mer','centrifuge':'k-mer','metaphlan':'marker'}
+tools: {'surpi':'mapping','pathseq':'mapping','ezvir':'mapping','ganon':'k-mer','kraken2':'k-mer','kraken2x':'k-mer',
+        'kaiju':'k-mer','bracken':'k-mer','centrifuge':'k-mer','metaphlan':'marker'}
 superkingdom: Viruses
 target_rank: species
 target_value: counts
