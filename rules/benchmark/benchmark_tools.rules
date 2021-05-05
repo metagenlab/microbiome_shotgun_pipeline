@@ -1,7 +1,5 @@
 #ezVIR params
 ezvir_db=config["ezvir_database"]
-
-
 #Benchmark params
 if paired:
     pairing=2
@@ -13,11 +11,14 @@ rank=config["target_rank"]
 community=config['community_name']
 tools=sorted(list(config["tools"].keys()))
 threshold=config["reads_threshold"]
-
+clustering=config["clustering"]
+distance=config["distance"]
+metric=config["metric"]
 #generate all tools taxonomy tables
 rule all_tax:
-    input: merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
-           status_update="ete3-NCBI-database.txt"
+    input: merged_tsv = expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
+           status_update = "ete3-NCBI-database.txt",
+           coverage = expand("taxonomy-tables/all_tools/{tool}-coverage.tsv",tool=tools)
 
 
 #generate all tools outputs without a gold standard
@@ -27,13 +28,14 @@ rule all_tool_out:
            heatmap_counts=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
            heatmap_presence_tools=f"plots/{superkingdom}/presence_between_tools_{rank}_level.pdf",
            heatmap_presence_samples=f"plots/{superkingdom}/presence_between_samples_{rank}_level.pdf",
-           nmds=expand(f"plots/{superkingdom}/ndms-{{tool}}-{threshold}-{rank}-level.pdf",tool=tools),
-           heatmap=expand(f"plots/{superkingdom}/heatmap-{{tool}}-{threshold}-{rank}-level.pdf",tool=tools),
-           coverage=expand("taxonomy-tables/all_tools/{tool}-coverage.tsv",tool=tools),
+           nmds=expand(f"plots/nmds-{{tool}}-{metric}-{rank}-level.png",tool=tools),
+           clustermap=expand(f"plots/{{tool}}-{rank}-{clustering}-{distance}-heatmap.pdf",tool=tools),
+           alpha=expand(f"plots/alpha-diversity-{{tool}}-{rank}-level.png",tool=tools),
            tab="benchmark/resources_usage/resources.tsv",
            memo="benchmark/resources_usage/memory.pdf",
            time="benchmark/resources_usage/time.pdf",
-           mem_and_time="benchmark/resources_usage/mem-time.pdf"
+           mem_and_time="benchmark/resources_usage/mem-time.pdf",
+
 
 
 #generate all benchmarks compared to a gold standard
@@ -41,7 +43,8 @@ rule all_benchmark:
     input:  merged_tsv=expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools),
             read_counts_heatmaps=f"plots/{superkingdom}/heatmap_counts_{threshold}_{rank}_level.pdf",
             gold_standard=f"gold_standard/gs_{community}.tsv",
-            scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}/{out}_{rank}_level_{thr}.tsv",superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
+            scores_presence=expand("benchmark/tax-class/{community}/stats/{superkingdom}/{out}_{rank}_level_{thr}.tsv",
+                superkingdom=superkingdom,community=community,thr=threshold,out=['scores','presence'],rank=rank),
             presence_heatmap=f"benchmark/tax-class/{community}/plots/{superkingdom}/heatmap_presence_{threshold}_{rank}_level.pdf",
             pr_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/precision-recall-{rank}.pdf",
             f1_curve=f"benchmark/tax-class/{community}/plots/{superkingdom}/f1-scores-{rank}.pdf",
@@ -49,7 +52,8 @@ rule all_benchmark:
             optimal_params=f"benchmark/tax-class/{community}/stats/{superkingdom}/optimal-params-{rank}.tsv",
             l1_distance=f"benchmark/tax-class/{community}/plots/{superkingdom}/l1-distance-{rank}.pdf",
             l1_dist_table=f"benchmark/tax-class/{community}/stats/l1-distance-{superkingdom}-{rank}.tsv",
-            barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,rank=rank,variable=['tools','samples']),
+            barplots=expand("plots/{superkingdom}/barplot_{variable}_{rank}_level.pdf",superkingdom=superkingdom,
+                rank=rank,variable=['tools','samples']),
             all_barplots=f"benchmark/tax-class/{community}/plots/{superkingdom}/barplot-{rank}.pdf",
             table_reads=f"benchmark/tax-class/{community}/stats/{superkingdom}/classified-reads.tsv",
             barplot_reads=f"benchmark/tax-class/{community}/plots/{superkingdom}/classified-reads.pdf",
@@ -96,12 +100,17 @@ rule get_viruses_assemblies_summaries:
 rule linear_tax_Kraken2:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: "kraken2/{sample}/report.txt"
+    input: tax="kraken2/{sample}/report.txt",
+            sample_info='samples.tsv'
 
     output: "taxonomy-tables/kraken2/{sample}.tsv"
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
+
+    resources: ncbi_requests=1
+
+    log: logging_folder + "taxonomy-tables/kraken2/{sample}.log"
 
     script: "scripts/kraken2-tax.py"
 
@@ -109,7 +118,8 @@ rule linear_tax_Kraken2:
 rule linear_tax_Kraken2X:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: expand("kraken2x/{sample}/report.txt",sample=list(read_naming.keys()))
+    input: tax="kraken2x/{sample}/report.txt",
+            sample_info='samples.tsv'
 
     output: "taxonomy-tables/kraken2x/{sample}.tsv"
 
@@ -204,7 +214,9 @@ rule linear_tax_ganon:
 rule linear_tax_centrifuge:
     conda: pipeline_path + "envs/benchmark.yml"
 
-    input: "centrifuge/{sample}/centrifuge-k-report.txt"
+    input: tax="centrifuge/{sample}/centrifuge-k-report.txt",
+           sample_info='samples.tsv',
+           update="ete3-NCBI-database.txt"
 
     output: "taxonomy-tables/centrifuge/{sample}.tsv"
 
@@ -212,7 +224,9 @@ rule linear_tax_centrifuge:
 
     params: NCBI_email=config['email'],
             NCBI_key=config['api_key']
-    
+
+    log: logging_folder + "taxonomy-tables/centrifuge/{sample}.log"
+
     script: "scripts/kraken2-tax.py"
 
 
@@ -273,27 +287,46 @@ rule concat_coverages_samples:
 
     script: "scripts/cat-tax.py"
 
-# rule plot_unclassified_reads:
-#     conda: pipeline_path + "envs/benchmark.yml"
-#
-#     input: expand("taxonomy-tables/all_tools/{tool}.tsv",tool=tools)
-#
-#     script: "unclassified.py"
-
-
-rule plot_nmds:
+rule clustermap_samples:
     conda: pipeline_path + "envs/benchmark.yml"
 
     input: "taxonomy-tables/all_tools/{tool}.tsv"
 
-    output: nmds=f"plots/{superkingdom}/ndms-{{tool}}-{threshold}-{rank}-level.pdf",
-            heatmap=f"plots/{superkingdom}/heatmap-{{tool}}-{threshold}-{rank}-level.pdf"
+    output: plot=f"plots/{{tool}}-{rank}-{clustering}-{distance}-heatmap.pdf",
+            read_counts="plots/{tool}-read_counts.csv",
+            metadata="plots/{tool}-metadata.csv"
 
-    params: superkingdom=superkingdom,
-            rank=config["target_rank"],
-            threshold=threshold
+    params: rank=rank,
+            clustering=clustering,
+            distance=distance
 
-    script: "scripts/nmds.py"
+    script: "scripts/clustermap.py"
+
+rule plot_nmds:
+    conda: pipeline_path + "envs/nmds.yml"
+
+    input: read_counts="plots/{tool}-read_counts.csv",
+           metadata="plots/{tool}-metadata.csv"
+
+    output: nmds=f"plots/nmds-{{tool}}-{metric}-{rank}-level.png"
+
+    params: metric=config["metric"]
+
+    log: f"plots/nmds-{{tool}}-{rank}-level.txt"
+
+    script: "scripts/NMDS.R"
+
+rule alpha_diversity:
+    conda: pipeline_path + "envs/nmds.yml"
+
+    input: read_counts="plots/{tool}-read_counts.csv",
+           metadata="plots/{tool}-metadata.csv"
+
+    output: alpha_cor=f"plots/alpha-diversity-{{tool}}-{rank}-level.png"
+
+    params: config["cor"]
+
+    script: "scripts/alpha.R"
 
 
 rule plot_tools_output:
